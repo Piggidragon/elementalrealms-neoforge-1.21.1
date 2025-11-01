@@ -64,7 +64,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         );
 
         // Position the portal precisely centered on the block
-        portal.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        portal.setPos(pos.getX() + 0.5, pos.getY()+0.5, pos.getZ() + 0.5);
 
         // Apply chosen variant from config, fallback to random variant if null
         if (config.portalVariant() != null) {
