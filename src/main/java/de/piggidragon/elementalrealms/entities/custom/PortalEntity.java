@@ -1,11 +1,8 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
-import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -17,9 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -27,12 +21,8 @@ import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Relative;
-import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
@@ -66,7 +56,7 @@ public class PortalEntity extends Entity {
      */
     private boolean discard = false;
     private int despawnTimeout = 0;
-    private boolean isNatural = false;
+    private boolean primed = false;
 
     /**
      * Basic constructor for entity registration.
@@ -141,13 +131,13 @@ public class PortalEntity extends Entity {
     }
 
     public void setRandomVariant() {
-        PortalVariant[] variants = PortalVariant.values();
+        PortalVariant[] variants = {PortalVariant.ELEMENTAL, PortalVariant.DEVIANT, PortalVariant.ETERNAL};
         int randomIndex = this.level().random.nextInt(variants.length);
         this.setVariant(variants[randomIndex]);
     }
 
-    public void setNatural() {
-        this.isNatural = true;
+    public void prime() {
+        this.primed = true;
     }
 
     @Override
@@ -205,7 +195,7 @@ public class PortalEntity extends Entity {
         this.despawnTimeout = valueInput.getIntOr("DespawnTimer", 0);
 
         this.discard = valueInput.getBooleanOr("Discard", false);
-        this.isNatural = valueInput.getBooleanOr("IsNatural", false);
+        this.primed = valueInput.getBooleanOr("IsNatural", false);
         this.initialized = valueInput.getBooleanOr("Initialized", false);
 
         String levelKey = valueInput.getStringOr("TargetLevel", "");
@@ -240,7 +230,7 @@ public class PortalEntity extends Entity {
     protected void addAdditionalSaveData(ValueOutput valueOutput) {
         valueOutput.putInt("DespawnTimer", this.despawnTimeout);
         valueOutput.putBoolean("Discard", this.discard);
-        valueOutput.putBoolean("IsNatural", this.isNatural);
+        valueOutput.putBoolean("IsNatural", this.primed);
         valueOutput.putBoolean("Initialized", this.initialized);
         valueOutput.putInt("Variant", this.getVariant().getId());
 
@@ -271,7 +261,7 @@ public class PortalEntity extends Entity {
         }
 
         // Auto-initialize on first tick for naturally spawned entities
-        if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && isNatural) {
+        if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && primed) {
             createExplosivePortalSpace();
             this.initialized = true;
         }

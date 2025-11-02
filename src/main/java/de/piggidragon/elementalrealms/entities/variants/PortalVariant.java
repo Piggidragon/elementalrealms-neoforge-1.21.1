@@ -54,13 +54,6 @@ public enum PortalVariant {
         return SCHOOL;
     }
 
-    /**
-     * Gets a random variant.
-     */
-    public static PortalVariant getRandomVariant(net.minecraft.util.RandomSource random) {
-        return BY_ID[random.nextInt(BY_ID.length)];
-    }
-
     public int getId() {
         return id;
     }

@@ -67,7 +67,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             portal.setRandomVariant();
         }
 
-        portal.setNatural();
+        if (pos.getY() < 41) portal.prime();
 
         ElementalRealms.LOGGER.info("Spawning portal");
         level.addFreshEntity(portal);
