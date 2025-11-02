@@ -376,13 +376,19 @@ public class PortalEntity extends Entity {
         }
     }
 
+    /**
+     * Creates space around the portal by generating an explosion.
+     * Called once during portal initialization to clear surrounding terrain.
+     */
     private void createExplosivePortalSpace() {
         ServerLevel serverLevel = (ServerLevel) this.level();
         Vec3 centerPos = this.position();
 
         serverLevel.explode(
                 this,
-                centerPos.x, centerPos.y+1, centerPos.z,
+                centerPos.x,
+                centerPos.y + 1,
+                centerPos.z,
                 25.0f,
                 Level.ExplosionInteraction.BLOCK
         );
