@@ -379,28 +379,12 @@ public class PortalEntity extends Entity {
     private void createExplosivePortalSpace() {
         ServerLevel serverLevel = (ServerLevel) this.level();
         Vec3 centerPos = this.position();
-        RandomSource random = serverLevel.getRandom();
 
-        // Mehrere Explosionen für irregulären Effekt
-        int explosionCount = 2 + random.nextInt(2); // 2-3 Explosionen
-
-        ElementalRealms.LOGGER.info("Exploding:" + explosionCount);
-
-        for (int i = 0; i < explosionCount; i++) {
-            // Zufällige Position für jede Explosion
-            double offsetX = (random.nextFloat() - 0.5) * 3.0;
-            double offsetY = random.nextFloat() * 2.0 - 1.0; // -1 bis +1
-            double offsetZ = (random.nextFloat() - 0.5) * 3.0;
-
-            Vec3 explosionPos = centerPos.add(offsetX, offsetY, offsetZ);
-
-            // Direkte Explosion ohne TNT-Entity
-            serverLevel.explode(
-                    this,                    // Source entity (portal)
-                    explosionPos.x, explosionPos.y, explosionPos.z,
-                    2.0f + random.nextFloat() * 1.5f, // Stärke 2.0-3.5 (kleiner als TNT)
-                    Level.ExplosionInteraction.BLOCK  // Zerstört Blöcke
-            );
-        }
+        serverLevel.explode(
+                this,
+                centerPos.x, centerPos.y+1, centerPos.z,
+                25.0f,
+                Level.ExplosionInteraction.BLOCK
+        );
     }
 }
