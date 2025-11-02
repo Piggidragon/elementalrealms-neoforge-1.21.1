@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.worldgen;
+package de.piggidragon.elementalrealms.worldgen.chunkgen.custom;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

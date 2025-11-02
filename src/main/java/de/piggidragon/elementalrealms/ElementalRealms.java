@@ -5,12 +5,12 @@ import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.creativetabs.ModCreativeTabs;
 import de.piggidragon.elementalrealms.entities.ModEntities;
-import de.piggidragon.elementalrealms.features.ModFeatures;
+import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.items.magic.dimension.DimensionItems;
 import de.piggidragon.elementalrealms.structures.ModStructurePlacements;
 import de.piggidragon.elementalrealms.structures.ModStructures;
-import de.piggidragon.elementalrealms.worldgen.ModWorldGen;
+import de.piggidragon.elementalrealms.worldgen.chunkgen.ModChunkgen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -46,7 +46,7 @@ public class ElementalRealms {
         ModCreativeTabs.register(modEventBus);
         ModStructurePlacements.register(modEventBus);
         ModStructures.register(modEventBus);
-        ModWorldGen.register(modEventBus);
+        ModChunkgen.register(modEventBus);
         ModFeatures.register(modEventBus);
 
         // Client-only: configuration screen
