@@ -2,8 +2,8 @@ package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
-import de.piggidragon.elementalrealms.features.ModFeatures;
-import de.piggidragon.elementalrealms.features.config.PortalConfiguration;
+import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
+import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
@@ -13,9 +13,9 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.*;
 import net.neoforged.neoforge.common.Tags;
@@ -54,7 +54,6 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new ConfiguredFeature<>(
                                     ModFeatures.PORTAL_FEATURE.get(),
                                     new PortalConfiguration(
-                                            1.0f,
                                             PortalVariant.ELEMENTAL,
                                             ModLevel.TEST_DIMENSION
                                     )
@@ -69,9 +68,12 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
                                     List.of(
-                                            RarityFilter.onAverageOnceEvery(1),
+                                            RarityFilter.onAverageOnceEvery(20),
                                             InSquarePlacement.spread(),
-                                            HeightmapPlacement.onHeightmap(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES),
+                                            HeightRangePlacement.uniform(
+                                                    VerticalAnchor.absolute(-64), // Bedrock level
+                                                    VerticalAnchor.absolute(320)  // Build limit
+                                            ),
                                             BiomeFilter.biome()
                                     )
                             )
