@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.worldgen.features.custom;
 
 import com.mojang.serialization.Codec;
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import de.piggidragon.elementalrealms.level.ModLevel;

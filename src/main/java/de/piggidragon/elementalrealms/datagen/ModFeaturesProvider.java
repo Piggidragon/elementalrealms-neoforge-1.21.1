@@ -5,6 +5,7 @@ import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import de.piggidragon.elementalrealms.level.ModLevel;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistrySetBuilder;
@@ -12,10 +13,12 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
+import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.*;
 import net.neoforged.neoforge.common.Tags;
@@ -26,6 +29,8 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides configured and placed features for portal worldgen.
@@ -68,11 +73,11 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
                                     List.of(
-                                            RarityFilter.onAverageOnceEvery(20),
+                                            RarityFilter.onAverageOnceEvery(200),
                                             InSquarePlacement.spread(),
                                             HeightRangePlacement.uniform(
-                                                    VerticalAnchor.absolute(-64), // Bedrock level
-                                                    VerticalAnchor.absolute(320)  // Build limit
+                                                    VerticalAnchor.absolute(-64),
+                                                    VerticalAnchor.absolute(320)
                                             ),
                                             BiomeFilter.biome()
                                     )
@@ -81,13 +86,13 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                 })
         .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, bootstrap -> {
             HolderGetter<PlacedFeature> placed = bootstrap.lookup(Registries.PLACED_FEATURE);
-            HolderGetter<Biome> biomes = bootstrap.lookup(Registries.BIOME);
+            HolderGetter<Biome> biomeGetter = bootstrap.lookup(Registries.BIOME);
 
             bootstrap.register(
                     ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
                             ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
                     new BiomeModifiers.AddFeaturesBiomeModifier(
-                            biomes.getOrThrow(Tags.Biomes.IS_OVERWORLD),
+                            biomeGetter.getOrThrow(Tags.Biomes.IS_OVERWORLD),
                             HolderSet.direct(placed.getOrThrow(PORTAL_PLACED)),
                             GenerationStep.Decoration.SURFACE_STRUCTURES
                     )
