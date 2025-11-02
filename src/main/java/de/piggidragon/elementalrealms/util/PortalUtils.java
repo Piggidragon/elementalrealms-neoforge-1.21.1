@@ -28,47 +28,7 @@ public class PortalUtils {
         if (state.isAir()) return false;
 
         // Skip fluids (water, lava, custom fluids)
-        if (!state.getFluidState().isEmpty()) return false;
-
-        // Check if block provides solid support
-        if (!state.isSolidRender()) return false;
-
-        // Skip problematic solid blocks
-        Block block = state.getBlock();
-        if (block == Blocks.MAGMA_BLOCK ||
-                block == Blocks.CACTUS ||
-                block == Blocks.POWDER_SNOW ||
-                block == Blocks.DRAGON_EGG ||
-                block == Blocks.CAKE ||
-                block == Blocks.TURTLE_EGG ||
-                block == Blocks.BEDROCK ||
-                block == Blocks.END_PORTAL ||
-                block == Blocks.END_PORTAL_FRAME ||
-                block == Blocks.NETHER_PORTAL ||
-                block == Blocks.SCAFFOLDING) {
-            return false;
-        }
-
-        // Check space above for portal (3 blocks height)
-        for (int y = 1; y <= 3; y++) {
-            if (!level.getBlockState(pos.above(y)).isAir()) {
-                return false;
-            }
-        }
-
-        // Check all horizontal neighbors (including diagonals)
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                if (dx == 0 && dz == 0) continue; // Skip center position
-
-                BlockPos neighborPos = pos.offset(dx, 0, dz);
-                if (!level.getBlockState(neighborPos).isAir()) {
-                    return false; // Neighbor is not air
-                }
-            }
-        }
-
-        return true;
+        return state.getFluidState().isEmpty();
     }
 
     public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) throws NullPointerException {
