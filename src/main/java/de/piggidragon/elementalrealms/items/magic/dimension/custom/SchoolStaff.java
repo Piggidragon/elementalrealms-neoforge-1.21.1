@@ -53,7 +53,7 @@ public class SchoolStaff extends Item {
                 ModEntities.PORTAL_ENTITY.get(),
                 level,
                 true,
-                200, // 10 second lifetime
+                200,
                 player.level().getServer().getLevel(ModLevel.SCHOOL_DIMENSION),
                 player.getUUID()
         );

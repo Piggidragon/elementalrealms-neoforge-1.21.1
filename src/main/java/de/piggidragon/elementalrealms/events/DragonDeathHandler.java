@@ -76,7 +76,7 @@ public class DragonDeathHandler {
                 ModEntities.PORTAL_ENTITY.get(),
                 overworld,
                 false,
-                -1, // Never despawn
+                -1,
                 server.getLevel(ModLevel.SCHOOL_DIMENSION),
                 null
         );

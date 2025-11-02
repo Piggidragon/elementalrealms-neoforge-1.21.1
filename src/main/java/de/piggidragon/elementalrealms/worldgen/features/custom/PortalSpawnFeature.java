@@ -67,6 +67,8 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         }
 
         portal.setNatural();
+
+        ElementalRealms.LOGGER.info("Spawning portal");
         level.addFreshEntity(portal);
         return true;
     }

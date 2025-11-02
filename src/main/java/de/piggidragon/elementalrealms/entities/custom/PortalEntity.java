@@ -1,9 +1,11 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -15,6 +17,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -22,8 +27,12 @@ import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
@@ -50,13 +59,14 @@ public class PortalEntity extends Entity {
 
     private ServerLevel targetLevel;
     private UUID ownerUUID;
+    private boolean initialized = false;
 
     /**
      * Whether this portal should be removed after first use
      */
     private boolean discard = false;
     private int despawnTimeout = 0;
-    private boolean initialized = false;
+    private boolean isNatural = false;
 
     /**
      * Basic constructor for entity registration.
@@ -121,6 +131,10 @@ public class PortalEntity extends Entity {
         }
     }
 
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
     public void setVariant(PortalVariant variant) {
         if (variant == null) variant = PortalVariant.SCHOOL;
         this.entityData.set(DATA_VARIANT, variant.getId());
@@ -132,8 +146,8 @@ public class PortalEntity extends Entity {
         this.setVariant(variants[randomIndex]);
     }
 
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
+    public void setNatural() {
+        this.isNatural = true;
     }
 
     @Override
@@ -191,6 +205,8 @@ public class PortalEntity extends Entity {
         this.despawnTimeout = valueInput.getIntOr("DespawnTimer", 0);
 
         this.discard = valueInput.getBooleanOr("Discard", false);
+        this.isNatural = valueInput.getBooleanOr("IsNatural", false);
+        this.initialized = valueInput.getBooleanOr("Initialized", false);
 
         String levelKey = valueInput.getStringOr("TargetLevel", "");
         if (!levelKey.isEmpty() && !this.level().isClientSide()) {
@@ -224,6 +240,8 @@ public class PortalEntity extends Entity {
     protected void addAdditionalSaveData(ValueOutput valueOutput) {
         valueOutput.putInt("DespawnTimer", this.despawnTimeout);
         valueOutput.putBoolean("Discard", this.discard);
+        valueOutput.putBoolean("IsNatural", this.isNatural);
+        valueOutput.putBoolean("Initialized", this.initialized);
         valueOutput.putInt("Variant", this.getVariant().getId());
 
         if (this.targetLevel != null) {
@@ -252,13 +270,12 @@ public class PortalEntity extends Entity {
             this.setupAnimationStates();
         }
 
-        /*
         // Auto-initialize on first tick for naturally spawned entities
-        if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && this.naturalSpawn) {
-            initializeNaturalSpawn();
+        if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && isNatural) {
+            createExplosivePortalSpace();
             this.initialized = true;
         }
-         */
+
 
         // Server-side logic
         if (!this.level().isClientSide()) {
@@ -359,21 +376,31 @@ public class PortalEntity extends Entity {
         }
     }
 
-    /**
-     * Sets variant on spawn for naturally spawned portals.
-     */
-    private void initializeNaturalSpawn() {
-        // Safety check for server availability
-        if (this.getServer() == null) {
-            return; // Skip initialization if server not available
-        }
-        // Set variant based on dimension
-        ResourceKey<Level> level = this.level().dimension();
+    private void createExplosivePortalSpace() {
+        ServerLevel serverLevel = (ServerLevel) this.level();
+        Vec3 centerPos = this.position();
+        RandomSource random = serverLevel.getRandom();
 
-        if (level == Level.NETHER || level == Level.NETHER || level == Level.END) {
-            this.setRandomVariant();
-        }
+        // Mehrere Explosionen für irregulären Effekt
+        int explosionCount = 2 + random.nextInt(2); // 2-3 Explosionen
 
-        this.targetLevel = this.getServer().getLevel(ModLevel.TEST_DIMENSION);
+        ElementalRealms.LOGGER.info("Exploding:" + explosionCount);
+
+        for (int i = 0; i < explosionCount; i++) {
+            // Zufällige Position für jede Explosion
+            double offsetX = (random.nextFloat() - 0.5) * 3.0;
+            double offsetY = random.nextFloat() * 2.0 - 1.0; // -1 bis +1
+            double offsetZ = (random.nextFloat() - 0.5) * 3.0;
+
+            Vec3 explosionPos = centerPos.add(offsetX, offsetY, offsetZ);
+
+            // Direkte Explosion ohne TNT-Entity
+            serverLevel.explode(
+                    this,                    // Source entity (portal)
+                    explosionPos.x, explosionPos.y, explosionPos.z,
+                    2.0f + random.nextFloat() * 1.5f, // Stärke 2.0-3.5 (kleiner als TNT)
+                    Level.ExplosionInteraction.BLOCK  // Zerstört Blöcke
+            );
+        }
     }
 }
