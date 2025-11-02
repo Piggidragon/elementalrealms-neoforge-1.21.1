@@ -66,6 +66,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             portal.setRandomVariant();
         }
 
+        portal.setNatural();
         level.addFreshEntity(portal);
         return true;
     }
