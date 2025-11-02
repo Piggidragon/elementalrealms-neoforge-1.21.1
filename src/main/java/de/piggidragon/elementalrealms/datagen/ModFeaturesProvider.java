@@ -2,10 +2,9 @@ package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
-import de.piggidragon.elementalrealms.level.ModLevel;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistrySetBuilder;
@@ -13,14 +12,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
-import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight;
 import net.minecraft.world.level.levelgen.placement.*;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
@@ -30,8 +26,6 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provides configured and placed features for portal worldgen.
@@ -100,23 +94,23 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             )
                     );
                 })
-        .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, bootstrap -> {
-            HolderGetter<PlacedFeature> placed = bootstrap.lookup(Registries.PLACED_FEATURE);
-            HolderGetter<Biome> biomeGetter = bootstrap.lookup(Registries.BIOME);
+                .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, bootstrap -> {
+                    HolderGetter<PlacedFeature> placed = bootstrap.lookup(Registries.PLACED_FEATURE);
+                    HolderGetter<Biome> biomeGetter = bootstrap.lookup(Registries.BIOME);
 
-            bootstrap.register(
-                    ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
-                            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
-                    new BiomeModifiers.AddFeaturesBiomeModifier(
-                            biomeGetter.getOrThrow(Tags.Biomes.IS_OVERWORLD),
-                            HolderSet.direct(
-                                    List.of(
-                                        placed.getOrThrow(PORTAL_PLACED_SURFACE),
-                                        placed.getOrThrow(PORTAL_PLACED_UNDER)
-                                    )),
-                            GenerationStep.Decoration.SURFACE_STRUCTURES
-                    )
-            );
-        });
+                    bootstrap.register(
+                            ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
+                                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
+                            new BiomeModifiers.AddFeaturesBiomeModifier(
+                                    biomeGetter.getOrThrow(Tags.Biomes.IS_OVERWORLD),
+                                    HolderSet.direct(
+                                            List.of(
+                                                    placed.getOrThrow(PORTAL_PLACED_SURFACE),
+                                                    placed.getOrThrow(PORTAL_PLACED_UNDER)
+                                            )),
+                                    GenerationStep.Decoration.SURFACE_STRUCTURES
+                            )
+                    );
+                });
     }
 }

@@ -12,9 +12,12 @@ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfigur
 /**
  * Configuration for portal spawn feature.
  */
-public record PortalConfiguration(PortalVariant portalVariant, ResourceKey<Level> targetDimension) implements FeatureConfiguration {
+public record PortalConfiguration(PortalVariant portalVariant,
+                                  ResourceKey<Level> targetDimension) implements FeatureConfiguration {
 
-    /** Codec for serializing this configuration to/from JSON */
+    /**
+     * Codec for serializing this configuration to/from JSON
+     */
     public static final Codec<PortalConfiguration> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     PortalVariant.CODEC
@@ -36,7 +39,9 @@ public record PortalConfiguration(PortalVariant portalVariant, ResourceKey<Level
         this(portalVariant, ResourceKey.create(Registries.DIMENSION, targetDimension));
     }
 
-    /** Compact canonical constructor retained (no extra docs). */
+    /**
+     * Compact canonical constructor retained (no extra docs).
+     */
     public PortalConfiguration {
     }
 }

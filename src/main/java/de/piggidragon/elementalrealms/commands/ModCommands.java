@@ -46,8 +46,7 @@ public class ModCommands {
                                 var portal = PortalUtils.findNearestPortal(player.level(), player.position(), 1000);
                                 ctx.getSource().sendSuccess(() -> Component.literal("Nearest Portal: " + portal.getPositionVec()), false);
                                 return 1;
-                            }
-                            catch (Exception e) {
+                            } catch (Exception e) {
                                 ctx.getSource().sendFailure(Component.literal(e.getMessage()));
                                 return 0;
                             }

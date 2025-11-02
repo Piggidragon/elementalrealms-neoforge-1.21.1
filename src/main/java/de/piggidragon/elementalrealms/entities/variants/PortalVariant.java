@@ -13,7 +13,7 @@ public enum PortalVariant {
     ELEMENTAL(1, "elemental"),
     DEVIANT(2, "deviant"),
     ETERNAL(3, "eternal"),
-    RANDOM(4,"random");
+    RANDOM(4, "random");
 
     /**
      * Codec for serialization/deserialization in DataGen and JSON configs
