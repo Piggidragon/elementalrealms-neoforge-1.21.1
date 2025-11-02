@@ -20,6 +20,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.heightproviders.BiasedToBottomHeight;
 import net.minecraft.world.level.levelgen.placement.*;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
@@ -41,9 +42,12 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
             ResourceKey.create(Registries.CONFIGURED_FEATURE,
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_configured"));
 
-    public static final ResourceKey<PlacedFeature> PORTAL_PLACED =
+    public static final ResourceKey<PlacedFeature> PORTAL_PLACED_SURFACE =
             ResourceKey.create(Registries.PLACED_FEATURE,
-                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed"));
+                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed_surface"));
+    public static final ResourceKey<PlacedFeature> PORTAL_PLACED_UNDER =
+            ResourceKey.create(Registries.PLACED_FEATURE,
+                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed_under"));
 
     public ModFeaturesProvider(PackOutput output, CompletableFuture<RegistrySetBuilder.PatchedRegistries> registries) {
         super(output, registries, Set.of(ElementalRealms.MODID));
@@ -69,15 +73,27 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                     HolderGetter<ConfiguredFeature<?, ?>> configured =
                             bootstrap.lookup(Registries.CONFIGURED_FEATURE);
 
-                    bootstrap.register(PORTAL_PLACED,
+                    bootstrap.register(PORTAL_PLACED_SURFACE,
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
                                     List.of(
-                                            RarityFilter.onAverageOnceEvery(200),
+                                            RarityFilter.onAverageOnceEvery(150),
+                                            InSquarePlacement.spread(),
+                                            HeightmapPlacement.onHeightmap(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES),
+                                            BiomeFilter.biome()
+                                    )
+                            )
+                    );
+
+                    bootstrap.register(PORTAL_PLACED_UNDER,
+                            new PlacedFeature(
+                                    configured.getOrThrow(PORTAL_CONFIGURED),
+                                    List.of(
+                                            RarityFilter.onAverageOnceEvery(400),
                                             InSquarePlacement.spread(),
                                             HeightRangePlacement.uniform(
-                                                    VerticalAnchor.absolute(-64),
-                                                    VerticalAnchor.absolute(320)
+                                                    VerticalAnchor.absolute(-60),
+                                                    VerticalAnchor.absolute(40)
                                             ),
                                             BiomeFilter.biome()
                                     )
@@ -93,7 +109,11 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
                     new BiomeModifiers.AddFeaturesBiomeModifier(
                             biomeGetter.getOrThrow(Tags.Biomes.IS_OVERWORLD),
-                            HolderSet.direct(placed.getOrThrow(PORTAL_PLACED)),
+                            HolderSet.direct(
+                                    List.of(
+                                        placed.getOrThrow(PORTAL_PLACED_SURFACE),
+                                        placed.getOrThrow(PORTAL_PLACED_UNDER)
+                                    )),
                             GenerationStep.Decoration.SURFACE_STRUCTURES
                     )
             );
