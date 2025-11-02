@@ -71,7 +71,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
                                     List.of(
-                                            RarityFilter.onAverageOnceEvery(150),
+                                            RarityFilter.onAverageOnceEvery(250),
                                             InSquarePlacement.spread(),
                                             HeightmapPlacement.onHeightmap(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES),
                                             BiomeFilter.biome()
@@ -83,7 +83,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
                                     List.of(
-                                            RarityFilter.onAverageOnceEvery(400),
+                                            RarityFilter.onAverageOnceEvery(500),
                                             InSquarePlacement.spread(),
                                             HeightRangePlacement.uniform(
                                                     VerticalAnchor.absolute(-60),
