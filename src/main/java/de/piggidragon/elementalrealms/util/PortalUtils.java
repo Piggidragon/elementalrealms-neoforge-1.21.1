@@ -50,13 +50,25 @@ public class PortalUtils {
         }
 
         // Check space above for portal (3 blocks height)
-        BlockPos above1 = pos.above();
-        BlockPos above2 = pos.above(2);
-        BlockPos above3 = pos.above(3);
+        for (int y = 1; y <= 3; y++) {
+            if (!level.getBlockState(pos.above(y)).isAir()) {
+                return false;
+            }
+        }
 
-        return level.getBlockState(above1).isAir() &&
-                level.getBlockState(above2).isAir() &&
-                level.getBlockState(above3).isAir();
+        // Check all horizontal neighbors (including diagonals)
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) continue; // Skip center position
+
+                BlockPos neighborPos = pos.offset(dx, 0, dz);
+                if (!level.getBlockState(neighborPos).isAir()) {
+                    return false; // Neighbor is not air
+                }
+            }
+        }
+
+        return true;
     }
 
     public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) throws NullPointerException {

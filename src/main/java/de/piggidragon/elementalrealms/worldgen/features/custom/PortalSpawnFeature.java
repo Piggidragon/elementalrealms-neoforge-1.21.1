@@ -3,12 +3,11 @@ package de.piggidragon.elementalrealms.worldgen.features.custom;
 import com.mojang.serialization.Codec;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.util.PortalUtils;
+import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -29,19 +28,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
         WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
-        RandomSource random = context.random();
         PortalConfiguration config = context.config();
-
-        // Check spawn chance defined by config
-        if (random.nextFloat() > config.spawnChance()) {
-            return false;
-        }
-
-        // Validate portal base suitability
-        if (!PortalUtils.isSuitableForPortalBase(level, pos.below(),
-                level.getBlockState(pos.below()))) {
-            return false;
-        }
 
         // Server is required to create cross-dimension portal references
         MinecraftServer server = level.getServer();
@@ -50,6 +37,11 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         }
 
         if (!PortalUtils.isValidDimensionForSpawn(level.getLevel(), pos)) {
+            return false;
+        }
+
+        // Validate portal base suitability
+        if (!PortalUtils.isSuitableForPortalBase(level, pos.below(), level.getBlockState(pos.below()))) {
             return false;
         }
 
@@ -64,7 +56,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         );
 
         // Position the portal precisely centered on the block
-        portal.setPos(pos.getX() + 0.5, pos.getY()+0.5, pos.getZ() + 0.5);
+        portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
 
         // Apply chosen variant from config, fallback to random variant if null
         if (config.portalVariant() != null) {

@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.features.config;
+package de.piggidragon.elementalrealms.worldgen.features.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -12,15 +12,11 @@ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfigur
 /**
  * Configuration for portal spawn feature.
  */
-public record PortalConfiguration(float spawnChance, PortalVariant portalVariant, ResourceKey<Level> targetDimension) implements FeatureConfiguration {
+public record PortalConfiguration(PortalVariant portalVariant, ResourceKey<Level> targetDimension) implements FeatureConfiguration {
 
     /** Codec for serializing this configuration to/from JSON */
     public static final Codec<PortalConfiguration> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    Codec.floatRange(0.0F, 1.0F)
-                            .fieldOf("spawn_chance")
-                            .forGetter(config -> config.spawnChance),
-
                     PortalVariant.CODEC
                             .fieldOf("portal_variant")
                             .forGetter(config -> config.portalVariant),
@@ -35,10 +31,9 @@ public record PortalConfiguration(float spawnChance, PortalVariant portalVariant
     /**
      * Constructor matching the Codec - targetDimension supplied as ResourceLocation.
      */
-    public PortalConfiguration(float spawnChance,
-                               PortalVariant portalVariant,
+    public PortalConfiguration(PortalVariant portalVariant,
                                ResourceLocation targetDimension) {
-        this(spawnChance, portalVariant, ResourceKey.create(Registries.DIMENSION, targetDimension));
+        this(portalVariant, ResourceKey.create(Registries.DIMENSION, targetDimension));
     }
 
     /** Compact canonical constructor retained (no extra docs). */
