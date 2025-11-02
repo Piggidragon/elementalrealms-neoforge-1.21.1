@@ -63,7 +63,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new ConfiguredFeature<>(
                                     ModFeatures.PORTAL_FEATURE.get(),
                                     new PortalConfiguration(
-                                            null,
+                                            PortalVariant.RANDOM,
                                             ModLevel.TEST_DIMENSION
                                     )
                             )

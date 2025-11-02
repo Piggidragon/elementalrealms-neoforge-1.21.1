@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
@@ -60,7 +61,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
 
         // Apply chosen variant from config, fallback to random variant if null
-        if (config.portalVariant() != null) {
+        if (config.portalVariant() != PortalVariant.RANDOM) {
             portal.setVariant(config.portalVariant());
         } else {
             portal.setRandomVariant();
