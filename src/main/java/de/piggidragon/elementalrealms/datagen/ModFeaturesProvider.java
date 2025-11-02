@@ -102,7 +102,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
                                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
                             new BiomeModifiers.AddFeaturesBiomeModifier(
-                                    biomeGetter.getOrThrow(Tags.Biomes.IS_OVERWORLD),
+                                    biomeGetter.getOrThrow(ModBiomeTagsProvider.ALL_SPAWNABLE_DIMENSIONS),
                                     HolderSet.direct(
                                             List.of(
                                                     placed.getOrThrow(PORTAL_PLACED_SURFACE),

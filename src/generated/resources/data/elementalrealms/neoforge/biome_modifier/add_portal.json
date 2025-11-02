@@ -1,6 +1,6 @@
 {
   "type": "neoforge:add_features",
-  "biomes": "#c:is_overworld",
+  "biomes": "#elementalrealms:all_spawnable_dimensions",
   "features": [
     "elementalrealms:portal_placed_surface",
     "elementalrealms:portal_placed_under"

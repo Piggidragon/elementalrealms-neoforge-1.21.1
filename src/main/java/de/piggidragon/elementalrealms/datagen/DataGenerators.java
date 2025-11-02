@@ -39,6 +39,8 @@ public class DataGenerators {
                 List.of(new AdvancementGenerator())
         ));
 
+        generator.addProvider(true, new ModBiomeTagsProvider(packOutput, lookupProvider));
+
         event.createDatapackRegistryObjects(ModFeaturesProvider.createBuilder());
     }
 
