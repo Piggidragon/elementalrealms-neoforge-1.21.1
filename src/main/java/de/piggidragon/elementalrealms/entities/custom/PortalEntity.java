@@ -121,13 +121,13 @@ public class PortalEntity extends Entity {
         }
     }
 
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
     public void setVariant(PortalVariant variant) {
         if (variant == null) variant = PortalVariant.SCHOOL;
         this.entityData.set(DATA_VARIANT, variant.getId());
-    }
-
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
     }
 
     public void setRandomVariant() {

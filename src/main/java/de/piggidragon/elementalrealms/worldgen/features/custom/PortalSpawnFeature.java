@@ -9,6 +9,7 @@ import de.piggidragon.elementalrealms.util.PortalUtils;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -30,6 +31,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
         PortalConfiguration config = context.config();
+        RandomSource randomSource = level.getRandom();
 
         // Server is required to create cross-dimension portal references
         MinecraftServer server = level.getServer();
@@ -58,6 +60,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         // Position the portal precisely centered on the block
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        portal.setYRot(randomSource.nextFloat() * 360.0F);
 
         // Apply chosen variant from config, fallback to random variant if null
         if (config.portalVariant() != PortalVariant.RANDOM) {
