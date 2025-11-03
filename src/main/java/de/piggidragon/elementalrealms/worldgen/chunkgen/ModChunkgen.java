@@ -1,7 +1,8 @@
-package de.piggidragon.elementalrealms.worldgen;
+package de.piggidragon.elementalrealms.worldgen.chunkgen;
 
 import com.mojang.serialization.MapCodec;
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.neoforged.bus.api.IEventBus;
@@ -13,7 +14,7 @@ import java.util.function.Supplier;
  * Handles registration of custom world generation features.
  * Registers chunk generators for bounded dimensions.
  */
-public class ModWorldGen {
+public class ModChunkgen {
 
     public static final DeferredRegister<MapCodec<? extends ChunkGenerator>> CHUNK_GENERATORS =
             DeferredRegister.create(Registries.CHUNK_GENERATOR, ElementalRealms.MODID);

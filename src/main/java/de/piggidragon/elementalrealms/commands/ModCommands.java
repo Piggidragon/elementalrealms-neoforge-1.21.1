@@ -6,6 +6,7 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinitiesRoll;
+import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -34,7 +35,25 @@ public class ModCommands {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         var dispatcher = event.getDispatcher();
-        ElementalRealms.LOGGER.info("Registering Elemental Realms commands");
+
+        dispatcher.register(Commands.literal("portal")
+                .requires(cs -> cs.hasPermission(2))
+
+                .then(Commands.literal("locate")
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            try {
+                                var portal = PortalUtils.findNearestPortal(player.level(), player.position(), 1000);
+                                ctx.getSource().sendSuccess(() -> Component.literal("Nearest Portal: " + portal.getPositionVec()), false);
+                                return 1;
+                            } catch (Exception e) {
+                                ctx.getSource().sendFailure(Component.literal(e.getMessage()));
+                                return 0;
+                            }
+                        })
+                )
+        );
+
         dispatcher.register(Commands.literal("affinities")
                 .requires(cs -> cs.hasPermission(2)) // Requires OP level 2
 

@@ -46,14 +46,17 @@ public class PortalEntity extends Entity {
     public final AnimationState spawnAnimationState = new AnimationState();
     private final ResourceKey<Level> portalLevel;
     private int idleAnimationTimer = 0;
+
     private ServerLevel targetLevel;
     private UUID ownerUUID;
+    private boolean initialized = false;
 
     /**
      * Whether this portal should be removed after first use
      */
     private boolean discard = false;
     private int despawnTimeout = 0;
+    private boolean primed = false;
 
     /**
      * Basic constructor for entity registration.
@@ -111,16 +114,30 @@ public class PortalEntity extends Entity {
 
     public PortalVariant getVariant() {
         try {
-            int id = this.entityData.get(DATA_VARIANT);
-            return PortalVariant.byId(id);
+            return PortalVariant.byId(this.entityData.get(DATA_VARIANT));
         } catch (Exception e) {
+            // Fallback if data not synced yet
             return PortalVariant.SCHOOL;
         }
+    }
+
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
     }
 
     public void setVariant(PortalVariant variant) {
         if (variant == null) variant = PortalVariant.SCHOOL;
         this.entityData.set(DATA_VARIANT, variant.getId());
+    }
+
+    public void setRandomVariant() {
+        PortalVariant[] variants = {PortalVariant.ELEMENTAL, PortalVariant.DEVIANT, PortalVariant.ETERNAL};
+        int randomIndex = this.level().random.nextInt(variants.length);
+        this.setVariant(variants[randomIndex]);
+    }
+
+    public void prime() {
+        this.primed = true;
     }
 
     @Override
@@ -178,6 +195,8 @@ public class PortalEntity extends Entity {
         this.despawnTimeout = valueInput.getIntOr("DespawnTimer", 0);
 
         this.discard = valueInput.getBooleanOr("Discard", false);
+        this.primed = valueInput.getBooleanOr("IsNatural", false);
+        this.initialized = valueInput.getBooleanOr("Initialized", false);
 
         String levelKey = valueInput.getStringOr("TargetLevel", "");
         if (!levelKey.isEmpty() && !this.level().isClientSide()) {
@@ -211,6 +230,8 @@ public class PortalEntity extends Entity {
     protected void addAdditionalSaveData(ValueOutput valueOutput) {
         valueOutput.putInt("DespawnTimer", this.despawnTimeout);
         valueOutput.putBoolean("Discard", this.discard);
+        valueOutput.putBoolean("IsNatural", this.primed);
+        valueOutput.putBoolean("Initialized", this.initialized);
         valueOutput.putInt("Variant", this.getVariant().getId());
 
         if (this.targetLevel != null) {
@@ -227,9 +248,7 @@ public class PortalEntity extends Entity {
      */
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        if (DATA_VARIANT != null) {
-            builder.define(DATA_VARIANT, PortalVariant.SCHOOL.getId());
-        }
+        builder.define(DATA_VARIANT, PortalVariant.SCHOOL.getId());
     }
 
     @Override
@@ -240,6 +259,13 @@ public class PortalEntity extends Entity {
         if (this.level().isClientSide()) {
             this.setupAnimationStates();
         }
+
+        // Auto-initialize on first tick for naturally spawned entities
+        if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && primed) {
+            createExplosivePortalSpace();
+            this.initialized = true;
+        }
+
 
         // Server-side logic
         if (!this.level().isClientSide()) {
@@ -338,5 +364,23 @@ public class PortalEntity extends Entity {
                 }
             }
         }
+    }
+
+    /**
+     * Creates space around the portal by generating an explosion.
+     * Called once during portal initialization to clear surrounding terrain.
+     */
+    private void createExplosivePortalSpace() {
+        ServerLevel serverLevel = (ServerLevel) this.level();
+        Vec3 centerPos = this.position();
+
+        serverLevel.explode(
+                this,
+                centerPos.x,
+                centerPos.y + 1,
+                centerPos.z,
+                25.0f,
+                Level.ExplosionInteraction.BLOCK
+        );
     }
 }

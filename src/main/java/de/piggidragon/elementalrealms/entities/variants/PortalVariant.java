@@ -1,54 +1,64 @@
 package de.piggidragon.elementalrealms.entities.variants;
 
+import com.mojang.serialization.Codec;
+
 import java.util.Arrays;
 import java.util.Comparator;
 
 /**
- * Visual variants for portal entities. Each variant can have unique textures and effects.
+ * Visual variants for portal entities.
  */
 public enum PortalVariant {
-    SCHOOL(0),
-    ELEMENTAL(1),
-    DEVIANT(2),
-    ETERNAL(3);
+    SCHOOL(0, "school"),
+    ELEMENTAL(1, "elemental"),
+    DEVIANT(2, "deviant"),
+    ETERNAL(3, "eternal"),
+    RANDOM(4, "random");
 
     /**
-     * Array of variants sorted by ID for quick lookup
+     * Codec for serialization/deserialization in DataGen and JSON configs
      */
+    public static final Codec<PortalVariant> CODEC = Codec.STRING.xmap(
+            PortalVariant::byName,
+            PortalVariant::getName
+    );
+
+    // Sorted lookup array for fast ID-based retrieval
     private static final PortalVariant[] BY_ID = Arrays.stream(values()).sorted(
             Comparator.comparingInt(PortalVariant::getId)).toArray(PortalVariant[]::new);
 
-    /**
-     * Numeric ID of this variant for serialization
-     */
     private final int id;
+    private final String name;
 
-    /**
-     * Constructs a portal variant with a specific ID.
-     *
-     * @param id Unique numeric identifier for this variant
-     */
-    PortalVariant(int id) {
+    PortalVariant(int id, String name) {
         this.id = id;
+        this.name = name;
     }
 
     /**
-     * Retrieves a portal variant by its numeric ID.
-     * Uses modulo to wrap invalid IDs to valid range.
-     *
-     * @param id The variant ID to look up
-     * @return The portal variant corresponding to this ID
+     * Gets variant by ID, wrapping invalid IDs.
      */
     public static PortalVariant byId(int id) {
         return BY_ID[id % BY_ID.length];
     }
 
     /**
-     * Gets the numeric ID of this variant.
-     *
-     * @return The variant's unique identifier
+     * Gets variant by name, defaults to SCHOOL if not found.
      */
+    public static PortalVariant byName(String name) {
+        for (PortalVariant variant : values()) {
+            if (variant.name.equals(name)) {
+                return variant;
+            }
+        }
+        return SCHOOL;
+    }
+
     public int getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 }
