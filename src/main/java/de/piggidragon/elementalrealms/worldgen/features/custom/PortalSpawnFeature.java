@@ -1,7 +1,6 @@
 package de.piggidragon.elementalrealms.worldgen.features.custom;
 
 import com.mojang.serialization.Codec;
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
@@ -69,7 +68,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         if (pos.getY() < 41) portal.prime();
 
-        ElementalRealms.LOGGER.info("Spawning portal");
         level.addFreshEntity(portal);
         return true;
     }
