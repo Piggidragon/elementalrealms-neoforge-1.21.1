@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
@@ -354,25 +355,27 @@ public class PortalEntity extends Entity {
                     this.discard();
                 }
 
-                try {
-                    PortalUtils.findNearestPortal(player.level(), player.position(), 256);
-                } catch (Exception e) {
-                    PortalEntity portal = new PortalEntity(
-                            ModEntities.PORTAL_ENTITY.get(),
-                            player.level(),
-                            false,
-                            -1,
-                            returnLevelPos.keySet().iterator().next(),
-                            null
-                    );
-
-                    if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                        portal.setPos(0.5, 61, 2.5);
-                    } else {
-                        portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
-                    }
-                    player.level().addFreshEntity(portal);
+                if (PortalUtils.findNearestPortal(player.level().getServer().getLevel(targetLevel), new Vec3(0, 61, 0), 5) != null) {
+                    return;
                 }
+
+                PortalEntity portal = new PortalEntity(
+                        ModEntities.PORTAL_ENTITY.get(),
+                        player.level(),
+                        false,
+                        -1,
+                        returnLevelPos.keySet().iterator().next(),
+                        null
+                );
+
+                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                    portal.setPos(0.5, 61, 2.5);
+                } else {
+                    portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
+                }
+                ElementalRealms.LOGGER.info("Spawning Dimension Portal: " + portal.getPositionVec() + portal.level().dimension());
+                player.level().addFreshEntity(portal);
+
             } else {
                 // Teleporting FROM custom dimension BACK TO vanilla dimension
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());

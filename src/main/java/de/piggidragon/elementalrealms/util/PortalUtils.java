@@ -29,7 +29,7 @@ public class PortalUtils {
         return state.getFluidState().isEmpty();
     }
 
-    public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) throws NullPointerException {
+    public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) {
         AABB searchArea = new AABB(
                 position.x - searchRadius, position.y - searchRadius, position.z - searchRadius,
                 position.x + searchRadius, position.y + searchRadius, position.z + searchRadius
@@ -53,10 +53,6 @@ public class PortalUtils {
                     nearestPortal = portal;
                 }
             }
-        }
-
-        if (nearestPortal == null) {
-            throw new NullPointerException("No portal found within search radius.");
         }
 
         return nearestPortal;
