@@ -29,10 +29,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Dimensional portal entity that teleports players between worlds.
@@ -134,7 +131,7 @@ public class PortalEntity extends Entity {
         return new Vec3(this.getX(), this.getY(), this.getZ());
     }
 
-    private ServerLevel getTargetLevel(ResourceKey<Level> targetLevel) {
+    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
         return this.getServer().getLevel(targetLevel);
     }
 
@@ -339,7 +336,6 @@ public class PortalEntity extends Entity {
                 return;
             }
 
-            ServerLevel overworld = player.level().getServer().getLevel(Level.OVERWORLD);
             Set<Relative> relatives = Collections.emptySet();
             float yaw = player.getYRot();
             float pitch = player.getXRot();
@@ -347,10 +343,15 @@ public class PortalEntity extends Entity {
 
             // Teleporting FROM Overworld TO custom dimension
             if (portalLevel == Level.OVERWORLD) {
-                // Save player's current position for return trip
-                player.setData(ModAttachments.OVERWORLD_RETURN_POS, new Vec3(player.getX(), player.getY(), player.getZ()));
 
-                player.teleportTo(getTargetLevel(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
+                Map<ResourceKey<Level>, Vec3> returnLevelPos = Map.of(
+                        player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
+                );
+
+                // Save player's current position for return trip
+                player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
+
+                player.teleportTo(getLevelfromKey(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 // Remove this portal if configured to discard after use
@@ -358,17 +359,20 @@ public class PortalEntity extends Entity {
                     this.discard();
                 }
             } else {
-                // Teleporting FROM custom dimension BACK TO Overworld
-                Vec3 returnPos = player.getData(ModAttachments.OVERWORLD_RETURN_POS);
+                // Teleporting FROM custom dimension BACK TO vanilla dimension
+                Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
 
                 // Teleport to saved return position
-                double x = returnPos.x();
-                double y = returnPos.y();
-                double z = returnPos.z();
-                player.teleportTo(overworld, x, y, z + 1, relatives, yaw, pitch, setCamera);
+                double x = returnLevelPos.values().iterator().next().x();
+                double y = returnLevelPos.values().iterator().next().y();
+                double z = returnLevelPos.values().iterator().next().z();
+
+                ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
+
+                player.teleportTo(getLevelfromKey(returnLevel), x, y, z + 1, relatives, yaw, pitch, setCamera);
 
                 // Clear saved position
-                player.removeData(ModAttachments.OVERWORLD_RETURN_POS);
+                player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 
                 // Remove this portal if configured to discard after use
