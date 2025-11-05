@@ -4,6 +4,7 @@ import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
+import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -100,13 +101,11 @@ public class PortalEntity extends Entity {
         this.despawnTimeout = despawnTimeout;
         this.ownerUUID = ownerUUID;
 
-        for (ResourceKey<Level> levels : ModLevel.LEVELS) {
-            if (levels == targetLevel) {
-                this.targetLevel = targetLevel;
-            } else {
-                this.targetLevel = Level.OVERWORLD;
-                throw new IllegalArgumentException("Target level doesn't exist.");
-            }
+        if (ModLevel.LEVELS.contains(targetLevel)) {
+            this.targetLevel = targetLevel;
+        } else {
+            this.targetLevel = Level.OVERWORLD;
+            throw new IllegalArgumentException("Target level doesn't exist.");
         }
     }
 
@@ -341,8 +340,8 @@ public class PortalEntity extends Entity {
             float pitch = player.getXRot();
             boolean setCamera = true;
 
-            // Teleporting FROM Overworld TO custom dimension
-            if (portalLevel == Level.OVERWORLD) {
+            // Teleporting FROM vanilla dimension TO custom dimension
+            if (PortalUtils.isVanilla(portalLevel)) {
 
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = Map.of(
                         player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
