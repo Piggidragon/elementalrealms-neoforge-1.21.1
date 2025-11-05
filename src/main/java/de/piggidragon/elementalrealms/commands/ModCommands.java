@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.commands;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.piggidragon.elementalrealms.ElementalRealms;
@@ -53,16 +54,18 @@ public class ModCommands {
         dispatcher.register(Commands.literal("portal")
                 .requires(cs -> cs.hasPermission(2))
                 .then(Commands.literal("locate")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 30000000)))
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                            try {
-                                var portal = PortalUtils.findNearestPortal(player.level(), player.position(), 1000);
-                                ctx.getSource().sendSuccess(() -> Component.literal("Nearest Portal: " + portal.getPositionVec()), false);
-                                return 1;
-                            } catch (Exception e) {
-                                ctx.getSource().sendFailure(Component.literal(e.getMessage()));
+                            int radius = IntegerArgumentType.getInteger(ctx, "radius");
+
+                            var portal = PortalUtils.findNearestPortal(player.level(), player.position(), radius);
+                            if (portal == null) {
+                                ctx.getSource().sendFailure(Component.literal("Could not find portal in search radius."));
                                 return 0;
                             }
+                            ctx.getSource().sendSuccess(() -> Component.literal("Nearest Portal: " + portal.getPositionVec()), false);
+                            return 1;
                         })
                 )
                 .then(Commands.literal("set")
@@ -92,12 +95,12 @@ public class ModCommands {
 
                                         portal.setPos(targetPos.x, targetPos.y, targetPos.z);
                                         portal.setYRot(player.getYRot());
-                                        ElementalRealms.LOGGER.info("Spawning Portal: " + portal.getPositionVec() + portal.level().dimension());
                                         player.level().addFreshEntity(portal);
+                                        return 1;
                                     } else {
                                         ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
+                                        return 0;
                                     }
-                                    return 1;
                                 })
                         )
                 )
