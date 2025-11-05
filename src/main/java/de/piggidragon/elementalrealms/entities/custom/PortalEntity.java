@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.entities.custom;
 
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
@@ -96,12 +97,20 @@ public class PortalEntity extends Entity {
      * @param targetLevel    The dimension to teleport players to
      * @param ownerUUID      UUID of the player who created this portal
      */
-    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) throws IllegalArgumentException {
         this(type, level);
         this.discard = discard;
         this.despawnTimeout = despawnTimeout;
-        this.targetLevel = targetLevel;
         this.ownerUUID = ownerUUID;
+
+        for (ResourceKey<Level> levels : ModLevel.LEVELS) {
+            if (levels == targetLevel) {
+                this.targetLevel = targetLevel;
+            } else {
+                this.targetLevel = Level.OVERWORLD;
+                throw new IllegalArgumentException("Target level doesn't exist.");
+            }
+        }
     }
 
     public UUID getOwnerUUID() {
