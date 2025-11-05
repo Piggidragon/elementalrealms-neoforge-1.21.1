@@ -77,7 +77,7 @@ public class DragonDeathHandler {
                 overworld,
                 false,
                 -1,
-                server.getLevel(ModLevel.SCHOOL_DIMENSION),
+                ModLevel.SCHOOL_DIMENSION,
                 null
         );
 

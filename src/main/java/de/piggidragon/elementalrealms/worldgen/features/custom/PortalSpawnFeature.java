@@ -54,7 +54,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
                 level.getLevel(),
                 false,
                 -1,
-                level.getServer().getLevel(ModLevel.TEST_DIMENSION),
+                ModLevel.TEST_DIMENSION,
                 null
         );
 

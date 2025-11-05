@@ -47,7 +47,7 @@ public class PortalEntity extends Entity {
     private final ResourceKey<Level> portalLevel;
     private int idleAnimationTimer = 0;
 
-    private ServerLevel targetLevel;
+    private ResourceKey<Level> targetLevel;
     private UUID ownerUUID;
     private boolean initialized = false;
 
@@ -77,7 +77,7 @@ public class PortalEntity extends Entity {
 
         // Default target level
         if (!level.isClientSide() && level.getServer() != null) {
-            this.targetLevel = level.getServer().getLevel(Level.OVERWORLD);
+            this.targetLevel = Level.OVERWORLD;
         }
 
         // Start spawn animation immediately
@@ -96,7 +96,7 @@ public class PortalEntity extends Entity {
      * @param targetLevel    The dimension to teleport players to
      * @param ownerUUID      UUID of the player who created this portal
      */
-    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ServerLevel targetLevel, @Nullable UUID ownerUUID) {
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
         this(type, level);
         this.discard = discard;
         this.despawnTimeout = despawnTimeout;
@@ -123,6 +123,10 @@ public class PortalEntity extends Entity {
 
     public Vec3 getPositionVec() {
         return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
+    private ServerLevel getTargetLevel(ResourceKey<Level> targetLevel) {
+        return this.getServer().getLevel(targetLevel);
     }
 
     public void setVariant(PortalVariant variant) {
@@ -204,10 +208,10 @@ public class PortalEntity extends Entity {
                     Registries.DIMENSION,
                     ResourceLocation.parse(levelKey)
             );
-            this.targetLevel = this.getServer().getLevel(key);
+            this.targetLevel = key;
         } else if (levelKey.isEmpty() && !this.level().isClientSide() && this.getServer() != null) {
             // Default to Overworld
-            this.targetLevel = this.getServer().getLevel(Level.OVERWORLD);
+            this.targetLevel = Level.OVERWORLD;
         }
 
         String uuidString = valueInput.getStringOr("OwnerUUID", "");
@@ -235,7 +239,7 @@ public class PortalEntity extends Entity {
         valueOutput.putInt("Variant", this.getVariant().getId());
 
         if (this.targetLevel != null) {
-            valueOutput.putString("TargetLevel", this.targetLevel.dimension().location().toString());
+            valueOutput.putString("TargetLevel", this.targetLevel.toString());
         }
 
         if (this.ownerUUID != null) {
@@ -337,7 +341,7 @@ public class PortalEntity extends Entity {
                 // Save player's current position for return trip
                 player.setData(ModAttachments.OVERWORLD_RETURN_POS, new Vec3(player.getX(), player.getY(), player.getZ()));
 
-                player.teleportTo(targetLevel, 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getTargetLevel(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 // Remove this portal if configured to discard after use
