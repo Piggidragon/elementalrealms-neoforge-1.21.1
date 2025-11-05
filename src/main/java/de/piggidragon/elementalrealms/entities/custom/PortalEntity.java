@@ -205,13 +205,14 @@ public class PortalEntity extends Entity {
 
         String levelKey = valueInput.getStringOr("TargetLevel", "");
         if (!levelKey.isEmpty() && !this.level().isClientSide()) {
-            ResourceKey<Level> key = ResourceKey.create(
-                    Registries.DIMENSION,
-                    ResourceLocation.parse(levelKey)
-            );
-            this.targetLevel = key;
+            ResourceLocation location = ResourceLocation.tryParse(levelKey);
+            if (location != null) {
+                this.targetLevel = ResourceKey.create(Registries.DIMENSION, location);
+            } else {
+                // Fall-back oder Logging
+                this.targetLevel = Level.OVERWORLD;
+            }
         } else if (levelKey.isEmpty() && !this.level().isClientSide() && this.getServer() != null) {
-            // Default to Overworld
             this.targetLevel = Level.OVERWORLD;
         }
 
@@ -240,7 +241,7 @@ public class PortalEntity extends Entity {
         valueOutput.putInt("Variant", this.getVariant().getId());
 
         if (this.targetLevel != null) {
-            valueOutput.putString("TargetLevel", this.targetLevel.toString());
+            valueOutput.putString("TargetLevel", this.targetLevel.location().toString());
         }
 
         if (this.ownerUUID != null) {
@@ -359,7 +360,7 @@ public class PortalEntity extends Entity {
                     PortalEntity portal = new PortalEntity(
                             ModEntities.PORTAL_ENTITY.get(),
                             player.level(),
-                            true,
+                            false,
                             -1,
                             returnLevelPos.keySet().iterator().next(),
                             null
