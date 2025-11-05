@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.entities.custom;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
@@ -348,6 +349,16 @@ public class PortalEntity extends Entity {
                 player.teleportTo(getLevelfromKey(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
+                if (discard) {
+                    this.discard();
+                }
+
+                try {
+                    PortalUtils.findNearestPortal(player.level(), player.position(), 256);
+                } catch (Exception e) {
+                    return;
+                }
+
                 PortalEntity portal = new PortalEntity(
                         ModEntities.PORTAL_ENTITY.get(),
                         player.level(),
@@ -357,13 +368,12 @@ public class PortalEntity extends Entity {
                         null
                 );
 
+                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                    portal.setPos(0.5, 61, 2.5);
+                }
                 portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
                 player.level().addFreshEntity(portal);
 
-                // Remove this portal if configured to discard after use
-                if (discard) {
-                    this.discard();
-                }
             } else {
                 // Teleporting FROM custom dimension BACK TO vanilla dimension
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
