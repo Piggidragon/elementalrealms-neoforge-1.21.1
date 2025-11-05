@@ -355,39 +355,34 @@ public class PortalEntity extends Entity {
                     this.discard();
                 }
 
-                if (PortalUtils.findNearestPortal(player.level().getServer().getLevel(targetLevel), new Vec3(0, 61, 0), 5) != null) {
-                    return;
-                }
+                Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
+                        ? new Vec3(0.5, 61, 2.5)
+                        : new Vec3(0.5, Heightmap.Types.OCEAN_FLOOR.ordinal() + 0.5, 0.5);
 
-                PortalEntity portal = new PortalEntity(
-                        ModEntities.PORTAL_ENTITY.get(),
-                        player.level(),
-                        false,
-                        -1,
-                        returnLevelPos.keySet().iterator().next(),
-                        null
-                );
-
-                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                    portal.setPos(0.5, 61, 2.5);
-                } else {
-                    portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
+                if (PortalUtils.findNearestPortal(getLevelfromKey(targetLevel), destinationPos, 5) == null) {
+                    PortalEntity portal = new PortalEntity(
+                            ModEntities.PORTAL_ENTITY.get(),
+                            player.level(),
+                            false,
+                            -1,
+                            returnLevelPos.keySet().iterator().next(),
+                            null
+                    );
+                    portal.setPos(destinationPos.x, destinationPos.y, destinationPos.z);
+                    ElementalRealms.LOGGER.info("Spawning Dimension Portal: " + portal.getPositionVec() + portal.level().dimension());
+                    player.level().addFreshEntity(portal);
                 }
-                ElementalRealms.LOGGER.info("Spawning Dimension Portal: " + portal.getPositionVec() + portal.level().dimension());
-                player.level().addFreshEntity(portal);
 
             } else {
                 // Teleporting FROM custom dimension BACK TO vanilla dimension
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
 
                 // Teleport to saved return position
-                double x = returnLevelPos.values().iterator().next().x();
-                double y = returnLevelPos.values().iterator().next().y();
-                double z = returnLevelPos.values().iterator().next().z();
+                Vec3 returnPos = returnLevelPos.values().iterator().next();
 
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), x, y, z + 1, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z + 1, relatives, yaw, pitch, setCamera);
 
                 // Clear saved position
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
