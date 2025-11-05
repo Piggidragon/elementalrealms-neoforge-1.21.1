@@ -356,24 +356,22 @@ public class PortalEntity extends Entity {
                 try {
                     PortalUtils.findNearestPortal(player.level(), player.position(), 256);
                 } catch (Exception e) {
-                    return;
+                    PortalEntity portal = new PortalEntity(
+                            ModEntities.PORTAL_ENTITY.get(),
+                            player.level(),
+                            true,
+                            -1,
+                            returnLevelPos.keySet().iterator().next(),
+                            null
+                    );
+
+                    if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                        portal.setPos(0.5, 61, 2.5);
+                    } else {
+                        portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
+                    }
+                    player.level().addFreshEntity(portal);
                 }
-
-                PortalEntity portal = new PortalEntity(
-                        ModEntities.PORTAL_ENTITY.get(),
-                        player.level(),
-                        true,
-                        -1,
-                        returnLevelPos.keySet().iterator().next(),
-                        null
-                );
-
-                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                    portal.setPos(0.5, 61, 2.5);
-                }
-                portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
-                player.level().addFreshEntity(portal);
-
             } else {
                 // Teleporting FROM custom dimension BACK TO vanilla dimension
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
