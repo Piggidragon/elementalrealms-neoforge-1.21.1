@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -40,7 +41,7 @@ public class ModCommands {
     };
     public static final SuggestionProvider<CommandSourceStack> LEVEL_SUGGESTIONS = (context, builder) -> {
         for (ResourceKey<Level> level : ModLevel.LEVELS) {
-            builder.suggest(level.toString());
+            builder.suggest(level.location().toString());
         }
         return builder.buildFuture();
     };
@@ -65,7 +66,7 @@ public class ModCommands {
                         })
                 )
                 .then(Commands.literal("set")
-                        .then(Commands.argument("dimension", StringArgumentType.word())
+                        .then(Commands.argument("dimension", StringArgumentType.greedyString())
                                 .suggests(LEVEL_SUGGESTIONS)
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -81,9 +82,17 @@ public class ModCommands {
                                                 dimensionKey,
                                                 player.getUUID()
                                         );
+                                        Vec3 lookVec = player.getLookAngle();
+                                        double distance = 2.0;
+                                        Vec3 targetPos = new Vec3(
+                                                player.getX() + lookVec.x * distance,
+                                                player.getY() + 0.5,
+                                                player.getZ() + lookVec.z * distance
+                                        );
 
-                                        portal.setPos(player.position().x + 2, player.position().y, player.position().z);
+                                        portal.setPos(targetPos.x, targetPos.y, targetPos.z);
                                         portal.setYRot(player.getYRot());
+                                        ElementalRealms.LOGGER.info("Spawning Portal: " + portal.getPositionVec() + portal.level().dimension());
                                         player.level().addFreshEntity(portal);
                                     } else {
                                         ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
