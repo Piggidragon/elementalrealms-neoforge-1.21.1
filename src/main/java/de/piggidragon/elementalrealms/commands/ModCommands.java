@@ -3,14 +3,21 @@ package de.piggidragon.elementalrealms.commands;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.entities.ModEntities;
+import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinitiesRoll;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -31,6 +38,12 @@ public class ModCommands {
         }
         return builder.buildFuture();
     };
+    public static final SuggestionProvider<CommandSourceStack> LEVEL_SUGGESTIONS = (context, builder) -> {
+        for (ResourceKey<Level> level : ModLevel.LEVELS) {
+            builder.suggest(level.toString());
+        }
+        return builder.buildFuture();
+    };
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
@@ -38,7 +51,6 @@ public class ModCommands {
 
         dispatcher.register(Commands.literal("portal")
                 .requires(cs -> cs.hasPermission(2))
-
                 .then(Commands.literal("locate")
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -51,6 +63,34 @@ public class ModCommands {
                                 return 0;
                             }
                         })
+                )
+                .then(Commands.literal("set")
+                        .then(Commands.argument("dimension", StringArgumentType.word())
+                                .suggests(LEVEL_SUGGESTIONS)
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    String dimString = StringArgumentType.getString(ctx, "dimension");
+                                    ResourceLocation location = ResourceLocation.parse(dimString);
+                                    ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, location);
+                                    try {
+                                        PortalEntity portal = new PortalEntity(
+                                                ModEntities.PORTAL_ENTITY.get(),
+                                                player.level(),
+                                                true,
+                                                -1,
+                                                dimensionKey,
+                                                player.getUUID()
+                                        );
+
+                                        portal.setPos(player.position().x + 2, player.position().y, player.position().z);
+                                        portal.setYRot(player.getYRot());
+                                        player.level().addFreshEntity(portal);
+                                    } catch (IllegalArgumentException e) {
+                                        ctx.getSource().sendFailure(Component.literal("Invalid dimension"));
+                                    }
+                                    return 1;
+                                })
+                        )
                 )
         );
 
