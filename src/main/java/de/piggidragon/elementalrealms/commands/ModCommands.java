@@ -72,7 +72,7 @@ public class ModCommands {
                                     String dimString = StringArgumentType.getString(ctx, "dimension");
                                     ResourceLocation location = ResourceLocation.parse(dimString);
                                     ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, location);
-                                    try {
+                                    if (ModLevel.LEVELS.contains(dimensionKey)) {
                                         PortalEntity portal = new PortalEntity(
                                                 ModEntities.PORTAL_ENTITY.get(),
                                                 player.level(),
@@ -85,8 +85,8 @@ public class ModCommands {
                                         portal.setPos(player.position().x + 2, player.position().y, player.position().z);
                                         portal.setYRot(player.getYRot());
                                         player.level().addFreshEntity(portal);
-                                    } catch (IllegalArgumentException e) {
-                                        ctx.getSource().sendFailure(Component.literal("Invalid dimension"));
+                                    } else {
+                                        ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
                                     }
                                     return 1;
                                 })

@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
-import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
@@ -95,18 +95,12 @@ public class PortalEntity extends Entity {
      * @param targetLevel    The dimension to teleport players to
      * @param ownerUUID      UUID of the player who created this portal
      */
-    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) throws IllegalArgumentException {
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
         this(type, level);
         this.discard = discard;
         this.despawnTimeout = despawnTimeout;
         this.ownerUUID = ownerUUID;
-
-        if (ModLevel.LEVELS.contains(targetLevel)) {
-            this.targetLevel = targetLevel;
-        } else {
-            this.targetLevel = Level.OVERWORLD;
-            throw new IllegalArgumentException("Target level doesn't exist.");
-        }
+        this.targetLevel = targetLevel;
     }
 
     public UUID getOwnerUUID() {
@@ -352,6 +346,15 @@ public class PortalEntity extends Entity {
 
                 player.teleportTo(getLevelfromKey(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
+
+                PortalEntity portal = new PortalEntity(
+                        ModEntities.PORTAL_ENTITY.get(),
+                        player.level(),
+                        true,
+                        -1,
+                        returnLevelPos.keySet().iterator().next(),
+                        null
+                );
 
                 // Remove this portal if configured to discard after use
                 if (discard) {
