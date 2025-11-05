@@ -39,7 +39,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             return false;
         }
 
-        if (!PortalUtils.isValidDimensionForSpawn(level.getLevel(), pos)) {
+        if (!PortalUtils.isValidDimensionForSpawn(level, pos)) {
             return false;
         }
 

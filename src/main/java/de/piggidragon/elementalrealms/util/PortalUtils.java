@@ -62,14 +62,24 @@ public class PortalUtils {
         return nearestPortal;
     }
 
-    public static boolean isValidDimensionForSpawn(ServerLevel level, BlockPos pos) {
-        ResourceKey<Level> dimension = level.dimension();
-
-        if (dimension == Level.OVERWORLD) {
+    public static boolean isVanilla(ResourceKey<Level> level) {
+        if (level == Level.OVERWORLD) {
             return true;
-        } else if (dimension == Level.NETHER) {
+        } else if (level == Level.NETHER) {
+            return true;
+        } else if (level == Level.END) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isValidDimensionForSpawn(WorldGenLevel level, BlockPos pos) {
+
+        if (level == Level.OVERWORLD) {
+            return true;
+        } else if (level == Level.NETHER) {
             return pos.getY() < 128; // Avoid ceiling spawning
-        } else if (dimension == Level.END) {
+        } else if (level == Level.END) {
             return pos.getY() > 50; // Avoid void spawning
         }
         return false;
