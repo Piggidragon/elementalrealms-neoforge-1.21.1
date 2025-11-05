@@ -25,6 +25,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
@@ -355,6 +356,9 @@ public class PortalEntity extends Entity {
                         returnLevelPos.keySet().iterator().next(),
                         null
                 );
+
+                portal.setPos(0, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES.ordinal(), 0);
+                player.level().addFreshEntity(portal);
 
                 // Remove this portal if configured to discard after use
                 if (discard) {
