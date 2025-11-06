@@ -76,7 +76,7 @@ public class ModAttachments {
     );
 
     /**
-     * Stores Overworld position before entering School Dimension.
+     * Stores the return position and dimension for inter-dimensional travel.
      */
     public static final Supplier<AttachmentType<Map<ResourceKey<Level>, Vec3>>> RETURN_LEVEL_POS = ATTACHMENT_TYPE.register(
             "return_level_pos",
