@@ -379,32 +379,37 @@ public class PortalEntity extends Entity {
                         player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
                 );
 
-                player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
-                player.teleportTo(getLevelfromKey(targetLevel), 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
-                player.setPortalCooldown();
-
-                if (discard) {
-                    this.discard();
-                }
-
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
                         ? new Vec3(0.5, 61, 2.5) // Fixed spawn in school dimension
                         : new Vec3(0.5, Heightmap.Types.OCEAN_FLOOR.ordinal() + 0.5, 0.5);
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
-                // Create return portal if one doesn't exist nearby
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 10);
+                player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
+                player.setPortalCooldown();
 
-                if (existingPortal == null) {
-                    PortalEntity portal = new PortalEntity(
-                            ModEntities.PORTAL_ENTITY.get(),
-                            destinationLevel,
-                            returnLevelPos.keySet().iterator().next()
-                    );
-                    portal.setPos(destinationPos.x, destinationPos.y, destinationPos.z);
-                    destinationLevel.addFreshEntity(portal);
+                if (discard) {
+                    this.discard();
                 }
+
+                MinecraftServer server = destinationLevel.getServer();
+                ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
+
+                // Schedule portal check for next tick
+                server.execute(() -> {
+                    PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 5);
+
+                    if (existingPortal == null) {
+                        PortalEntity portal = new PortalEntity(
+                                ModEntities.PORTAL_ENTITY.get(),
+                                destinationLevel,
+                                returnLevel
+                        );
+                        portal.setPos(destinationPos.x, destinationPos.y, destinationPos.z);
+                        destinationLevel.addFreshEntity(portal);
+                    }
+                });
 
             } else {
                 // Handle return teleportation from custom dimension to vanilla
