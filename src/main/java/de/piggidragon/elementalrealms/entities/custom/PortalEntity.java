@@ -402,23 +402,18 @@ public class PortalEntity extends Entity {
                     this.discard();
                 }
 
-                MinecraftServer server = destinationLevel.getServer();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 10);
 
-                // Schedule portal check for next tick
-                server.execute(() -> {
-                    PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 5);
-
-                    if (existingPortal == null) {
-                        PortalEntity portal = new PortalEntity(
-                                ModEntities.PORTAL_ENTITY.get(),
-                                destinationLevel,
-                                returnLevel
-                        );
-                        portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
-                        destinationLevel.addFreshEntity(portal);
-                    }
-                });
+                if (existingPortal == null) {
+                    PortalEntity portal = new PortalEntity(
+                            ModEntities.PORTAL_ENTITY.get(),
+                            destinationLevel,
+                            returnLevel
+                    );
+                    portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
+                    destinationLevel.addFreshEntity(portal);
+                }
 
             } else {
                 // Handle return teleportation from custom dimension to vanilla
