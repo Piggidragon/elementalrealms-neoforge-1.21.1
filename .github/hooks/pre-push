@@ -1,5 +1,0 @@
-#!/bin/bash
-CHANGED=$(git diff --name-only @{u}..HEAD -- 'src/main/java/**/*.java' 2>/dev/null | wc -l)
-if [ "$CHANGED" -gt 0 ]; then
-    echo "📝 $CHANGED files → auto-docs after push"
-fi
