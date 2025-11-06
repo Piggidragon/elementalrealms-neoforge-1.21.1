@@ -62,5 +62,6 @@ public class ElementalRealms {
      */
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("Common setup for {}", MODID);
+        LOGGER.info("Elemental Realms mod setup complete.");
     }
 }
