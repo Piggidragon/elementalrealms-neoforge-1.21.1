@@ -27,7 +27,10 @@ import org.slf4j.Logger;
  */
 @Mod(ElementalRealms.MODID)
 public class ElementalRealms {
+    /** The unique identifier for this mod used by NeoForge. */
     public static final String MODID = "elementalrealms";
+    
+    /** Logger instance for mod-wide logging and debugging. */
     public static final Logger LOGGER = LogUtils.getLogger();
 
     /**
@@ -37,28 +40,41 @@ public class ElementalRealms {
      * @param modContainer Mod metadata and configuration container
      */
     public ElementalRealms(IEventBus modEventBus, ModContainer modContainer) {
-        // Register all mod content
+        // Register data attachments for player affinities and dimension data
         ModAttachments.register(modEventBus);
+        
+        // Register magic system items (affinity orbs and dimension keys)
         AffinityItems.register(modEventBus);
         DimensionItems.register(modEventBus);
+        
+        // Register custom entities and blocks
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
+        
+        // Register creative mode tabs for mod content organization
         ModCreativeTabs.register(modEventBus);
+        
+        // Register world generation components (structures, chunk generators, features)
         ModStructurePlacements.register(modEventBus);
         ModStructures.register(modEventBus);
         ModChunkgen.register(modEventBus);
         ModFeatures.register(modEventBus);
 
-        // Client-only: register configuration screen
+        // Register configuration screen factory for client-side settings
+        // This only runs on the physical client to avoid server-side issues
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
 
+        // Subscribe to common setup event for post-registration initialization
         modEventBus.addListener(this::commonSetup);
     }
 
     /**
      * Common setup phase executed after registration finalization.
+     * Runs on both client and server after all registries are frozen.
+     *
+     * @param event The common setup event containing deferred work queue
      */
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("Common setup for {}", MODID);
