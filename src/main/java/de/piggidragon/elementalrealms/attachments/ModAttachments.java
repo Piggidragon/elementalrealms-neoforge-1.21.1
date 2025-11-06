@@ -61,7 +61,9 @@ public class ModAttachments {
      */
     static Codec<ResourceKey<Level>> resourceKeyCodec = ResourceKey.codec(Registries.DIMENSION);
 
-    // Provides dimension keys for map codec
+    /**
+     * Provides dimension keys for map codec.
+     */
     static Supplier<Stream<String>> keys = () -> Stream.of(
             "minecraft:overworld",
             "minecraft:the_nether",
