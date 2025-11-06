@@ -1,0 +1,161 @@
+name: Documentation Generator
+
+on:
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - 'src/main/java/**/*.java'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find changed files
+        id: changes
+        run: |
+          git fetch origin main:main 2>/dev/null || git fetch origin main:main
+          CHANGED_FILES=$(git diff --name-only main...HEAD -- 'src/main/java/**/*.java' 2>/dev/null || echo "")
+          FILE_LIST=$(echo "$CHANGED_FILES" | tr '\n' ',' | sed 's/,$//')
+          FILE_COUNT=$(echo "$CHANGED_FILES" | grep -c '\.java$' || echo "0")
+          echo "files=${FILE_LIST}" >> $GITHUB_OUTPUT
+          echo "count=${FILE_COUNT}" >> $GITHUB_OUTPUT
+
+      - name: Create documentation issues
+        if: steps.changes.outputs.count > 0
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const filesString = '${{ steps.changes.outputs.files }}';
+            const branchName = '${{ github.ref_name }}';
+            const files = filesString.split(',').filter(f => f.trim().length > 0);
+            
+            if (files.length === 0) {
+              console.log('No files to document');
+              return;
+            }
+            
+            const batchSize = 5;
+            const totalBatches = Math.ceil(files.length / batchSize);
+            
+            for (let i = 0; i < files.length; i += batchSize) {
+              const batch = files.slice(i, i + batchSize);
+              const batchNumber = Math.floor(i / batchSize) + 1;
+            
+              const issueBody = `## Documentation Request - COMMENTS ONLY
+            
+            **Branch:** \`${branchName}\`
+            **Files in batch:** ${batch.length}
+            
+            ### Files to document:
+            ${batch.map(f => `- \`${f}\``).join('\n')}
+            
+            ---
+            
+            @github-copilot Please add documentation following these rules:
+            
+            ### CRITICAL: ADD COMMENTS ONLY - NO CODE CHANGES
+            
+            #### Rule 1: Classes
+            Add brief JavaDoc describing the class purpose:
+            \`\`\`java
+            /**
+             * Manages portal entities and handles dimensional teleportation.
+             */
+            public class PortalEntity extends Entity {
+            \`\`\`
+            
+            #### Rule 2: Regular Methods
+            Add JavaDoc with description, @param, and @return:
+            \`\`\`java
+            /**
+             * Teleports the entity to the specified dimension.
+             * @param entity The entity to teleport
+             * @param targetDim Target dimension key
+             * @return true if teleportation succeeded
+             */
+            public boolean teleport(Entity entity, ResourceKey<Level> targetDim) {
+            \`\`\`
+            
+            #### Rule 3: Override Methods
+            Add only a brief one-line comment:
+            \`\`\`java
+            /** Handles portal entity tick logic. */
+            @Override
+            public void tick() {
+            \`\`\`
+            
+            #### Rule 4: Variables
+            Add comments ONLY for unclear or complex variables:
+            \`\`\`java
+            // Portal cooldown duration in ticks (3 seconds at 20 TPS)
+            private int cooldownTicks = 60;
+            
+            // Self-explanatory - no comment needed
+            private boolean isActive;
+            \`\`\`
+            
+            #### Rule 5: Code Section Comments
+            Add brief comments explaining logical blocks:
+            \`\`\`java
+            // Validate teleportation prerequisites
+            if (entity == null || !isActive()) return false;
+            
+            // Calculate destination coordinates
+            BlockPos destination = calculateDestination();
+            
+            // Execute teleportation
+            return performTeleport(entity, destination);
+            \`\`\`
+            
+            #### Rule 6: Complex Code Explanation
+            Add detailed comments for difficult logic:
+            \`\`\`java
+            // Calculate portal frame orientation using vector cross products
+            // This ensures the frame stays perpendicular to portal direction
+            Vec3 right = direction.cross(new Vec3(0, 1, 0)).normalize();
+            Vec3 up = right.cross(direction).normalize();
+            \`\`\`
+            
+            ---
+            
+            ### What NOT to do:
+            - ❌ Do NOT change method signatures
+            - ❌ Do NOT modify logic or algorithms
+            - ❌ Do NOT rename variables or methods
+            - ❌ Do NOT refactor code structure
+            - ❌ Do NOT add/remove functionality
+            - ❌ Do NOT change imports
+            
+            ### What to do:
+            - ✅ Add JavaDoc comments
+            - ✅ Add inline comments
+            - ✅ Add explanatory block comments
+            - ✅ Keep comments concise and in English
+            - ✅ Explain WHY, not WHAT
+            
+            Please provide documentation suggestions using \`\`\`suggestion blocks.`;
+            
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📝 Documentation Batch ${batchNumber}/${totalBatches} - ${branchName}`,
+                body: issueBody,
+                labels: ['documentation', 'auto-generated']
+              });
+            
+              console.log(`Created issue #${issue.data.number} for batch ${batchNumber}/${totalBatches}`);
+            }
+            
+            console.log(`✅ Created ${totalBatches} documentation batch(es) for ${files.length} file(s)`);
