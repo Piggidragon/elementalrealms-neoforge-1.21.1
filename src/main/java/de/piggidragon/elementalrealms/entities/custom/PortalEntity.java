@@ -359,11 +359,10 @@ public class PortalEntity extends Entity {
                     this.discard();
                 }
 
+
                 Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
-                        ? new Vec3(2.5, 61, 0.5)
+                        ? new Vec3(0.5, 61, 2.5)
                         : new Vec3(0.5, Heightmap.Types.OCEAN_FLOOR.ordinal() + 0.5, 0.5);
-
-
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
                 PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 5);
