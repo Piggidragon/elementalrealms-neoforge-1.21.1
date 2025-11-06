@@ -52,10 +52,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 level.getLevel(),
-                false,
-                -1,
-                ModLevel.TEST_DIMENSION,
-                null
+                ModLevel.TEST_DIMENSION
         );
 
         // Position the portal precisely centered on the block

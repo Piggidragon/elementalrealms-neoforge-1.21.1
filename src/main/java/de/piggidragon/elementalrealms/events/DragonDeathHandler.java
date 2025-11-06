@@ -75,10 +75,7 @@ public class DragonDeathHandler {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 overworld,
-                false,
-                -1,
-                ModLevel.SCHOOL_DIMENSION,
-                null
+                ModLevel.SCHOOL_DIMENSION
         );
 
         // Find safe spawn position at world spawn
