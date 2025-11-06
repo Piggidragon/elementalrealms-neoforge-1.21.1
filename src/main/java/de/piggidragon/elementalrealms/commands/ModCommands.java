@@ -17,6 +17,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -52,21 +53,27 @@ public class ModCommands {
         var dispatcher = event.getDispatcher();
 
         dispatcher.register(Commands.literal("portal")
-                .requires(cs -> cs.hasPermission(2))
+                .requires(cs -> cs.hasPermission(2)) // Requires OP level 2
                 .then(Commands.literal("locate")
-                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 30000000)))
-                        .executes(ctx -> {
-                            ServerPlayer player = ctx.getSource().getPlayerOrException();
-                            int radius = IntegerArgumentType.getInteger(ctx, "radius");
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 30000000))
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    int radius = IntegerArgumentType.getInteger(ctx, "radius");
 
-                            var portal = PortalUtils.findNearestPortal(player.level(), player.position(), radius);
-                            if (portal == null) {
-                                ctx.getSource().sendFailure(Component.literal("Could not find portal in search radius."));
-                                return 0;
-                            }
-                            ctx.getSource().sendSuccess(() -> Component.literal("Nearest Portal: " + portal.getPositionVec()), false);
-                            return 1;
-                        })
+                                    ServerLevel level = player.level();
+                                    PortalEntity portal = PortalUtils.findNearestPortal(level, player.position(), radius);
+
+                                    if (portal != null) {
+                                        ctx.getSource().sendSuccess(() -> Component.literal(
+                                                "Found portal at: " + portal.position() +
+                                                        " (Distance: " + String.format("%.2f", portal.position().distanceTo(player.position())) + " blocks)"
+                                        ), false);
+                                    } else {
+                                        ctx.getSource().sendFailure(Component.literal("No portal found within " + radius + " blocks"));
+                                    }
+                                    return 1;
+                                })
+                        )
                 )
                 .then(Commands.literal("set")
                         .then(Commands.argument("dimension", StringArgumentType.greedyString())
