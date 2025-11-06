@@ -145,8 +145,13 @@ public class PortalEntity extends Entity {
         this.entityData.set(DATA_VARIANT, variant.getId());
     }
 
+    @Nullable
     private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
-        return this.getServer().getLevel(targetLevel);
+        MinecraftServer server = this.getServer();
+        if (server == null) {
+            return null;
+        }
+        return server.getLevel(targetLevel);
     }
 
     /**
@@ -403,7 +408,7 @@ public class PortalEntity extends Entity {
                 }
 
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 10);
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 128);
 
                 if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
@@ -418,6 +423,10 @@ public class PortalEntity extends Entity {
             } else {
                 // Handle return teleportation from custom dimension to vanilla
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
+                if (returnLevelPos == null || returnLevelPos.isEmpty()) {
+                    player.displayClientMessage(Component.literal("No return position found!"), true);
+                    return;
+                }
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
