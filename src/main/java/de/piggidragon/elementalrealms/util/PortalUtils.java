@@ -1,10 +1,10 @@
 package de.piggidragon.elementalrealms.util;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -30,31 +30,41 @@ public class PortalUtils {
     }
 
     public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) {
+        ElementalRealms.LOGGER.info("=== Starting portal search ===");
+        ElementalRealms.LOGGER.info("Level: " + level.dimension().location());
+        ElementalRealms.LOGGER.info("Search position: " + position);
+        ElementalRealms.LOGGER.info("Search radius: " + searchRadius);
+
         AABB searchArea = new AABB(
                 position.x - searchRadius, position.y - searchRadius, position.z - searchRadius,
                 position.x + searchRadius, position.y + searchRadius, position.z + searchRadius
         );
 
-        // Use getEntities with predicate for more control
-        List<Entity> entities = level.getEntities(
-                (Entity) null,  // Entity to exclude (null = none)
+        ElementalRealms.LOGGER.info("Search AABB: " + searchArea);
+
+        // First check: Get ALL entities in the area
+        List<PortalEntity> portals = level.getEntitiesOfClass(
+                PortalEntity.class,
                 searchArea,
-                entity -> entity instanceof PortalEntity && entity.isAlive() && !entity.isRemoved()
+                portal -> portal.isAlive() && !portal.isRemoved()
         );
+        ElementalRealms.LOGGER.info("Total entities in search area: " + portals.size());
 
         PortalEntity nearestPortal = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Entity entity : entities) {
-            if (entity instanceof PortalEntity portal) {
+        for (PortalEntity portal : portals) {
                 double distance = portal.position().distanceTo(position);
+            ElementalRealms.LOGGER.info("  Portal at " + portal.position() + ", distance: " + distance);
                 if (distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestPortal = portal;
-                }
+
             }
         }
 
+        ElementalRealms.LOGGER.info("Nearest portal result: " + (nearestPortal != null ? nearestPortal.position() : "NULL"));
+        ElementalRealms.LOGGER.info("=== End portal search ===");
         return nearestPortal;
     }
 

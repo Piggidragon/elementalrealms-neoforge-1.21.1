@@ -394,7 +394,7 @@ public class PortalEntity extends Entity {
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
                 // Create return portal if one doesn't exist nearby
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 5);
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 10);
 
                 if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
