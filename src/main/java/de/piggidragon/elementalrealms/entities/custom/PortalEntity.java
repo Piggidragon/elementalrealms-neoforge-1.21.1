@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
@@ -47,10 +46,10 @@ public class PortalEntity extends Entity {
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState spawnAnimationState = new AnimationState();
     private final ResourceKey<Level> portalLevel;
-    private int idleAnimationTimer = 0;
+    private int idleAnimationTimer = -1;
 
     private ResourceKey<Level> targetLevel;
-    private UUID ownerUUID;
+    private UUID ownerUUID = null;
     private boolean initialized = false;
 
     /**
@@ -86,6 +85,11 @@ public class PortalEntity extends Entity {
         if (level.isClientSide()) {
             this.spawnAnimationState.start(0);
         }
+    }
+
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, ResourceKey<Level> targetLevel) {
+        this(type, level);
+        this.targetLevel = targetLevel;
     }
 
     /**
@@ -356,21 +360,22 @@ public class PortalEntity extends Entity {
                 }
 
                 Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
-                        ? new Vec3(0.5, 61, 2.5)
+                        ? new Vec3(2.5, 61, 0.5)
                         : new Vec3(0.5, Heightmap.Types.OCEAN_FLOOR.ordinal() + 0.5, 0.5);
 
-                if (PortalUtils.findNearestPortal(getLevelfromKey(targetLevel), destinationPos, 5) == null) {
+
+                ServerLevel destinationLevel = getLevelfromKey(targetLevel);
+
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 5);
+
+                if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
                             ModEntities.PORTAL_ENTITY.get(),
-                            player.level(),
-                            false,
-                            -1,
-                            returnLevelPos.keySet().iterator().next(),
-                            null
+                            destinationLevel,
+                            returnLevelPos.keySet().iterator().next()
                     );
                     portal.setPos(destinationPos.x, destinationPos.y, destinationPos.z);
-                    ElementalRealms.LOGGER.info("Spawning Dimension Portal: " + portal.getPositionVec() + portal.level().dimension());
-                    player.level().addFreshEntity(portal);
+                    destinationLevel.addFreshEntity(portal);
                 }
 
             } else {
