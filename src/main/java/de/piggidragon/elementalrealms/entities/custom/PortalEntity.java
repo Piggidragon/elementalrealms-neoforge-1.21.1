@@ -382,11 +382,11 @@ public class PortalEntity extends Entity {
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
                         ? new Vec3(0.5, 61, 2.5) // Fixed spawn in school dimension
-                        : new Vec3(0.5, Heightmap.Types.OCEAN_FLOOR.ordinal() + 0.5, 0.5);
+                        : new Vec3(0.5, Heightmap.Types.WORLD_SURFACE.ordinal() + 0.5, 0.5);
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
-                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
+                player.teleportTo(destinationLevel, destinationPos.x + 2, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 if (discard) {
