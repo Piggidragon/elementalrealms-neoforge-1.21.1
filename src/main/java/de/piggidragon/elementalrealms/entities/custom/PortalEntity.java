@@ -25,6 +25,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
@@ -379,14 +380,22 @@ public class PortalEntity extends Entity {
                         player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
                 );
 
-                // Determine spawn position based on target dimension
-                Vec3 destinationPos = targetLevel == ModLevel.SCHOOL_DIMENSION
-                        ? new Vec3(0.5, 61, 2.5) // Fixed spawn in school dimension
-                        : new Vec3(0.5, Heightmap.Types.WORLD_SURFACE.ordinal() + 0.5, 0.5);
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
+                ChunkPos spawnChunk = new ChunkPos(0, 0);
+                destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
+
+                // Determine spawn position based on target dimension
+                Vec3 destinationPos;
+                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                    destinationPos = new Vec3(0.5, 61, 2.5); // Fixed spawn
+                } else {
+                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+                    destinationPos = new Vec3(0.5, terrainHeight, 0.5);
+                }
+
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
-                player.teleportTo(destinationLevel, destinationPos.x + 2, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 if (discard) {
@@ -406,7 +415,7 @@ public class PortalEntity extends Entity {
                                 destinationLevel,
                                 returnLevel
                         );
-                        portal.setPos(destinationPos.x, destinationPos.y, destinationPos.z);
+                        portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
                         destinationLevel.addFreshEntity(portal);
                     }
                 });
@@ -417,7 +426,7 @@ public class PortalEntity extends Entity {
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z + 1, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z, relatives, yaw, pitch, setCamera);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 
