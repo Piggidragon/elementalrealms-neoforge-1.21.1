@@ -29,47 +29,45 @@ public class PortalUtils {
         return state.getFluidState().isEmpty();
     }
 
-    public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) throws NullPointerException {
+    public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) {
+
         AABB searchArea = new AABB(
                 position.x - searchRadius, position.y - searchRadius, position.z - searchRadius,
                 position.x + searchRadius, position.y + searchRadius, position.z + searchRadius
         );
 
-        // Use getEntities with predicate for more control
-        List<Entity> entities = level.getEntities(
-                (Entity) null,  // Entity to exclude (null = none)
+        // First check: Get ALL entities in the area
+        List<PortalEntity> portals = level.getEntitiesOfClass(
+                PortalEntity.class,
                 searchArea,
-                entity -> entity instanceof PortalEntity && entity.isAlive() && !entity.isRemoved()
+                Entity::isAlive
         );
 
         PortalEntity nearestPortal = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Entity entity : entities) {
-            if (entity instanceof PortalEntity portal) {
+        for (PortalEntity portal : portals) {
                 double distance = portal.position().distanceTo(position);
                 if (distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestPortal = portal;
-                }
+
             }
         }
-
-        if (nearestPortal == null) {
-            throw new NullPointerException("No portal found within search radius.");
-        }
-
         return nearestPortal;
     }
 
-    public static boolean isValidDimensionForSpawn(ServerLevel level, BlockPos pos) {
-        ResourceKey<Level> dimension = level.dimension();
+    public static boolean isVanilla(ResourceKey<Level> level) {
+        return level == Level.OVERWORLD || level == Level.NETHER || level == Level.END;
+    }
 
-        if (dimension == Level.OVERWORLD) {
+    public static boolean isValidDimensionForSpawn(WorldGenLevel level, BlockPos pos) {
+
+        if (level.getLevel().dimension() == Level.OVERWORLD) {
             return true;
-        } else if (dimension == Level.NETHER) {
+        } else if (level.getLevel().dimension() == Level.NETHER) {
             return pos.getY() < 128; // Avoid ceiling spawning
-        } else if (dimension == Level.END) {
+        } else if (level.getLevel().dimension() == Level.END) {
             return pos.getY() > 50; // Avoid void spawning
         }
         return false;

@@ -54,7 +54,7 @@ public class SchoolStaff extends Item {
                 level,
                 true,
                 200,
-                player.level().getServer().getLevel(ModLevel.SCHOOL_DIMENSION),
+                ModLevel.SCHOOL_DIMENSION,
                 player.getUUID()
         );
 

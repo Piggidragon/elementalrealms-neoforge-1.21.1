@@ -1,8 +1,11 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
+import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -22,20 +25,19 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Dimensional portal entity that teleports players between worlds.
- * Supports bidirectional travel, timed despawn, and automatic platform generation.
+ * Supports multiple variants and can be configured for automatic despawn.
  */
 public class PortalEntity extends Entity {
 
@@ -44,66 +46,74 @@ public class PortalEntity extends Entity {
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState spawnAnimationState = new AnimationState();
-    private final ResourceKey<Level> portalLevel;
-    private int idleAnimationTimer = 0;
+    private int idleAnimationTimer = -1;
 
-    private ServerLevel targetLevel;
-    private UUID ownerUUID;
+    private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
+    private ResourceKey<Level> targetLevel; // Dimension to teleport to
+    private UUID ownerUUID = null;
     private boolean initialized = false;
+    private boolean discard = false; // Remove portal after single use
+    private int despawnTimeout = 0; // Ticks until automatic removal
+    private boolean primed = false; // Natural spawn flag - triggers explosion
 
     /**
-     * Whether this portal should be removed after first use
-     */
-    private boolean discard = false;
-    private int despawnTimeout = 0;
-    private boolean primed = false;
-
-    /**
-     * Basic constructor for entity registration.
-     * Called by Minecraft's entity system when loading from world save.
-     * Sets the default target level to Overworld if on server side.
+     * Creates a portal entity with default settings.
      *
-     * @param type  The entity type of this portal
-     * @param level The level/dimension this entity exists in
+     * @param type the entity type
+     * @param level the world level
      */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level) {
         super(type, level);
         this.portalLevel = level.dimension();
 
-        // Default variant
         if (!level.isClientSide()) {
             this.setVariant(PortalVariant.SCHOOL);
         }
 
-        // Default target level
         if (!level.isClientSide() && level.getServer() != null) {
-            this.targetLevel = level.getServer().getLevel(Level.OVERWORLD);
+            this.targetLevel = Level.OVERWORLD;
         }
 
-        // Start spawn animation immediately
         if (level.isClientSide()) {
             this.spawnAnimationState.start(0);
         }
     }
 
     /**
-     * Full constructor for programmatic portal creation.
+     * Creates a portal entity with a specific target level.
      *
-     * @param type           The entity type of this portal
-     * @param level          The level/dimension this entity exists in
-     * @param discard        Whether to remove portal after first use
-     * @param despawnTimeout Ticks until portal despawns (-1 = never)
-     * @param targetLevel    The dimension to teleport players to
-     * @param ownerUUID      UUID of the player who created this portal
+     * @param type        the entity type
+     * @param level       the world level
+     * @param targetLevel the dimension to teleport to
      */
-    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ServerLevel targetLevel, @Nullable UUID ownerUUID) {
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, ResourceKey<Level> targetLevel) {
+        this(type, level);
+        this.targetLevel = targetLevel;
+    }
+
+    /**
+     * Creates a fully configured portal entity.
+     *
+     * @param type the entity type
+     * @param level the world level
+     * @param discard whether to remove portal after use
+     * @param despawnTimeout ticks until automatic removal
+     * @param targetLevel the dimension to teleport to
+     * @param ownerUUID the UUID of the player who created this portal
+     */
+    public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
         this(type, level);
         this.discard = discard;
         this.despawnTimeout = despawnTimeout;
-        this.targetLevel = targetLevel;
         this.ownerUUID = ownerUUID;
+        this.targetLevel = targetLevel;
     }
 
+    /**
+     * Gets the UUID of the player who created this portal.
+     *
+     * @return the owner's UUID, or null if none
+     */
     public UUID getOwnerUUID() {
         return this.ownerUUID;
     }
@@ -112,30 +122,59 @@ public class PortalEntity extends Entity {
         return level().getServer();
     }
 
+    /**
+     * Gets the visual variant of this portal.
+     *
+     * @return the portal variant
+     */
     public PortalVariant getVariant() {
         try {
             return PortalVariant.byId(this.entityData.get(DATA_VARIANT));
         } catch (Exception e) {
-            // Fallback if data not synced yet
             return PortalVariant.SCHOOL;
         }
     }
 
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
-    }
-
+    /**
+     * Sets the visual variant of this portal.
+     *
+     * @param variant the portal variant to set
+     */
     public void setVariant(PortalVariant variant) {
         if (variant == null) variant = PortalVariant.SCHOOL;
         this.entityData.set(DATA_VARIANT, variant.getId());
     }
 
+    @Nullable
+    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
+        MinecraftServer server = this.getServer();
+        if (server == null) {
+            return null;
+        }
+        return server.getLevel(targetLevel);
+    }
+
+    /**
+     * Gets the portal's position as a vector.
+     *
+     * @return the position vector
+     */
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
+    /**
+     * Sets a random variant from non-school types.
+     */
     public void setRandomVariant() {
         PortalVariant[] variants = {PortalVariant.ELEMENTAL, PortalVariant.DEVIANT, PortalVariant.ETERNAL};
         int randomIndex = this.level().random.nextInt(variants.length);
         this.setVariant(variants[randomIndex]);
     }
 
+    /**
+     * Marks this portal as naturally spawned, enabling explosion on first tick.
+     */
     public void prime() {
         this.primed = true;
     }
@@ -154,6 +193,9 @@ public class PortalEntity extends Entity {
     public void push(Entity entity) {
     }
 
+    /**
+     * Handles damage to the portal.
+     */
     @Override
     public boolean hurtServer(ServerLevel serverLevel, DamageSource damageSource, float v) {
         return false;
@@ -164,23 +206,28 @@ public class PortalEntity extends Entity {
         return true;
     }
 
+    /**
+     * Handles player interaction with the portal.
+     */
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
         return InteractionResult.PASS;
     }
 
+    /**
+     * Determines if the portal can be collided with.
+     */
     @Override
     public boolean canBeCollidedWith(@Nullable Entity entity) {
         return false;
     }
 
     /**
-     * Manages animation states on client side.
+     * Manages animation states for the portal.
      */
     public void setupAnimationStates() {
-        // Restart idle animation every 160 ticks
         if (this.idleAnimationTimer <= 0) {
-            this.idleAnimationTimer = 160;
+            this.idleAnimationTimer = 160; // Reset timer for next cycle
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimer;
@@ -188,28 +235,29 @@ public class PortalEntity extends Entity {
     }
 
     /**
-     * Reads additional entity data from NBT for world persistence.
+     * Reads entity data from NBT.
      */
     @Override
     protected void readAdditionalSaveData(ValueInput valueInput) {
         this.despawnTimeout = valueInput.getIntOr("DespawnTimer", 0);
-
         this.discard = valueInput.getBooleanOr("Discard", false);
         this.primed = valueInput.getBooleanOr("IsNatural", false);
         this.initialized = valueInput.getBooleanOr("Initialized", false);
 
+        // Parse target dimension from saved string
         String levelKey = valueInput.getStringOr("TargetLevel", "");
         if (!levelKey.isEmpty() && !this.level().isClientSide()) {
-            ResourceKey<Level> key = ResourceKey.create(
-                    Registries.DIMENSION,
-                    ResourceLocation.parse(levelKey)
-            );
-            this.targetLevel = this.getServer().getLevel(key);
+            ResourceLocation location = ResourceLocation.tryParse(levelKey);
+            if (location != null) {
+                this.targetLevel = ResourceKey.create(Registries.DIMENSION, location);
+            } else {
+                this.targetLevel = Level.OVERWORLD; // Fallback to overworld
+            }
         } else if (levelKey.isEmpty() && !this.level().isClientSide() && this.getServer() != null) {
-            // Default to Overworld
-            this.targetLevel = this.getServer().getLevel(Level.OVERWORLD);
+            this.targetLevel = Level.OVERWORLD;
         }
 
+        // Parse owner UUID from string
         String uuidString = valueInput.getStringOr("OwnerUUID", "");
         if (!uuidString.isEmpty()) {
             try {
@@ -224,7 +272,7 @@ public class PortalEntity extends Entity {
     }
 
     /**
-     * Saves additional entity data to NBT for world persistence.
+     * Saves entity data to NBT.
      */
     @Override
     protected void addAdditionalSaveData(ValueOutput valueOutput) {
@@ -235,7 +283,7 @@ public class PortalEntity extends Entity {
         valueOutput.putInt("Variant", this.getVariant().getId());
 
         if (this.targetLevel != null) {
-            valueOutput.putString("TargetLevel", this.targetLevel.dimension().location().toString());
+            valueOutput.putString("TargetLevel", this.targetLevel.location().toString());
         }
 
         if (this.ownerUUID != null) {
@@ -251,38 +299,38 @@ public class PortalEntity extends Entity {
         builder.define(DATA_VARIANT, PortalVariant.SCHOOL.getId());
     }
 
+    /**
+     * Updates the portal every tick.
+     */
     @Override
     public void tick() {
         super.tick();
 
-        // Client-side: Update animations
         if (this.level().isClientSide()) {
             this.setupAnimationStates();
         }
 
-        // Auto-initialize on first tick for naturally spawned entities
+        // Trigger explosion on first tick for naturally spawned portals
         if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && primed) {
             createExplosivePortalSpace();
             this.initialized = true;
         }
 
-
-        // Server-side logic
         if (!this.level().isClientSide()) {
-            // Handle despawn timer countdown
+            // Handle automatic despawn countdown
             if (despawnTimeout > 0) {
                 despawnTimeout--;
                 if (despawnTimeout <= 0) {
-                    // Create disappearance particle effect and remove portal
                     PortalParticles.createPortalDisappearEffect((ServerLevel) this.level(), this.position());
                     this.discard();
                 }
             }
 
-            // Spawn particle effects every 5 ticks
+            // Spawn swirling portal particles every 5 ticks
             if (tickCount % 5 == 0) {
                 ServerLevel serverLevel = (ServerLevel) level();
 
+                // Create 3 particles in a rotating pattern
                 for (int i = 0; i < 3; i++) {
                     double angle = (tickCount * 0.1 + i * Math.PI * 2 / 3);
                     double radius = 0.8;
@@ -296,7 +344,7 @@ public class PortalEntity extends Entity {
                 }
             }
 
-            // Check for players colliding with portal
+            // Check for players entering the portal
             List<ServerPlayer> players = this.level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox());
 
             for (ServerPlayer player : players) {
@@ -309,56 +357,84 @@ public class PortalEntity extends Entity {
 
     /**
      * Teleports a player through the portal to the target dimension.
+     * Creates a return portal at the destination if traveling from vanilla dimensions.
      *
-     * @param level  The current level the player is in
-     * @param player The player to teleport
+     * @param level the current level
+     * @param player the player to teleport
      */
     private void teleportPlayer(Level level, ServerPlayer player) {
         if (!level.isClientSide()) {
-            // Prevent teleportation if player is on cooldown
             if (player.isOnPortalCooldown()) {
                 player.displayClientMessage(Component.literal("Portal is on cooldown!"), true);
                 return;
             }
 
-            // Ensure target dimension is valid
             if (targetLevel == null) {
                 return;
             }
 
-            ServerLevel overworld = player.level().getServer().getLevel(Level.OVERWORLD);
             Set<Relative> relatives = Collections.emptySet();
             float yaw = player.getYRot();
             float pitch = player.getXRot();
             boolean setCamera = true;
 
-            // Teleporting FROM Overworld TO custom dimension
-            if (portalLevel == Level.OVERWORLD) {
-                // Save player's current position for return trip
-                player.setData(ModAttachments.OVERWORLD_RETURN_POS, new Vec3(player.getX(), player.getY(), player.getZ()));
+            // Handle teleportation from vanilla dimensions to custom dimensions
+            if (PortalUtils.isVanilla(portalLevel)) {
+                // Store return position for later
+                Map<ResourceKey<Level>, Vec3> returnLevelPos = Map.of(
+                        player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
+                );
 
-                player.teleportTo(targetLevel, 0.5, 60, 0.5, relatives, yaw, pitch, setCamera);
+                ServerLevel destinationLevel = getLevelfromKey(targetLevel);
+
+                ChunkPos spawnChunk = new ChunkPos(0, 0);
+                assert destinationLevel != null;
+                destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
+
+                // Determine spawn position based on target dimension
+                Vec3 destinationPos;
+                if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn
+                } else {
+                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+                    destinationPos = new Vec3(0.5, terrainHeight, 0.5);
+                }
+
+                player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
-                // Remove this portal if configured to discard after use
                 if (discard) {
                     this.discard();
                 }
+
+                ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 128);
+
+                if (existingPortal == null) {
+                    PortalEntity portal = new PortalEntity(
+                            ModEntities.PORTAL_ENTITY.get(),
+                            destinationLevel,
+                            returnLevel
+                    );
+                    portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
+                    destinationLevel.addFreshEntity(portal);
+                }
+
             } else {
-                // Teleporting FROM custom dimension BACK TO Overworld
-                Vec3 returnPos = player.getData(ModAttachments.OVERWORLD_RETURN_POS);
+                // Handle return teleportation from custom dimension to vanilla
+                Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
+                if (returnLevelPos == null || returnLevelPos.isEmpty()) {
+                    player.displayClientMessage(Component.literal("No return position found!"), true);
+                    return;
+                }
+                Vec3 returnPos = returnLevelPos.values().iterator().next();
+                ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                // Teleport to saved return position
-                double x = returnPos.x();
-                double y = returnPos.y();
-                double z = returnPos.z();
-                player.teleportTo(overworld, x, y, z + 1, relatives, yaw, pitch, setCamera);
-
-                // Clear saved position
-                player.removeData(ModAttachments.OVERWORLD_RETURN_POS);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z, relatives, yaw, pitch, setCamera);
+                player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 
-                // Remove this portal if configured to discard after use
                 if (discard) {
                     this.discard();
                 }
@@ -367,8 +443,7 @@ public class PortalEntity extends Entity {
     }
 
     /**
-     * Creates space around the portal by generating an explosion.
-     * Called once during portal initialization to clear surrounding terrain.
+     * Creates an explosion to clear space around a naturally spawned portal.
      */
     private void createExplosivePortalSpace() {
         ServerLevel serverLevel = (ServerLevel) this.level();

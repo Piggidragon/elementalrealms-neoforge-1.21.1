@@ -75,17 +75,14 @@ public class DragonDeathHandler {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 overworld,
-                false,
-                -1,
-                server.getLevel(ModLevel.SCHOOL_DIMENSION),
-                null
+                ModLevel.SCHOOL_DIMENSION
         );
 
         // Find safe spawn position at world spawn
         BlockPos worldSpawn = overworld.getRespawnData().globalPos().pos();
         BlockPos safePos = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, worldSpawn);
 
-        portal.setPos(safePos.getX(), safePos.getY() + 0.5, safePos.getZ() + 2);
+        portal.setPos(safePos.getX(), safePos.getY() + 5, safePos.getZ() + 2);
 
         // Notify all online players about the portal's appearance
         List<ServerPlayer> players = server.getPlayerList().getPlayers();

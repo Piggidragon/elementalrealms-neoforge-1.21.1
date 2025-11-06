@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.structures.custom;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.structures.ModStructures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -94,8 +93,6 @@ public class Platform extends Structure {
      */
     @Override
     public Optional<Structure.GenerationStub> findGenerationPoint(Structure.GenerationContext context) {
-
-        ElementalRealms.LOGGER.info("Generating Platform Structure at chunk: " + context.chunkPos());
 
         // Sample Y-level from height provider
         int startY = this.startHeight.sample(context.random(), new WorldGenerationContext(context.chunkGenerator(), context.heightAccessor()));

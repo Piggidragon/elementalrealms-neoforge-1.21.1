@@ -39,7 +39,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             return false;
         }
 
-        if (!PortalUtils.isValidDimensionForSpawn(level.getLevel(), pos)) {
+        if (!PortalUtils.isValidDimensionForSpawn(level, pos)) {
             return false;
         }
 
@@ -52,10 +52,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 level.getLevel(),
-                false,
-                -1,
-                level.getServer().getLevel(ModLevel.TEST_DIMENSION),
-                null
+                ModLevel.TEST_DIMENSION
         );
 
         // Position the portal precisely centered on the block
