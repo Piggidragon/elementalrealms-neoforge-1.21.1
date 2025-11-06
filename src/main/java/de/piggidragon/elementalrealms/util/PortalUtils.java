@@ -5,6 +5,7 @@ import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -46,7 +47,7 @@ public class PortalUtils {
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
                 searchArea,
-                portal -> portal.isAlive() && !portal.isRemoved()
+                Entity::isAlive
         );
         ElementalRealms.LOGGER.info("Total entities in search area: " + portals.size());
 
@@ -55,7 +56,6 @@ public class PortalUtils {
 
         for (PortalEntity portal : portals) {
                 double distance = portal.position().distanceTo(position);
-            ElementalRealms.LOGGER.info("  Portal at " + portal.position() + ", distance: " + distance);
                 if (distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestPortal = portal;
