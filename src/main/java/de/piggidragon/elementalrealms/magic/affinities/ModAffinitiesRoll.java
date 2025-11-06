@@ -7,21 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Handles randomized affinity assignment for new players.
- * Uses weighted probability to determine how many and which affinities a player receives.
- *
- * <p>Roll mechanism:</p>
- * <ul>
- *   <li>100% chance for first elemental affinity</li>
- *   <li>25% chance for second elemental affinity</li>
- *   <li>20% chance for third and fourth affinities</li>
- *   <li>25% chance to also grant the deviant variant of each rolled affinity</li>
- * </ul>
+ * Randomized affinity assignment for new players using weighted probability.
  */
 public class ModAffinitiesRoll {
 
     /**
-     * Checks if a random event should occur based on probability percentage.
+     * Checks if random event occurs based on probability percentage.
+     *
+     * @param random             Random source
+     * @param probabilityPercent Chance 0-100
+     * @return true if event occurs
      */
     private static boolean chance(RandomSource random, int probabilityPercent) {
         if (probabilityPercent <= 0) return false;
@@ -30,7 +25,11 @@ public class ModAffinitiesRoll {
     }
 
     /**
-     * Selects a random elemental affinity that the player doesn't already have.
+     * Selects random elemental affinity player doesn't have.
+     *
+     * @param player             Target player
+     * @param probabilityPercent Chance to select
+     * @return Selected affinity or VOID if none available
      */
     private static Affinity randomElementalAffinity(ServerPlayer player, int probabilityPercent) {
         RandomSource random = player.getRandom();
@@ -48,21 +47,25 @@ public class ModAffinitiesRoll {
     }
 
     /**
-     * Rolls affinities for a new player using weighted probability.
-     * Returns a list of affinities to be added (may include deviant variants).
+     * Generates random affinities for new player.
+     * Rolls 4 times with decreasing probability: 100%, 25%, 20%, 20%.
+     * Each roll has 25% chance to also grant deviant variant.
+     *
+     * @param player Target player
+     * @return List of affinities to add
      */
     public static List<Affinity> rollAffinities(ServerPlayer player) {
         RandomSource random = player.getRandom();
         List<Affinity> affinitiesToAdd = new ArrayList<>();
 
-        // Roll up to 4 times with decreasing probability
+        // Roll with decreasing probability
         for (int x : new int[]{100, 25, 20, 20}) {
             Affinity newAffinity = randomElementalAffinity(player, x);
 
             if (newAffinity != Affinity.VOID) {
                 affinitiesToAdd.add(newAffinity);
 
-                // 25% chance to also grant deviant variant
+                // 25% chance for deviant variant
                 if (chance(random, 25)) {
                     Affinity deviant = newAffinity.getDeviant();
                     affinitiesToAdd.add(deviant);

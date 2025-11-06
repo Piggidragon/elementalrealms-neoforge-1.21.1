@@ -12,6 +12,13 @@ import java.util.concurrent.CompletableFuture;
  * Generates advancement JSON files during data generation.
  */
 public class ModAdvancementProvider extends AdvancementProvider {
+    /**
+     * Creates the advancement provider.
+     *
+     * @param output       Pack output handler
+     * @param registries   Registry lookup provider
+     * @param subProviders List of sub-providers that generate actual advancements
+     */
     public ModAdvancementProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries, List<AdvancementSubProvider> subProviders) {
         super(output, registries, subProviders);
     }

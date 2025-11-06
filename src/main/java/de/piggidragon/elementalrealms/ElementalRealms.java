@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 
 /**
  * Main mod class for Elemental Realms.
- * Handles registration of all mod content: items, entities, dimensions, and data attachments.
+ * Manages registration of all mod content: items, entities, dimensions, structures, and worldgen.
  */
 @Mod(ElementalRealms.MODID)
 public class ElementalRealms {
@@ -31,10 +31,10 @@ public class ElementalRealms {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     /**
-     * Mod constructor - registers all deferred registries.
+     * Mod constructor - initializes all deferred registries.
      *
-     * @param modEventBus  Mod-specific event bus
-     * @param modContainer Mod metadata container
+     * @param modEventBus  Mod-specific event bus for registration
+     * @param modContainer Mod metadata and configuration container
      */
     public ElementalRealms(IEventBus modEventBus, ModContainer modContainer) {
         // Register all mod content
@@ -49,7 +49,7 @@ public class ElementalRealms {
         ModChunkgen.register(modEventBus);
         ModFeatures.register(modEventBus);
 
-        // Client-only: configuration screen
+        // Client-only: register configuration screen
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
@@ -58,7 +58,7 @@ public class ElementalRealms {
     }
 
     /**
-     * Common setup phase after registration finalization.
+     * Common setup phase executed after registration finalization.
      */
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("Common setup for {}", MODID);

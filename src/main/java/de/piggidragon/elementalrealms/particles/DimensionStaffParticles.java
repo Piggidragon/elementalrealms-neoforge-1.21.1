@@ -6,24 +6,24 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Creates visual particle effects for the Dimension Staff.
+ * Particle effects for Dimension Staff usage and durability indication.
  */
 public class DimensionStaffParticles {
 
     /**
-     * Spawns enchantment particles scaled by staff durability.
-     * More particles indicate better condition (3-13 particles).
+     * Spawns enchantment particles scaled by remaining staff durability.
+     * Visual feedback for staff condition (3-13 particles based on durability).
      *
-     * @param level  Server level for particle spawning
-     * @param player Center of particle effect
-     * @param staff  Staff to check durability
+     * @param level  Server level for particles
+     * @param player Center of effect
+     * @param staff  Staff item to check durability
      */
     public static void addDurabilityEffects(ServerLevel level, Player player, ItemStack staff) {
         int maxDamage = staff.getMaxDamage();
         int currentDamage = staff.getDamageValue();
         float durabilityPercent = 1.0f - ((float) currentDamage / maxDamage);
 
-        // Scale particle count with durability (3-13 particles)
+        // More particles = better condition
         int particleCount = (int) (durabilityPercent * 10) + 3;
 
         for (int i = 0; i < particleCount; i++) {

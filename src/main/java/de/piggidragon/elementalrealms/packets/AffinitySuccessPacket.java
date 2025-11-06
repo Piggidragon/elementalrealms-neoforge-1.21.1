@@ -9,23 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Network packet sent from server to client when an affinity stone is successfully used.
- * Triggers client-side visual effects including totem activation animation and particles.
+ * Network packet triggering client-side visual effects after affinity changes.
+ * Sent from server to client when affinity stone is successfully consumed.
  *
- * <p>This packet is necessary because certain visual effects (like the totem pop animation)
- * can only be triggered on the client side, while the actual affinity modification
- * happens on the server side.</p>
- *
- * <p>Packet flow:</p>
- * <ol>
- *   <li>Player uses affinity stone (server-side validation)</li>
- *   <li>Server modifies player's affinities</li>
- *   <li>Server sends this packet to the player's client</li>
- *   <li>Client receives packet and triggers visual effects</li>
- * </ol>
- *
- * @param itemStack The affinity stone item that was consumed
- * @param affinity  The affinity type that was granted/removed
+ * @param itemStack The consumed affinity stone
+ * @param affinity  The affinity granted/removed
  */
 public record AffinitySuccessPacket(
         ItemStack itemStack,
@@ -33,7 +21,7 @@ public record AffinitySuccessPacket(
 ) implements CustomPacketPayload {
 
     /**
-     * Unique identifier for this packet type in the network system
+     * Unique packet type identifier for network routing.
      */
     public static final CustomPacketPayload.Type<AffinitySuccessPacket> TYPE =
             new CustomPacketPayload.Type<>(
@@ -41,32 +29,23 @@ public record AffinitySuccessPacket(
             );
 
     /**
-     * Codec for serializing and deserializing this packet over the network.
-     *
-     * <p>Serialization process:</p>
-     * <ul>
-     *   <li>ItemStack is serialized using built-in STREAM_CODEC</li>
-     *   <li>Affinity enum is converted to integer (ordinal) for transmission</li>
-     *   <li>On receiving end, integer is converted back to Affinity enum</li>
-     * </ul>
+     * Codec for network serialization.
+     * Converts ItemStack and Affinity enum to bytes for transmission.
      */
     public static final StreamCodec<RegistryFriendlyByteBuf, AffinitySuccessPacket> CODEC =
             StreamCodec.composite(
-                    ItemStack.STREAM_CODEC,          // Serialize ItemStack to bytes
-                    AffinitySuccessPacket::itemStack, // Extract itemStack field
-                    ByteBufCodecs.INT.map(           // Convert Affinity to int and back
-                            i -> Affinity.values()[i],   // Deserialize: int → Affinity
-                            Affinity::ordinal            // Serialize: Affinity → int
+                    ItemStack.STREAM_CODEC,
+                    AffinitySuccessPacket::itemStack,
+                    ByteBufCodecs.INT.map(
+                            i -> Affinity.values()[i],   // Deserialize ordinal to enum
+                            Affinity::ordinal            // Serialize enum to ordinal
                     ),
-                    AffinitySuccessPacket::affinity, // Extract affinity field
-                    AffinitySuccessPacket::new       // Reconstruct packet from fields
+                    AffinitySuccessPacket::affinity,
+                    AffinitySuccessPacket::new
             );
 
     /**
-     * Returns the type identifier for this packet.
-     * Used by the network system to route packets to the correct handler.
-     *
-     * @return The packet type identifier
+     * Returns packet type for network routing.
      */
     @Override
     public Type<? extends CustomPacketPayload> type() {

@@ -25,6 +25,9 @@ import java.util.function.Consumer;
  */
 public class AdvancementGenerator implements AdvancementSubProvider {
 
+    /**
+     * Generates all advancements for the mod.
+     */
     @Override
     public void generate(HolderLookup.Provider provider, Consumer<AdvancementHolder> consumer) {
         // Root: Kill Ender Dragon

@@ -23,14 +23,13 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.LiquidSetting
 import java.util.Optional;
 
 /**
- * Jigsaw-based structure for generating platforms in the School dimension.
- * Uses template pools to assemble structure pieces with configurable height and size.
+ * Jigsaw structure for School dimension spawn platforms.
+ * Assembles structure pieces from template pools at configurable height.
  */
 public class Platform extends Structure {
 
     /**
-     * Codec for serializing/deserializing platform structure configuration from JSON.
-     * Includes start pool, size, height provider, and generation constraints.
+     * Codec for JSON serialization of platform configuration.
      */
     public static final MapCodec<Platform> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
@@ -55,17 +54,17 @@ public class Platform extends Structure {
     private final LiquidSettings liquidSettings;
 
     /**
-     * Constructs a new platform structure with specified generation parameters.
+     * Creates platform structure with jigsaw generation parameters.
      *
-     * @param config                  Base structure settings (biome tags, spawn overrides, etc.)
-     * @param startPool               Template pool to begin structure generation from
+     * @param config                  Base structure settings
+     * @param startPool               Initial template pool for jigsaw assembly
      * @param startJigsawName         Optional specific jigsaw block to start from
-     * @param size                    Maximum depth of jigsaw piece branching (0-30)
-     * @param startHeight             Y-level provider for structure placement
-     * @param projectStartToHeightmap Optional heightmap projection for terrain-relative placement
-     * @param maxDistanceFromCenter   Maximum radius for piece placement (1-128 chunks)
-     * @param dimensionPadding        Vertical padding from dimension bounds
-     * @param liquidSettings          Controls waterlogging behavior
+     * @param size                    Jigsaw branching depth (0-30)
+     * @param startHeight             Y-level provider for placement
+     * @param projectStartToHeightmap Optional terrain-relative placement
+     * @param maxDistanceFromCenter   Maximum piece placement radius
+     * @param dimensionPadding        Vertical bounds padding
+     * @param liquidSettings          Waterlogging behavior
      */
     public Platform(Structure.StructureSettings config,
                     Holder<StructureTemplatePool> startPool,
@@ -88,19 +87,18 @@ public class Platform extends Structure {
     }
 
     /**
-     * Determines structure spawn location and generates jigsaw assembly.
-     * Called during world generation when placement conditions are met.
+     * Calculates structure position and assembles jigsaw pieces.
      */
     @Override
     public Optional<Structure.GenerationStub> findGenerationPoint(Structure.GenerationContext context) {
 
-        // Sample Y-level from height provider
+        // Sample Y from height provider
         int startY = this.startHeight.sample(context.random(), new WorldGenerationContext(context.chunkGenerator(), context.heightAccessor()));
 
         ChunkPos chunkPos = context.chunkPos();
         BlockPos blockPos = new BlockPos(0, 60, 0);
 
-        // Assemble jigsaw pieces using vanilla placement algorithm
+        // Assemble structure pieces using jigsaw algorithm
         Optional<Structure.GenerationStub> structurePiecesGenerator =
                 JigsawPlacement.addPieces(
                         context,

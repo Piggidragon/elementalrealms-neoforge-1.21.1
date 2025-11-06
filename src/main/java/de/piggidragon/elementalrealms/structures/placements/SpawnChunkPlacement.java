@@ -14,14 +14,13 @@ import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement
 import java.util.Optional;
 
 /**
- * Custom structure placement that restricts generation to the world spawn chunk (0, 0).
- * Extends {@link RandomSpreadStructurePlacement} but overrides chunk selection logic.
+ * Structure placement restricted to world spawn chunk (0, 0).
+ * Used for dimension entry platforms that must spawn at origin.
  */
 public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
 
     /**
-     * Codec for serializing spawn chunk placement configuration from JSON.
-     * Includes standard RandomSpread parameters plus custom spawn-only logic.
+     * Codec for JSON serialization of placement configuration.
      */
     public static final MapCodec<SpawnChunkPlacement> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
@@ -35,7 +34,7 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
                     RandomSpreadType.CODEC.optionalFieldOf("spread_type", RandomSpreadType.LINEAR).forGetter(placement -> placement.spreadType)
             ).apply(instance, SpawnChunkPlacement::new));
 
-    // Local copies of parent class fields for codec getters
+    // Fields for codec getters
     private final Vec3i locateOffset;
     private final StructurePlacement.FrequencyReductionMethod frequencyReductionMethod;
     private final float frequency;
@@ -46,16 +45,16 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
     private final RandomSpreadType spreadType;
 
     /**
-     * Constructs spawn chunk placement with standard RandomSpread parameters.
+     * Creates spawn-only placement with standard RandomSpread parameters.
      *
-     * @param locateOffset             Offset for structure location commands
-     * @param frequencyReductionMethod How to reduce structure frequency
-     * @param frequency                Probability of spawning (0.0-1.0)
+     * @param locateOffset             Offset for /locate command
+     * @param frequencyReductionMethod Frequency reduction strategy
+     * @param frequency                Spawn probability (0.0-1.0)
      * @param salt                     Random seed modifier
-     * @param exclusionZone            Optional area to prevent overlapping structures
+     * @param exclusionZone            Optional overlap prevention zone
      * @param spacing                  Grid spacing in chunks
      * @param separation               Minimum distance between structures
-     * @param spreadType               Distribution pattern (LINEAR/TRIANGULAR)
+     * @param spreadType               Distribution pattern
      * @throws RuntimeException if spacing <= separation
      */
     public SpawnChunkPlacement(Vec3i locateOffset,
@@ -68,7 +67,6 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
                                RandomSpreadType spreadType) {
         super(locateOffset, frequencyReductionMethod, frequency, salt, exclusionZone, spacing, separation, spreadType);
 
-        // Store locally for codec
         this.locateOffset = locateOffset;
         this.frequencyReductionMethod = frequencyReductionMethod;
         this.frequency = frequency;
@@ -83,7 +81,7 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
         }
     }
 
-    // Getters required by codec
+    // Codec getter methods
     public Vec3i locateOffset() {
         return this.locateOffset;
     }
@@ -117,17 +115,10 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
     }
 
     /**
-     * Overrides parent method to restrict generation to spawn chunk only.
-     * Called during world generation to determine valid structure locations.
-     *
-     * @param structureState Cached structure generation data
-     * @param x              Chunk X coordinate
-     * @param z              Chunk Z coordinate
-     * @return true only if chunk is at world spawn (0, 0)
+     * Restricts structure generation to spawn chunk (0, 0) only.
      */
     @Override
     protected boolean isPlacementChunk(ChunkGeneratorStructureState structureState, int x, int z) {
-        // Only allow spawn chunk
         return x == 0 && z == 0;
     }
 

@@ -16,7 +16,6 @@ import java.util.Map;
 
 /**
  * Registry for affinity items: stones, shards, and essences.
- * Organized by affinity type with appropriate rarities.
  */
 public class AffinityItems {
 
@@ -24,7 +23,7 @@ public class AffinityItems {
             DeferredRegister.createItems(ElementalRealms.MODID);
 
     /**
-     * Map of all affinity stones, grouped by affinity type
+     * Affinity stones mapped by type. Used to grant affinities to players.
      */
     public static final Map<Affinity, DeferredItem<Item>> AFFINITY_STONES = Util.make(new EnumMap<>(Affinity.class), map -> {
         registerAffinityStone(map, Affinity.FIRE, Rarity.EPIC);
@@ -42,7 +41,7 @@ public class AffinityItems {
     });
 
     /**
-     * Map of all affinity shards, grouped by affinity type
+     * Affinity shards mapped by type. Crafting material for stones.
      */
     public static final Map<Affinity, DeferredItem<Item>> AFFINITY_SHARDS = Util.make(new EnumMap<>(Affinity.class), map -> {
         registerAffinityShard(map, Affinity.FIRE, Rarity.RARE);
@@ -56,7 +55,7 @@ public class AffinityItems {
     });
 
     /**
-     * Map of all essences, grouped by affinity type
+     * Essences mapped by type. Crafting material for shards.
      */
     public static final Map<Affinity, DeferredItem<Item>> ESSENCES = Util.make(new EnumMap<>(Affinity.class), map -> {
         registerEssence(map, Affinity.FIRE);
@@ -70,11 +69,11 @@ public class AffinityItems {
     });
 
     /**
-     * Helper method to register an affinity stone
+     * Helper to register an affinity stone with given rarity.
      *
-     * @param map      The map to add the registered stone to
-     * @param affinity The affinity type for this stone
-     * @param rarity   The rarity of the stone
+     * @param map      Map to store the registered stone
+     * @param affinity Affinity type for this stone
+     * @param rarity   Item rarity
      */
     private static void registerAffinityStone(Map<Affinity, DeferredItem<Item>> map, Affinity affinity, Rarity rarity) {
         String name = "affinity_stone_" + affinity.getName();
@@ -86,11 +85,11 @@ public class AffinityItems {
     }
 
     /**
-     * Helper method to register an affinity shard
+     * Helper to register an affinity shard with given rarity.
      *
-     * @param map      The map to add the registered shard to
-     * @param affinity The affinity type for this shard
-     * @param rarity   The rarity of the shard
+     * @param map      Map to store the registered shard
+     * @param affinity Affinity type for this shard
+     * @param rarity   Item rarity
      */
     private static void registerAffinityShard(Map<Affinity, DeferredItem<Item>> map, Affinity affinity, Rarity rarity) {
         String name = "affinity_shard_" + affinity.getName();
@@ -102,10 +101,10 @@ public class AffinityItems {
     }
 
     /**
-     * Helper method to register an essence
+     * Helper to register an essence (always UNCOMMON rarity).
      *
-     * @param map      The map to add the registered essence to
-     * @param affinity The affinity type for this essence
+     * @param map      Map to store the registered essence
+     * @param affinity Affinity type for this essence
      */
     private static void registerEssence(Map<Affinity, DeferredItem<Item>> map, Affinity affinity) {
         String name = "essence_" + affinity.getName();
@@ -119,7 +118,7 @@ public class AffinityItems {
     /**
      * Registers all affinity items with the mod event bus.
      *
-     * @param bus The mod's event bus for registration
+     * @param bus The mod event bus
      */
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

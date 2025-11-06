@@ -18,10 +18,18 @@ import java.util.stream.Stream;
  * Generates item and block model JSON files.
  */
 public class ModModelProvider extends ModelProvider {
+    /**
+     * Creates the model provider.
+     *
+     * @param output Pack output handler
+     */
     public ModModelProvider(PackOutput output) {
         super(output, ElementalRealms.MODID);
     }
 
+    /**
+     * Registers models for blocks and items.
+     */
     @Override
     protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
         // Generate flat 2D models for all affinity items
@@ -34,6 +42,9 @@ public class ModModelProvider extends ModelProvider {
                 .forEach(item -> itemModels.generateFlatItem(item.get(), ModelTemplates.FLAT_ITEM));
     }
 
+    /**
+     * Returns all mod items that need model generation.
+     */
     @Override
     protected Stream<? extends Holder<Item>> getKnownItems() {
         return BuiltInRegistries.ITEM.listElements()

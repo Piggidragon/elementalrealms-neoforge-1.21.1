@@ -8,13 +8,14 @@ import net.neoforged.fml.common.asm.enumextension.EnumProxy;
 import java.util.function.UnaryOperator;
 
 /**
- * Custom rarity tiers beyond vanilla's Epic.
- * LEGENDARY (gold) for deviant affinities, MYTHIC (dark purple) for eternal affinities.
+ * Custom rarity tiers extending Minecraft's vanilla rarity system.
+ * Provides higher tiers for advanced affinity items.
  */
 public class ModRarities {
 
     /**
      * LEGENDARY rarity (gold text) for deviant affinity stones.
+     * Higher tier than vanilla's EPIC rarity.
      */
     public static final EnumProxy<Rarity> LEGENDARY = new EnumProxy<>(
             Rarity.class,
@@ -25,6 +26,7 @@ public class ModRarities {
 
     /**
      * MYTHIC rarity (dark purple text) for eternal affinity stones.
+     * Highest tier representing ultimate power.
      */
     public static final EnumProxy<Rarity> MYTHIC = new EnumProxy<>(
             Rarity.class,

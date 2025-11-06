@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.advancements.AdvancementGenerator;
-import de.piggidragon.elementalrealms.datagen.magic.affinities.AffinityRecipeProvider;
+import de.piggidragon.elementalrealms.datagen.recipes.affinities.AffinityRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -20,8 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class DataGenerators {
 
     /**
-     * Event handler that registers all data generators (both client and server).
-     * Called automatically during the data generation phase of the build process.
+     * Registers all data generators during the data generation phase.
      */
     @SubscribeEvent
     public static void onGatherData(GatherDataEvent.Client event) {

@@ -23,19 +23,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.function.Consumer;
 
 /**
- * Consumable magical item that grants or removes player affinities.
- * <p>
- * Each stone corresponds to a specific {@link Affinity} type:
- * <ul>
- *   <li>Regular stones (Fire, Water, etc.) - Add one affinity to player</li>
- *   <li>Void stone - Clears all existing affinities</li>
- * </ul>
- * <p>
- * Usage triggers visual effects, sounds, and network synchronization.
- * Stone is consumed on successful use, but preserved if action fails
- *
- * @see Affinity
- * @see ModAffinities
+ * Consumable item that grants or removes player affinities.
+ * Regular stones add specific affinities, void stone clears all.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
 public class AffinityStone extends Item {
@@ -45,8 +34,8 @@ public class AffinityStone extends Item {
     /**
      * Creates a new affinity stone.
      *
-     * @param properties Item properties (rarity, stack size, etc.)
-     * @param affinity   The affinity this stone will grant/manage
+     * @param properties Item properties including rarity
+     * @param affinity   The affinity this stone grants or manages
      */
     public AffinityStone(Properties properties, Affinity affinity) {
         super(properties);
@@ -54,17 +43,8 @@ public class AffinityStone extends Item {
     }
 
     /**
-     * Event handler for right-click interaction with affinity stones.
-     * <p>
-     * Server-side only. Handles:
-     * <ul>
-     *   <li>Affinity addition/removal via {@link ModAffinities}</li>
-     *   <li>Item consumption on success</li>
-     *   <li>Particle effects via {@link AffinityParticles}</li>
-     *   <li>Sound effects with varying pitch per affinity</li>
-     *   <li>Client notification via {@link AffinitySuccessPacket}</li>
-     *   <li>Error messages for invalid operations</li>
-     * </ul>
+     * Handles right-click usage of affinity stones.
+     * Adds affinity to player or clears all affinities (void stone).
      */
     @SubscribeEvent
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
@@ -72,7 +52,6 @@ public class AffinityStone extends Item {
             ItemStack itemStack = event.getItemStack();
             if (itemStack.getItem() instanceof AffinityStone stone) {
 
-                // Store original for packet
                 ItemStack originalItemStack = itemStack.copy();
 
                 boolean success = false;
@@ -100,15 +79,15 @@ public class AffinityStone extends Item {
                 if (success) {
                     ServerLevel serverLevel = player.level();
 
-                    // Spawn colored particles matching affinity
+                    // Spawn colored particles
                     AffinityParticles.createCustomAffinityParticles(serverLevel, player, stone.affinity);
 
-                    // Play sound with pitch based on affinity rarity
+                    // Play sound with pitch varying by affinity
                     float pitch = 0.25F + (stone.affinity.ordinal() * 0.1F);
                     serverLevel.playSound(null, player.blockPosition(),
                             SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, pitch);
 
-                    // Notify client for additional effects/UI
+                    // Send packet to client for additional effects
                     PacketDistributor.sendToPlayer(player,
                             new AffinitySuccessPacket(originalItemStack, stone.affinity)
                     );

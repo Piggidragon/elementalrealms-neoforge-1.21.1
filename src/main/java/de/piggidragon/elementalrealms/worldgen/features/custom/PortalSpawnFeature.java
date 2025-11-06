@@ -15,16 +15,23 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 
 /**
- * Feature used to spawn portals in the world.
+ * Worldgen feature for spawning portal entities during world generation.
+ * Used to create naturally occurring portals in vanilla dimensions.
  */
 public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
+    /**
+     * Creates portal spawn feature with configuration codec.
+     *
+     * @param codec Configuration codec for serialization
+     */
     public PortalSpawnFeature(Codec<PortalConfiguration> codec) {
         super(codec);
     }
 
     /**
-     * Attempts to place a portal according to the configuration.
+     * Attempts to place a portal entity during worldgen.
+     * Validates spawn conditions and creates portal with configured properties.
      */
     @Override
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
@@ -33,39 +40,41 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         PortalConfiguration config = context.config();
         RandomSource randomSource = level.getRandom();
 
-        // Server is required to create cross-dimension portal references
+        // Server required for cross-dimension portal references
         MinecraftServer server = level.getServer();
         if (server == null) {
             return false;
         }
 
+        // Validate dimension-specific spawn conditions
         if (!PortalUtils.isValidDimensionForSpawn(level, pos)) {
             return false;
         }
 
-        // Validate portal base suitability
+        // Validate solid non-fluid base block
         if (!PortalUtils.isSuitableForPortalBase(level, pos.below(), level.getBlockState(pos.below()))) {
             return false;
         }
 
-        // Create portal entity. The constructor parameters include target dimension lookup.
+        // Create portal entity with target dimension
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 level.getLevel(),
                 ModLevel.TEST_DIMENSION
         );
 
-        // Position the portal precisely centered on the block
+        // Position portal centered on block with random rotation
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         portal.setYRot(randomSource.nextFloat() * 360.0F);
 
-        // Apply chosen variant from config, fallback to random variant if null
+        // Apply configured variant or randomize
         if (config.portalVariant() != PortalVariant.RANDOM) {
             portal.setVariant(config.portalVariant());
         } else {
             portal.setRandomVariant();
         }
 
+        // Prime underground portals (Y < 41) for activation
         if (pos.getY() < 41) portal.prime();
 
         level.addFreshEntity(portal);
