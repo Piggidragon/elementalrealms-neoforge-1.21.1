@@ -388,6 +388,7 @@ public class PortalEntity extends Entity {
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
                 ChunkPos spawnChunk = new ChunkPos(0, 0);
+                assert destinationLevel != null;
                 destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
 
                 // Determine spawn position based on target dimension
