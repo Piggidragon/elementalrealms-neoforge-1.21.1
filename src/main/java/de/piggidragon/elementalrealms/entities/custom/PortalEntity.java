@@ -388,7 +388,7 @@ public class PortalEntity extends Entity {
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                    destinationPos = new Vec3(0.5, 61, 2.5); // Fixed spawn
+                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn
                 } else {
                     int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
                     destinationPos = new Vec3(0.5, terrainHeight, 0.5);
