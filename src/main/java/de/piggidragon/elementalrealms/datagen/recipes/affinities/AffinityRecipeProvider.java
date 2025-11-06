@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.datagen.magic.affinities;
+package de.piggidragon.elementalrealms.datagen.recipes.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.items.magic.affinities.AffinityItems;

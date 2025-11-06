@@ -10,42 +10,28 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import java.util.List;
 
 /**
- * Manager class for player affinity system.
- * Handles adding, removing, and validating magical affinities according to game rules.
- *
- * <p>Affinity rules enforced:</p>
- * <ul>
- *   <li>No duplicate affinities allowed</li>
- *   <li>Only one ETERNAL affinity per player</li>
- *   <li>DEVIANT affinities require corresponding ELEMENTAL base</li>
- * </ul>
+ * Manages player affinity data with validation rules.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
 public class ModAffinities {
 
     /**
-     * Adds a new affinity to a player with validation.
+     * Adds affinity to player with validation.
+     * Checks for duplicates, ETERNAL limit, and DEVIANT requirements.
      *
-     * <p>Validation checks:</p>
-     * <ul>
-     *   <li>Player doesn't already have this affinity</li>
-     *   <li>If ETERNAL, player doesn't have another ETERNAL affinity</li>
-     *   <li>If DEVIANT, player has the required ELEMENTAL base affinity</li>
-     * </ul>
-     *
-     * @param player   The player to add affinity to
-     * @param affinity The affinity to add
-     * @throws Exception If validation fails with descriptive error message
+     * @param player   Target player
+     * @param affinity Affinity to add
+     * @throws Exception If validation fails
      */
     public static void addAffinity(ServerPlayer player, Affinity affinity) throws Exception {
         List<Affinity> affinities = getAffinities(player);
 
-        // Check for duplicate affinity
+        // Prevent duplicate
         if (affinities.contains(affinity)) {
             throw new Exception("Player already has affinity: " + affinity);
         }
 
-        // Validate ETERNAL affinity restriction
+        // Check ETERNAL limit (only one per player)
         if (affinity.getType() == AffinityType.ETERNAL) {
             for (Affinity a : affinities) {
                 if (a.getType() == AffinityType.ETERNAL) {
@@ -54,7 +40,7 @@ public class ModAffinities {
             }
         }
 
-        // Validate DEVIANT affinity requirement
+        // Check DEVIANT requires base elemental
         if (affinity.getType() == AffinityType.DEVIANT) {
             boolean hasBase = false;
             for (Affinity a : affinities) {
@@ -68,57 +54,52 @@ public class ModAffinities {
             }
         }
 
-        // Remove NONE placeholder if present before adding real affinity
+        // Remove VOID placeholder before adding real affinity
         affinities.remove(Affinity.VOID);
         affinities.add(affinity);
     }
 
     /**
-     * Clears all affinities from a player and sets them to NONE.
-     * Used by the Void affinity stone.
+     * Clears all affinities and sets to VOID.
      *
-     * @param player The player to clear affinities from
-     * @throws Exception If player has no affinities to clear
+     * @param player Target player
+     * @throws Exception If player already has no affinities
      */
     public static void clearAffinities(ServerPlayer player) throws Exception {
         List<Affinity> affinities = getAffinities(player);
 
-        // Cannot clear if already has no affinities
         if (affinities.contains(Affinity.VOID)) {
             throw new Exception("Player has no affinities to clear.");
         }
 
-        // Clear all affinities and set to NONE
         affinities.clear();
         affinities.add(Affinity.VOID);
     }
 
     /**
-     * Gets the list of affinities for a player.
-     * The list is mutable and changes are automatically saved via data attachments.
+     * Gets mutable list of player's affinities.
+     * Changes are automatically saved via data attachments.
      *
-     * @param player The player to get affinities for
-     * @return Mutable list of player's current affinities
+     * @param player Target player
+     * @return Mutable affinity list
      */
     public static List<Affinity> getAffinities(ServerPlayer player) {
         return player.getData(ModAttachments.AFFINITIES.get());
     }
 
     /**
-     * Checks if a player has a specific affinity.
+     * Checks if player has specific affinity.
      *
-     * @param player   The player to check
-     * @param affinity The affinity to check for
-     * @return true if player has this affinity, false otherwise
+     * @param player   Target player
+     * @param affinity Affinity to check
+     * @return true if player has this affinity
      */
     public static boolean hasAffinity(ServerPlayer player, Affinity affinity) {
         return getAffinities(player).contains(affinity);
     }
 
     /**
-     * Event handler for player login.
-     * Automatically assigns random affinities to new players who don't have any yet.
-     * Existing players keep their saved affinities.
+     * Assigns random affinities to new players on first login.
      */
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -128,13 +109,12 @@ public class ModAffinities {
                 return;
             }
 
-            // Roll and assign random affinities for new player
+            // Roll and assign random affinities
             for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player)) {
                 if (affinity != Affinity.VOID) {
                     try {
                         addAffinity(player, affinity);
                     } catch (Exception ignored) {
-                        // Should never happen with freshly rolled affinities, but ignore just in case
                     }
                 }
             }

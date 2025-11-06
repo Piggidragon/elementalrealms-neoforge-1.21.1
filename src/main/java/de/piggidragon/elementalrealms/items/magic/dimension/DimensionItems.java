@@ -9,7 +9,7 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
- * Registry for dimension-related items and tools.
+ * Registry for dimension-related items.
  */
 public class DimensionItems {
     public static final DeferredRegister.Items ITEMS =
@@ -17,7 +17,7 @@ public class DimensionItems {
 
     /**
      * Staff that creates temporary portals to School dimension.
-     * 16 uses, creates beam animation, 10-second portals.
+     * 16 uses, beam animation, 10-second portals.
      */
     public static final DeferredItem<Item> DIMENSION_STAFF = ITEMS.registerItem(
             "dimension_staff",
@@ -27,7 +27,7 @@ public class DimensionItems {
     /**
      * Registers all dimension items with the mod event bus.
      *
-     * @param bus The mod's event bus for registration
+     * @param bus The mod event bus
      */
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

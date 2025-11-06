@@ -7,11 +7,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 /**
- * Handles portal layer register.
+ * Registers entity renderers during client initialization.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
 public class LayerRegisterHandler {
 
+    /**
+     * Binds custom renderers to entity types.
+     */
     @SubscribeEvent
     public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(PortalModel.LAYER_LOCATION, PortalModel::createBodyLayer);

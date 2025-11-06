@@ -8,21 +8,13 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Defines resource keys for custom dimensions added by the mod.
- * Resource keys are used to reference dimensions in code and must match
- * the dimension JSON files in the data pack.
- *
- * <p>Custom dimensions:</p>
- * <ul>
- *   <li>School Dimension - Educational hub world for learning magic</li>
- *   <li>Test Dimension - Development testing dimension</li>
- * </ul>
+ * Resource keys for custom dimensions.
+ * Must match dimension JSON files in data pack.
  */
 public class ModLevel {
 
     /**
-     * Resource key for the School dimension.
-     * This dimension serves as an educational hub for players to learn magic.
+     * Educational hub dimension for learning magic.
      */
     public static final ResourceKey<Level> SCHOOL_DIMENSION = ResourceKey.create(
             Registries.DIMENSION,
@@ -30,8 +22,7 @@ public class ModLevel {
     );
 
     /**
-     * Resource key for the Test dimension.
-     * This dimension is used for development and testing purposes.
+     * Development/testing dimension.
      */
     public static final ResourceKey<Level> TEST_DIMENSION = ResourceKey.create(
             Registries.DIMENSION,
@@ -39,8 +30,7 @@ public class ModLevel {
     );
 
     /**
-     * List of all custom dimension resource keys.
-     * Used for batch operations like world border configuration.
+     * List of all custom dimensions for batch operations.
      */
     public static final List<ResourceKey<Level>> LEVELS = List.of(
             SCHOOL_DIMENSION,

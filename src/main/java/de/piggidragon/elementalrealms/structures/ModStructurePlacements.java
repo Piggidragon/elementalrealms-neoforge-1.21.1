@@ -10,7 +10,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * Registry for custom structure placement types.
- * Placement types control where and how often structures can spawn.
  */
 public class ModStructurePlacements {
 
@@ -18,16 +17,15 @@ public class ModStructurePlacements {
             DeferredRegister.create(Registries.STRUCTURE_PLACEMENT, ElementalRealms.MODID);
 
     /**
-     * Placement type that restricts structures to spawn chunk only.
-     * Used for dimensional entry platforms that should appear at world origin.
+     * Placement type restricting structures to spawn chunk (0, 0).
      */
     public static final DeferredHolder<StructurePlacementType<?>, StructurePlacementType<SpawnChunkPlacement>> SPAWN_ONLY_STRUCTURE_PLACEMENT =
             STRUCTURE_PLACEMENTS.register("spawn_only", () -> () -> SpawnChunkPlacement.CODEC);
 
-    /*
-     * Registers all structure placements with the mod event bus.
+    /**
+     * Registers all placement types with mod event bus.
      *
-     * @param eventBus The mod's event bus for registration
+     * @param eventBus Mod event bus
      */
     public static void register(IEventBus eventBus) {
         STRUCTURE_PLACEMENTS.register(eventBus);

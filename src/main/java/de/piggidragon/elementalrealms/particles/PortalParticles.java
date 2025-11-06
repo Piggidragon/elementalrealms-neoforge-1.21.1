@@ -5,18 +5,18 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Creates particle effects for portal lifecycle events.
+ * Particle effects for portal spawn and despawn events.
  */
 public class PortalParticles {
 
     /**
-     * Creates expanding ring effect when portal spawns.
+     * Creates expanding ring effect when portal appears.
      *
-     * @param level    Server level for effect
+     * @param level    Server level
      * @param position Portal spawn location
      */
     public static void createPortalArrivalEffect(ServerLevel level, Vec3 position) {
-        // 3 expanding rings
+        // 3 concentric expanding rings
         for (int ring = 0; ring < 3; ring++) {
             double radius = (ring + 1) * 0.8;
 
@@ -36,13 +36,13 @@ public class PortalParticles {
     }
 
     /**
-     * Creates inward spiral when portal disappears.
+     * Creates inward collapsing effect when portal disappears.
      *
-     * @param level    Server level for effect
+     * @param level    Server level
      * @param position Portal despawn location
      */
     public static void createPortalDisappearEffect(ServerLevel level, Vec3 position) {
-        // Inward collapsing spiral
+        // Inward spiraling collapse
         for (int i = 0; i < 20; i++) {
             double angle = i * Math.PI * 2 / 6;
             double radius = 1.5 - (i * 0.05);
@@ -56,7 +56,7 @@ public class PortalParticles {
                     ParticleTypes.PORTAL,
                     x, y, z,
                     1,
-                    -Math.cos(angle) * 0.1,
+                    -Math.cos(angle) * 0.1,  // Inward velocity
                     -0.02,
                     -Math.sin(angle) * 0.1,
                     0.05

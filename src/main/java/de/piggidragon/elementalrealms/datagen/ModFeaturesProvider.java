@@ -38,20 +38,30 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
     public static final ResourceKey<PlacedFeature> PORTAL_PLACED_SURFACE =
             ResourceKey.create(Registries.PLACED_FEATURE,
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed_surface"));
+
     public static final ResourceKey<PlacedFeature> PORTAL_PLACED_UNDER =
             ResourceKey.create(Registries.PLACED_FEATURE,
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed_under"));
 
+    /**
+     * Creates the features provider.
+     *
+     * @param output     Pack output handler
+     * @param registries Registry lookup provider
+     */
     public ModFeaturesProvider(PackOutput output, CompletableFuture<RegistrySetBuilder.PatchedRegistries> registries) {
         super(output, registries, Set.of(ElementalRealms.MODID));
     }
 
     /**
-     * Creates registry entries for portal features.
+     * Creates registry entries for portal features and biome modifiers.
+     *
+     * @return Registry builder with all feature configurations
      */
     public static RegistrySetBuilder createBuilder() {
         return new RegistrySetBuilder()
                 .add(Registries.CONFIGURED_FEATURE, bootstrap -> {
+                    // Configure basic portal feature
                     bootstrap.register(PORTAL_CONFIGURED,
                             new ConfiguredFeature<>(
                                     ModFeatures.PORTAL_FEATURE.get(),
@@ -66,6 +76,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                     HolderGetter<ConfiguredFeature<?, ?>> configured =
                             bootstrap.lookup(Registries.CONFIGURED_FEATURE);
 
+                    // Surface portal placement (rare)
                     bootstrap.register(PORTAL_PLACED_SURFACE,
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
@@ -78,6 +89,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             )
                     );
 
+                    // Underground portal placement (very rare)
                     bootstrap.register(PORTAL_PLACED_UNDER,
                             new PlacedFeature(
                                     configured.getOrThrow(PORTAL_CONFIGURED),
@@ -97,6 +109,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                     HolderGetter<PlacedFeature> placed = bootstrap.lookup(Registries.PLACED_FEATURE);
                     HolderGetter<Biome> biomeGetter = bootstrap.lookup(Registries.BIOME);
 
+                    // Add portals to all spawnable dimensions
                     bootstrap.register(
                             ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
                                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),

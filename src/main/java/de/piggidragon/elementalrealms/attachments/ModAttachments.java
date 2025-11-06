@@ -46,7 +46,7 @@ public class ModAttachments {
     );
 
     /**
-     * Codec for serializing Vec3 positions to NBT
+     * Codec for serializing Vec3 positions to NBT.
      */
     public static final Codec<Vec3> VEC3_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -57,17 +57,19 @@ public class ModAttachments {
     );
 
     /**
-     * Codec for Level Resourcekeys
+     * Codec for Level ResourceKeys.
      */
     static Codec<ResourceKey<Level>> resourceKeyCodec = ResourceKey.codec(Registries.DIMENSION);
 
+    // Provides dimension keys for map codec
     static Supplier<Stream<String>> keys = () -> Stream.of(
             "minecraft:overworld",
             "minecraft:the_nether",
             "minecraft:the_end"
     );
+
     /**
-     * SimpleMapCodec for Level and Vec3
+     * SimpleMapCodec for storing positions per dimension.
      */
     public static final SimpleMapCodec<ResourceKey<Level>, Vec3> VEC3_MAP_CODEC = Codec.simpleMap(
             resourceKeyCodec,

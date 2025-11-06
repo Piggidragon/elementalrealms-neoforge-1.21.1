@@ -28,25 +28,35 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Magical staff that creates temporary portals to School Dimension via beam animation.
+ * Staff that creates temporary portals to School dimension via beam animation.
  */
 public class SchoolStaff extends Item {
 
+    // Active animations tracked by player UUID
     private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new HashMap<>();
 
+    /**
+     * Creates the school staff item.
+     *
+     * @param properties Item properties including durability
+     */
     public SchoolStaff(Properties properties) {
         super(properties);
     }
 
     /**
-     * Must be called from server tick event to update beam animations.
+     * Updates all active beam animations. Must be called from server tick event.
      */
     public static void tickAnimations() {
         ACTIVE_ANIMATIONS.entrySet().removeIf(entry -> !entry.getValue().tick());
     }
 
     /**
-     * Spawns a portal entity at the specified target position owned by the player.
+     * Spawns a portal entity at target position.
+     *
+     * @param level          The world level
+     * @param player         Owner of the portal
+     * @param targetPosition Position to spawn portal at
      */
     private static void spawnPortal(Level level, Player player, Vec3 targetPosition) {
         PortalEntity portal = new PortalEntity(
@@ -64,7 +74,10 @@ public class SchoolStaff extends Item {
     }
 
     /**
-     * Removes all existing portals owned by player and creates disappear effects.
+     * Removes all portals owned by player with disappear effects.
+     *
+     * @param level  The world level
+     * @param player Portal owner
      */
     private static void removeOldPortals(Level level, Player player) {
         List<PortalEntity> portals = level.getEntitiesOfClass(
@@ -81,9 +94,12 @@ public class SchoolStaff extends Item {
         }
     }
 
+    /**
+     * Handles staff usage to create portal beam animation.
+     */
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        // Restrict dimensions
+        // Restrict to vanilla dimensions
         if (level.dimension() != Level.OVERWORLD && level.dimension() != Level.NETHER && level.dimension() != Level.END) {
             player.displayClientMessage(Component.literal("Can't use this here..."), true);
             return InteractionResult.PASS;
@@ -92,12 +108,12 @@ public class SchoolStaff extends Item {
         if (!level.isClientSide()) {
             ServerLevel serverLevel = (ServerLevel) level;
 
-            // Calculate beam start position at staff tip (slightly in front of player's eyes)
+            // Calculate beam start at staff tip (in front of player eyes)
             Vec3 staffTip = player.getEyePosition().add(
                     player.getLookAngle().scale(0.8)
             );
 
-            // Calculate target position 2 blocks in front of player at torso level
+            // Calculate target position 2 blocks ahead at torso height
             Vec3 lookVec = player.getLookAngle();
             double distance = 2.0;
             Vec3 targetPos = new Vec3(
@@ -106,7 +122,7 @@ public class SchoolStaff extends Item {
                     player.getZ() + lookVec.z * distance
             );
 
-            // Remove any existing portals before starting new animation
+            // Remove existing portals before creating new one
             removeOldPortals(level, player);
 
             serverLevel.playSound(null, player.blockPosition(),
@@ -115,14 +131,13 @@ public class SchoolStaff extends Item {
 
             DimensionStaffParticles.addDurabilityEffects(serverLevel, player, player.getMainHandItem());
 
-            // Register new beam animation for this player (prevents multiple simultaneous casts)
+            // Start beam animation (prevents multiple casts by same player)
             ACTIVE_ANIMATIONS.put(player.getUUID(), new BeamAnimation(serverLevel, player, staffTip, targetPos));
 
-            // Apply durability damage to staff (item wears out with use)
+            // Damage staff
             player.getMainHandItem().hurtAndBreak(1, serverLevel, player,
                     item -> player.onEquippedItemBroken(item, EquipmentSlot.MAINHAND));
 
-            // No cooldown for immediate reuse capability
             player.getCooldowns().addCooldown(player.getMainHandItem(), 0);
             return InteractionResult.SUCCESS;
         }
@@ -142,7 +157,7 @@ public class SchoolStaff extends Item {
     }
 
     /**
-     * Handles spiraling beam animation from staff to portal spawn point.
+     * Handles spiraling beam particle animation from staff to portal spawn point.
      */
     private static class BeamAnimation {
         final ServerLevel level;
@@ -155,12 +170,12 @@ public class SchoolStaff extends Item {
         int currentTick = 0;
 
         /**
-         * Constructor initializes beam animation parameters including direction and step size
+         * Initializes beam animation parameters.
          *
-         * @param level     The server level where animation occurs
-         * @param player    The player who cast the beam
-         * @param startPos  Starting position at staff tip
-         * @param targetPos Destination where portal will spawn
+         * @param level     Server level for particle spawning
+         * @param player    Player who cast the beam
+         * @param startPos  Start position at staff tip
+         * @param targetPos End position where portal spawns
          */
         BeamAnimation(ServerLevel level, Player player, Vec3 startPos, Vec3 targetPos) {
             this.level = level;
@@ -172,21 +187,20 @@ public class SchoolStaff extends Item {
         }
 
         /**
-         * Advances the animation by one tick, spawning particles along the beam path.
-         * Creates a spiraling purple particle effect that travels from staff to target location.
+         * Advances animation by one tick, spawning spiral particles along beam.
          *
-         * @return true if animation should continue, false if completed
+         * @return true to continue animation, false when complete
          */
         boolean tick() {
             if (currentTick > totalTicks) {
                 return false;
             }
 
-            // Calculate current position along beam path
+            // Calculate current position along beam
             double currentDistance = currentTick * stepSize;
             Vec3 currentPos = startPos.add(direction.scale(currentDistance));
 
-            // Create spiral pattern with 3 particles rotating around beam axis
+            // Create spiral with 3 rotating particles
             for (int i = 0; i < 3; i++) {
                 double angle = (currentTick * 0.3 + i * (Math.PI * 2 / 3));
                 double spiralRadius = 0.3;
@@ -204,7 +218,7 @@ public class SchoolStaff extends Item {
                 );
             }
 
-            // Add witch particles every 3rd tick for mystical effect
+            // Add witch particles every 3 ticks for mystical effect
             if (currentTick % 3 == 0) {
                 level.sendParticles(
                         ParticleTypes.WITCH,
@@ -213,7 +227,7 @@ public class SchoolStaff extends Item {
                 );
             }
 
-            // Spawn portal when beam reaches target position
+            // Spawn portal when beam reaches target
             if (currentTick == totalTicks) {
                 PortalParticles.createPortalArrivalEffect(level, targetPos);
                 level.playSound(null, targetPos.x, targetPos.y, targetPos.z,

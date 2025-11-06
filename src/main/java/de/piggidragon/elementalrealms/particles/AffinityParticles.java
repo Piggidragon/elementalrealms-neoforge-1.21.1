@@ -8,24 +8,23 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ARGB;
 
 /**
- * Creates unique particle effects for each affinity type.
- * Each affinity has thematic particles matching its elemental nature.
+ * Creates thematic particle effects for each affinity type.
+ * Server-side method spawning particles visible to nearby players.
  */
 public class AffinityParticles {
 
     /**
-     * Creates custom particle effects when an affinity stone is consumed.
-     * Server-side method that spawns particles visible to all nearby players.
+     * Spawns affinity-specific particle patterns when stone is consumed.
      *
-     * @param level    The server level where particles should be spawned
-     * @param player   The player at the center of the particle effect
-     * @param affinity The affinity type determining the visual effect
+     * @param level    Server level for particle spawning
+     * @param player   Player at effect center
+     * @param affinity Affinity determining visual theme
      */
     public static void createCustomAffinityParticles(ServerLevel level, ServerPlayer player, Affinity affinity) {
 
         switch (affinity) {
             case FIRE -> {
-                // Upward spiral of flames
+                // Upward flame spiral
                 for (int i = 0; i < 25; i++) {
                     double angle = i * Math.PI / 4;
                     double radius = 1.2;
@@ -76,7 +75,7 @@ public class AffinityParticles {
                         15, 1.2, 0.8, 1.2, 0.01);
             }
             case WIND -> {
-                // Swirling cyclone effect
+                // Swirling cyclone
                 for (int i = 0; i < 50; i++) {
                     double angle = i * Math.PI / 8;
                     double radius = 1.5 + Math.sin(i * 0.1) * 0.5;
@@ -110,7 +109,7 @@ public class AffinityParticles {
                         20, 1.0, 1.0, 1.0, 0.2);
             }
             case ICE -> {
-                // Upward spiral of snowflakes
+                // Upward snowflake spiral
                 for (int i = 0; i < 25; i++) {
                     double angle = i * Math.PI / 6;
                     double radius = 1.0;
@@ -129,7 +128,7 @@ public class AffinityParticles {
                         12, 0.8, 0.8, 0.8, 0.1);
             }
             case GRAVITY -> {
-                // Inward pulling vortex
+                // Inward collapsing vortex
                 for (int i = 0; i < 40; i++) {
                     double angle = i * Math.PI / 10;
                     double radius = 2.0 - (i * 0.03);
@@ -265,7 +264,7 @@ public class AffinityParticles {
                         12, 1.0, 0.5, 1.0, 0.02);
             }
             case VOID -> {
-                // Dark emptiness effect
+                // Dark void dissipation
                 level.sendParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 1.0, player.getZ(),
                         20, 0.8, 1.0, 0.8, 0.05);
                 level.sendParticles(ParticleTypes.ASH, player.getX(), player.getY() + 1.5, player.getZ(),

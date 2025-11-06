@@ -10,7 +10,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 /**
  * Client-side initialization for Elemental Realms.
- * Registers entity renderers and other client-only components.
+ * Handles registration of renderers and other client-only components.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID, value = Dist.CLIENT)
 public final class ElementalRealmsClient {
@@ -19,7 +19,7 @@ public final class ElementalRealmsClient {
     }
 
     /**
-     * Client setup phase for initialization.
+     * Client setup phase for initialization after registration.
      */
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
@@ -27,7 +27,7 @@ public final class ElementalRealmsClient {
     }
 
     /**
-     * Registers custom entity renderers.
+     * Registers custom entity renderers for client-side display.
      */
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {

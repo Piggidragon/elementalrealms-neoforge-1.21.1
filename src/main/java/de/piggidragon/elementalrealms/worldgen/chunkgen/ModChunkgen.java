@@ -11,8 +11,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Supplier;
 
 /**
- * Handles registration of custom world generation features.
- * Registers chunk generators for bounded dimensions.
+ * Registry for custom chunk generator types.
+ * Registers bounded chunk generator for floating island dimensions.
  */
 public class ModChunkgen {
 
@@ -20,15 +20,16 @@ public class ModChunkgen {
             DeferredRegister.create(Registries.CHUNK_GENERATOR, ElementalRealms.MODID);
 
     /**
-     * Codec for the bounded chunk generator used in limited-size dimensions.
+     * Bounded chunk generator codec for limited-size dimensions.
+     * Used in School dimension to create floating island effect.
      */
     public static final Supplier<MapCodec<BoundedChunkGenerator>> BOUNDED_GENERATOR =
             CHUNK_GENERATORS.register("bounded_generator", () -> BoundedChunkGenerator.MAP_CODEC);
 
     /**
-     * Registers all world generation features to the mod event bus.
+     * Registers all chunk generators with the mod event bus.
      *
-     * @param modEventBus the mod event bus
+     * @param modEventBus Mod event bus for registration
      */
     public static void register(IEventBus modEventBus) {
         CHUNK_GENERATORS.register(modEventBus);
