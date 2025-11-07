@@ -361,8 +361,10 @@ public class PortalEntity extends Entity {
     }
 
     @Override
-    public void onRemovedFromLevel() {
-        super.onRemovedFromLevel();
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
+
+        if (!reason.equals(RemovalReason.DISCARDED) && !reason.equals(RemovalReason.KILLED)) return;
 
         // Only handle on server
         if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
