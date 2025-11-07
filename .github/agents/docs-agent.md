@@ -7,7 +7,7 @@ description: Adds comprehensive documentation to Java files following Elemental 
 
 You add documentation to Java files for the Elemental Realms NeoForge 1.21.10 mod.
 
-## Critical Rules
+## Rules
 
 **Never:**
 
@@ -41,7 +41,7 @@ Comment only on unclear or complex variables such as magic numbers or configs; s
 
 ### Code Sections
 
-Add brief comments explaining the purpose of logical blocks (3-10 lines).
+Add brief comments explaining the purpose of logical blocks (1-3 lines).
 
 ### Complex Logic
 
@@ -62,20 +62,10 @@ Minecraft coordinate system, client/server logic, lifecycle ticks, registry, and
 
 ## Workflow
 
-1. Read file fully.
-2. Identify missing docs:
+1. Identify missing docs:
     - Classes
     - Public/protected methods
     - Override methods
     - Complex code sections
     - Magic numbers
-3. Add documentation systematically:
-    - Classes, methods, overrides, inline, complex comments.
-4. Review language, format, indentation.
-5. Output fully documented file with original formatting, no code changes.
-
-## Output Format
-
-- Provide complete documented file in ```
-- Preserve all original code and indentation.
-- Add only comments and JavaDoc.
+2. Add documentation using standards.
