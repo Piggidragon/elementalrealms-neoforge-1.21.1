@@ -32,7 +32,7 @@ jobs:
           FILE_LIST=""
           while IFS= read -r file; do
             if [ -n "$file" ]; then
-              FILE_LIST="${FILE_LIST}- \`${file}\`"$'\n'
+              FILE_LIST="${FILE_LIST}- ${file}"$'\n'
             fi
           done <<< "$CHANGED_FILES"
           
@@ -50,7 +50,11 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const branchName = '${{ github.event.pull_request.head.ref }}';
             const fileCount = '${{ steps.changes.outputs.count }}';
-            const fileList = `${{ steps.changes.outputs.files }}`;
+            const fileList = fileListRaw
+              .split('\n')
+              .filter(line => line.trim())
+              .map(line => line.trim().startsWith('-') ? line : `- ${line}`)
+              .join('\n');
             
             if (fileCount === '0') {
               console.log('No Java files changed');
