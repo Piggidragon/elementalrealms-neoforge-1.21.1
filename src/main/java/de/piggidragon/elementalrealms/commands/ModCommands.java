@@ -6,6 +6,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
@@ -81,7 +82,7 @@ public class ModCommands {
                                 })
                         )
                 )
-                .then(Commands.literal("set")
+                .then(Commands.literal("spawn")
                         .then(Commands.argument("dimension", StringArgumentType.greedyString())
                                 .suggests(LEVEL_SUGGESTIONS)
                                 .executes(ctx -> {
@@ -90,34 +91,38 @@ public class ModCommands {
                                     ResourceLocation location = ResourceLocation.parse(dimString);
                                     ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, location);
 
-                                    if (ModLevel.LEVELS.contains(dimensionKey)) {
-                                        // Create portal entity
-                                        PortalEntity portal = new PortalEntity(
-                                                ModEntities.PORTAL_ENTITY.get(),
-                                                player.level(),
-                                                true,
-                                                -1,
-                                                dimensionKey,
-                                                player.getUUID()
-                                        );
-
-                                        // Position portal 2 blocks in front of player
-                                        Vec3 lookVec = player.getLookAngle();
-                                        double distance = 2.0;
-                                        Vec3 targetPos = new Vec3(
-                                                player.getX() + lookVec.x * distance,
-                                                player.getY() + 0.5,
-                                                player.getZ() + lookVec.z * distance
-                                        );
-
-                                        portal.setPos(targetPos.x, targetPos.y, targetPos.z);
-                                        portal.setYRot(player.getYRot());
-                                        player.level().addFreshEntity(portal);
-                                        return 1;
-                                    } else {
+                                    if (!ModLevel.LEVELS.contains(dimensionKey)) {
                                         ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
                                         return 0;
                                     }
+
+                                    // Create portal entity
+                                    PortalEntity portal = new PortalEntity(
+                                            ModEntities.PORTAL_ENTITY.get(),
+                                            player.level(),
+                                            true,
+                                            -1,
+                                            dimensionKey,
+                                            player.getUUID()
+                                    );
+
+                                    if (dimensionKey == ModLevel.TEST_DIMENSION) {
+                                        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal));
+                                    }
+
+                                    // Position portal 2 blocks in front of player
+                                    Vec3 lookVec = player.getLookAngle();
+                                    double distance = 2.0;
+                                    Vec3 targetPos = new Vec3(
+                                            player.getX() + lookVec.x * distance,
+                                            player.getY() + 0.5,
+                                            player.getZ() + lookVec.z * distance
+                                    );
+
+                                    portal.setPos(targetPos.x, targetPos.y, targetPos.z);
+                                    portal.setYRot(player.getYRot());
+                                    player.level().addFreshEntity(portal);
+                                    return 1;
                                 })
                         )
                 )
