@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.entities.custom;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
@@ -118,8 +119,26 @@ public class PortalEntity extends Entity {
         return this.ownerUUID;
     }
 
+    /**
+     * Gets the portal's position as a vector.
+     *
+     * @return the position vector
+     */
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
     private MinecraftServer getServer() {
         return level().getServer();
+    }
+
+    @Nullable
+    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
+        MinecraftServer server = this.getServer();
+        if (server == null) {
+            return null;
+        }
+        return server.getLevel(targetLevel);
     }
 
     /**
@@ -145,22 +164,8 @@ public class PortalEntity extends Entity {
         this.entityData.set(DATA_VARIANT, variant.getId());
     }
 
-    @Nullable
-    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
-        MinecraftServer server = this.getServer();
-        if (server == null) {
-            return null;
-        }
-        return server.getLevel(targetLevel);
-    }
-
-    /**
-     * Gets the portal's position as a vector.
-     *
-     * @return the position vector
-     */
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
+    public void setTargetLevel(ResourceKey<Level> targetLevel) {
+        this.targetLevel = targetLevel;
     }
 
     /**
@@ -351,6 +356,27 @@ public class PortalEntity extends Entity {
                 if (player != null && !player.isSpectator()) {
                     teleportPlayer(player.level(), player);
                 }
+            }
+        }
+    }
+
+    @Override
+    public void onRemovedFromLevel() {
+        super.onRemovedFromLevel();
+
+        // Only handle on server
+        if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
+            ResourceKey<Level> targetDimension = this.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+
+            // Remove dimension if it's not school dimension
+            if (targetDimension != null &&
+                    !targetDimension.equals(Level.OVERWORLD) &&
+                    !targetDimension.equals(ModLevel.SCHOOL_DIMENSION)) {
+
+                DynamicDimensionHandler.removeDimensionForPortal(
+                        serverLevel.getServer(),
+                        this
+                );
             }
         }
     }
