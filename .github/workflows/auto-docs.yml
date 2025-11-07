@@ -1,0 +1,91 @@
+name: Documentation Generator
+
+on:
+  pull_request:
+    types: [ opened, synchronize ]
+    paths:
+      - 'src/main/java/**/*.java'
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  generate-docs-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Find changed Java files
+        id: changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD -- 'src/main/java/**/*.java' 2>/dev/null || echo "")
+          FILE_COUNT=$(echo "$CHANGED_FILES" | grep -c '\.java$' || echo "0")
+          
+          # Create formatted file list
+          FILE_LIST=""
+          while IFS= read -r file; do
+            if [ -n "$file" ]; then
+              FILE_LIST="${FILE_LIST}- ${file}"$'\n'
+            fi
+          done <<< "$CHANGED_FILES"
+          
+          echo "count=${FILE_COUNT}" >> $GITHUB_OUTPUT
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILE_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create documentation issue
+        if: steps.changes.outputs.count > 0
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const branchName = '${{ github.event.pull_request.head.ref }}';
+            const fileCount = '${{ steps.changes.outputs.count }}';
+            const fileListRaw = `${{ steps.changes.outputs.files }}`;
+            
+            if (fileCount === '0') {
+              console.log('No Java files changed');
+              return;
+            }
+            
+            const fileList = fileListRaw
+              .split('\n')
+              .filter(line => line.trim())
+              .map(line => line.trim().startsWith('-') ? line : `- ${line}`)
+              .join('\n');
+            
+            const issueBody = `Add comprehensive JavaDoc and inline comments to all changed Java files in PR #${prNumber}.
+
+            **Branch:** \`${branchName}\`
+            **Files (${fileCount}):**
+            ${fileList}
+
+            Create a pull request with documentation changes targeting the branch \`${branchName}\`.`;
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Add documentation for PR #${prNumber}`,
+              body: issueBody,
+              labels: ['documentation', 'copilot-task']
+            });
+            
+            console.log(`Created documentation issue #${issue.data.number}`);
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `📝 Documentation task created: #${issue.data.number}\n\n**Next steps:**\n1. Go to issue #${issue.data.number}\n2. Click "Assign Copilot" in the assignees dropdown\n3. Select the \`documentation-specialist\` agent\n4. Copilot will analyze the files and create a PR with documentation`
+            });
+            
+            console.log(`Added comment to PR #${prNumber}`);
