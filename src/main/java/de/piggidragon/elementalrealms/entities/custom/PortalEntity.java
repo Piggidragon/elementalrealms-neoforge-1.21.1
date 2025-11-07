@@ -452,14 +452,14 @@ public class PortalEntity extends Entity {
             } else {
                 // Handle return teleportation from custom dimension to vanilla
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
-                if (returnLevelPos == null || returnLevelPos.isEmpty()) {
+                if (returnLevelPos.isEmpty()) {
                     player.displayClientMessage(Component.literal("No return position found!"), true);
                     return;
                 }
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 1, returnPos.y, returnPos.z, relatives, yaw, pitch, setCamera);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 
