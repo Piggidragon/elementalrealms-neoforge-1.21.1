@@ -112,15 +112,13 @@ public class DynamicDimensionHandler {
 
         ResourceKey<Level> dimensionKey = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
 
-        if (dimensionKey != Level.OVERWORLD) {
-            ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
+        ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
 
-            portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
+        portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
 
-            // Use Infiniverse API to unregister the dimension
-            InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
+        // Use Infiniverse API to unregister the dimension
+        InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
 
-            ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
-        }
+        ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
     }
 }
