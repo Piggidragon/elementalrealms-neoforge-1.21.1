@@ -33,7 +33,7 @@ public class ModLevel {
 
     public static final ResourceKey<LevelStem> TEST_DIMENSION_STEM = ResourceKey.create(
             Registries.LEVEL_STEM,
-            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test_stem")
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test")
     );
 
     /**
