@@ -48,7 +48,7 @@ public class DynamicDimensionHandler {
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + dimensionCounter++
+                        "realm" + "_" + portal.getVariant().getName() + "_" + dimensionCounter++
                 )
         );
 
