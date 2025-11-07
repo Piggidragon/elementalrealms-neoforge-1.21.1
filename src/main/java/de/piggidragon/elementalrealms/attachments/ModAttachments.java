@@ -89,6 +89,13 @@ public class ModAttachments {
                     .build()
     );
 
+    public static final Supplier<AttachmentType<ResourceKey<Level>>> PORTAL_TARGET_LEVEL = ATTACHMENT_TYPE.register(
+            "portal_target_level",
+            () -> AttachmentType.builder(() -> Level.OVERWORLD)
+                    .serialize(resourceKeyCodec.fieldOf("portal_target_level"))
+                    .build()
+    );
+
     /**
      * Registers all attachment types with the mod event bus.
      *
