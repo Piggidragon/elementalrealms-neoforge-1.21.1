@@ -50,24 +50,25 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const branchName = '${{ github.event.pull_request.head.ref }}';
             const fileCount = '${{ steps.changes.outputs.count }}';
-            const fileList = fileListRaw
-              .split('\n')
-              .filter(line => line.trim())
-              .map(line => line.trim().startsWith('-') ? line : `- ${line}`)
-              .join('\n');
+            const fileListRaw = `${{ steps.changes.outputs.files }}`;
             
             if (fileCount === '0') {
               console.log('No Java files changed');
               return;
             }
             
-            // Kurze, klare Aufgabenbeschreibung für den Agent
-            const issueBody = `Add comprehensive JavaDoc and inline comments to all changed Java files in PR #${prNumber}.
+            const fileList = fileListRaw
+              .split('\n')
+              .filter(line => line.trim())
+              .map(line => line.trim().startsWith('-') ? line : `- ${line}`)
+              .join('\n');
             
+            const issueBody = `Add comprehensive JavaDoc and inline comments to all changed Java files in PR #${prNumber}.
+
             **Branch:** \`${branchName}\`
             **Files (${fileCount}):**
             ${fileList}
-            
+
             Create a pull request with documentation changes targeting the branch \`${branchName}\`.`;
             
             const issue = await github.rest.issues.create({
@@ -78,11 +79,13 @@ jobs:
               labels: ['documentation', 'copilot-task']
             });
             
-            console.log(`✅ Created documentation issue #${issue.data.number}`);
+            console.log(`Created documentation issue #${issue.data.number}`);
             
-            // Kommentar im PR mit Anleitung
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `📝 Documentation task created: #${issue.data.number}
+              body: `📝 Documentation task created: #${issue.data.number}\n\n**Next steps:**\n1. Go to issue #${issue.data.number}\n2. Click "Assign Copilot" in the assignees dropdown\n3. Select the \`documentation-specialist\` agent\n4. Copilot will analyze the files and create a PR with documentation`
+            });
+            
+            console.log(`Added comment to PR #${prNumber}`);
