@@ -100,7 +100,7 @@ public class ModCommands {
                                     PortalEntity portal = new PortalEntity(
                                             ModEntities.PORTAL_ENTITY.get(),
                                             player.level(),
-                                            true,
+                                            false,
                                             -1,
                                             dimensionKey,
                                             player.getUUID()
