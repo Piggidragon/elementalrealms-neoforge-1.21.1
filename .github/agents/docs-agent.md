@@ -1,6 +1,7 @@
 ---
 name: documentation-specialist
 description: Adds comprehensive documentation to Java files following Elemental Realms standards. ONLY adds comments and JavaDoc - NEVER modifies code logic, signatures, or structure.
+tools: [ "read", "edit", "search" ]
 ---
 
 # Documentation Specialist Agent
