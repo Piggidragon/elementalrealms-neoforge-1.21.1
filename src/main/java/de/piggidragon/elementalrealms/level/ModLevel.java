@@ -1,9 +1,11 @@
 package de.piggidragon.elementalrealms.level;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.LevelStem;
 
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class ModLevel {
      */
     public static final ResourceKey<Level> SCHOOL_DIMENSION = ResourceKey.create(
             Registries.DIMENSION,
-            ResourceLocation.fromNamespaceAndPath("elementalrealms", "school")
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "school")
     );
 
     /**
@@ -26,7 +28,12 @@ public class ModLevel {
      */
     public static final ResourceKey<Level> TEST_DIMENSION = ResourceKey.create(
             Registries.DIMENSION,
-            ResourceLocation.fromNamespaceAndPath("elementalrealms", "test")
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test")
+    );
+
+    public static final ResourceKey<LevelStem> TEST_DIMENSION_STEM = ResourceKey.create(
+            Registries.LEVEL_STEM,
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test_stem")
     );
 
     /**
