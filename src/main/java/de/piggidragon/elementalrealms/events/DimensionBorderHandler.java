@@ -1,10 +1,12 @@
 package de.piggidragon.elementalrealms.events;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -26,14 +28,16 @@ public class DimensionBorderHandler {
         for (ResourceKey<Level> level : ModLevel.LEVELS) {
             ServerLevel serverLevel = event.getServer().getLevel(level);
             if (serverLevel != null) {
-                setupWorldBorder(serverLevel);
+                for (ChunkPos generationCenter : DynamicDimensionHandler.getGenerationCenters()) {
+                    setupWorldBorder(serverLevel, generationCenter);
+                }
             }
         }
     }
 
-    public static void setupWorldBorder(ServerLevel level) {
+    public static void setupWorldBorder(ServerLevel level, ChunkPos generationCenter) {
         WorldBorder border = level.getWorldBorder();
-        border.setCenter(BoundedChunkGenerator.getGenerationCenter().x * 16, BoundedChunkGenerator.getGenerationCenter().z * 16);
+        border.setCenter(generationCenter.getMiddleBlockX(), generationCenter.getMiddleBlockZ());
         border.setSize(BoundedChunkGenerator.getMaxChunks() * 16 * 2);
         border.setWarningBlocks(10);
         border.setDamagePerBlock(1.0);

@@ -4,6 +4,7 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import de.piggidragon.elementalrealms.events.DimensionBorderHandler;
+import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
 import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.commoble.infiniverse.api.InfiniverseAPI;
 import net.minecraft.core.Holder;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,8 +31,8 @@ public class DynamicDimensionHandler {
 
     // Counter for unique dimension IDs (only used for new dimensions)
     private static int dimensionCounter = 0;
-    private static final List<ChunkPos> generationCenters = new ArrayList<>();
     private static int layer = 1;
+    static GenerationCenterData generationCenters;
 
     /**
      * Creates a new dimension instance for a specific portal using Infiniverse API.
@@ -61,18 +61,21 @@ public class DynamicDimensionHandler {
         ElementalRealms.LOGGER.info("Creating new dimension {} for portal {}", dimensionKey.location(), portal);
 
         try {
+            generationCenters = GenerationCenterData.get(server);
+            ChunkPos generationCenter = createNewGenerationCenter(generationCenters);
+
             // Use Infiniverse to create dimension with custom chunk generator
             ServerLevel newLevel = InfiniverseAPI.get().getOrCreateLevel(
                     server,
                     dimensionKey,
-                    () -> createCustomLevelStem(server, dimensionKey)
+                    () -> createCustomLevelStem(server, dimensionKey, generationCenter)
             );
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
 
                 // Setup world border
-                DimensionBorderHandler.setupWorldBorder(newLevel);
+                DimensionBorderHandler.setupWorldBorder(newLevel, generationCenter);
 
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
@@ -94,7 +97,7 @@ public class DynamicDimensionHandler {
      * @param dimensionKey The dimension key (provides unique seed automatically)
      * @return A LevelStem with custom settings
      */
-    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> dimensionKey) {
+    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> dimensionKey, ChunkPos generationCenter) {
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
                 .lookupOrThrow(Registries.LEVEL_STEM);
 
@@ -116,7 +119,7 @@ public class DynamicDimensionHandler {
         BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(
                 biomeSource,
                 noiseSettings,
-                createNewGenerationCenter()
+                generationCenter
         );
 
         ElementalRealms.LOGGER.info("Created new BoundedChunkGenerator for dimension {}",
@@ -151,13 +154,13 @@ public class DynamicDimensionHandler {
         }
     }
 
-    public static ChunkPos createNewGenerationCenter() {
+    public static ChunkPos createNewGenerationCenter(GenerationCenterData generationCenters) throws IllegalArgumentException {
 
         ChunkPos generationCenter;
 
         if (dimensionCounter == 0) {
             generationCenter = new ChunkPos(0, 0);
-            generationCenters.add(generationCenter);
+            generationCenters.addGenerationCenter(generationCenter);
             return generationCenter;
         }
 
@@ -168,13 +171,17 @@ public class DynamicDimensionHandler {
                 }
 
                 generationCenter = new ChunkPos(x * BoundedChunkGenerator.getMaxChunks() * 2, z * BoundedChunkGenerator.getMaxChunks() * 2);
-                if (!generationCenters.contains(generationCenter)) {
-                    generationCenters.add(generationCenter);
+                if (!generationCenters.getGenerationCenters().contains(generationCenter)) {
+                    generationCenters.addGenerationCenter(generationCenter);
                     return generationCenter;
                 }
             }
         }
 
-        return null;
+        throw new IllegalStateException("Failed to create new generation center");
+    }
+
+    public static List<ChunkPos> getGenerationCenters() {
+        return generationCenters.getGenerationCenters();
     }
 }
