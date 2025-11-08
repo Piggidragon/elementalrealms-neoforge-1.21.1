@@ -7,6 +7,7 @@ import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
+import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -371,9 +372,7 @@ public class PortalEntity extends Entity {
             ResourceKey<Level> targetDimension = this.getData(ModAttachments.PORTAL_TARGET_LEVEL);
 
             // Remove dimension if it's not school dimension
-            if (targetDimension != null &&
-                    !targetDimension.equals(Level.OVERWORLD) &&
-                    !targetDimension.equals(ModLevel.SCHOOL_DIMENSION)) {
+            if (!targetDimension.equals(Level.OVERWORLD) && !targetDimension.equals(ModLevel.SCHOOL_DIMENSION)) {
 
                 DynamicDimensionHandler.removeDimensionForPortal(
                         serverLevel.getServer(),
@@ -415,17 +414,18 @@ public class PortalEntity extends Entity {
 
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
-                ChunkPos spawnChunk = new ChunkPos(0, 0);
                 assert destinationLevel != null;
-                destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
 
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
+                    destinationLevel.setChunkForced(0, 0, true);
                     destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn
                 } else {
+                    ChunkPos spawnChunk = BoundedChunkGenerator.getGenerationCenter();
+                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
                     int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
-                    destinationPos = new Vec3(0.5, terrainHeight, 0.5);
+                    destinationPos = new Vec3(0.5 + spawnChunk.x * 16, terrainHeight, 0.5 + spawnChunk.z * 16);
                 }
 
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
