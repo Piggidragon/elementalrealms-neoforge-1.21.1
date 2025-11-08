@@ -54,7 +54,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     private RegistryAccess registryAccess;
     private RandomState customRandomState;
     private long customSeed;
-
+    private ChunkPos generationCenter;
     /**
      * Constructs a bounded chunk generator.
      *
@@ -63,6 +63,11 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      */
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings) {
         super(biomeSource, settings);
+    }
+
+    public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, ChunkPos generationCenter) {
+        this(biomeSource, settings);
+        this.generationCenter = generationCenter;
     }
 
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, RegistryAccess registryAccess, long seed) {
@@ -185,8 +190,8 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * @return true if within bounds, false otherwise
      */
     private boolean isWithinBounds(ChunkPos pos) {
-        return pos.x >= MIN_CHUNKS && pos.x < MAX_CHUNKS &&
-                pos.z >= MIN_CHUNKS && pos.z < MAX_CHUNKS;
+        return pos.x >= MIN_CHUNKS + generationCenter.x && pos.x < MAX_CHUNKS + generationCenter.x &&
+                pos.z >= MIN_CHUNKS + generationCenter.z && pos.z < MAX_CHUNKS + generationCenter.z;
     }
 
     /**
@@ -212,4 +217,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         // Initialize heightmaps for void chunks
         Heightmap.primeHeightmaps(chunkAccess, Set.of(Heightmap.Types.values()));
     }
+
+
 }

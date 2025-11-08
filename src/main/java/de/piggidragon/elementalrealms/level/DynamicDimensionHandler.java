@@ -13,12 +13,12 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ public class DynamicDimensionHandler {
 
     // Counter for unique dimension IDs (only used for new dimensions)
     private static int dimensionCounter = 0;
-    private static final List<Vec3> generationCenters = new ArrayList<>();
+    private static final List<ChunkPos> generationCenters = new ArrayList<>();
     private static int layer = 1;
 
     /**
@@ -141,7 +141,7 @@ public class DynamicDimensionHandler {
 
         ResourceKey<Level> dimensionKey = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
 
-        if (dimensionKey != null && dimensionKey != Level.OVERWORLD) {
+        if (dimensionKey != Level.OVERWORLD) {
             ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
 
             portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
@@ -153,12 +153,12 @@ public class DynamicDimensionHandler {
         }
     }
 
-    public static Vec3 createNewGenerationCenter() {
+    public static ChunkPos createNewGenerationCenter() {
 
-        Vec3 generationCenter;
+        ChunkPos generationCenter;
 
         if (dimensionCounter == 0) {
-            generationCenter = new Vec3(0, 0, 0);
+            generationCenter = new ChunkPos(0, 0);
             generationCenters.add(generationCenter);
             return generationCenter;
         }
@@ -169,7 +169,7 @@ public class DynamicDimensionHandler {
                     layer++;
                 }
 
-                generationCenter = new Vec3(x * MAX_CHUNKS * 16 * 2, 0, z * MAX_CHUNKS * 16 * 2);
+                generationCenter = new ChunkPos(x * MAX_CHUNKS * 2, z * MAX_CHUNKS * 2);
                 if (!generationCenters.contains(generationCenter)) {
                     generationCenters.add(generationCenter);
                     return generationCenter;
