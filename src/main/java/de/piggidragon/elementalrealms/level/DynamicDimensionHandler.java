@@ -18,6 +18,12 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator.MAX_CHUNKS;
 
 /**
  * Manager for creating and managing portal-specific dimension instances using Infiniverse API.
@@ -27,6 +33,8 @@ public class DynamicDimensionHandler {
 
     // Counter for unique dimension IDs (only used for new dimensions)
     private static int dimensionCounter = 0;
+    private static final List<Vec3> generationCenters = new ArrayList<>();
+    private static int layer = 1;
 
     /**
      * Creates a new dimension instance for a specific portal using Infiniverse API.
@@ -109,7 +117,8 @@ public class DynamicDimensionHandler {
 
         BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(
                 biomeSource,
-                noiseSettings
+                noiseSettings,
+                createNewGenerationCenter()
         );
 
         ElementalRealms.LOGGER.info("Created new BoundedChunkGenerator for dimension {}",
@@ -142,5 +151,32 @@ public class DynamicDimensionHandler {
 
             ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
         }
+    }
+
+    public static Vec3 createNewGenerationCenter() {
+
+        Vec3 generationCenter;
+
+        if (dimensionCounter == 0) {
+            generationCenter = new Vec3(0, 0, 0);
+            generationCenters.add(generationCenter);
+            return generationCenter;
+        }
+
+        for (int x = -layer; x <= layer; x++) {
+            for (int z = -layer; z <= layer; z++) {
+                if (x == layer && z == layer) {
+                    layer++;
+                }
+
+                generationCenter = new Vec3(x * MAX_CHUNKS * 16 * 2, 0, z * MAX_CHUNKS * 16 * 2);
+                if (!generationCenters.contains(generationCenter)) {
+                    generationCenters.add(generationCenter);
+                    return generationCenter;
+                }
+            }
+        }
+
+        return null;
     }
 }
