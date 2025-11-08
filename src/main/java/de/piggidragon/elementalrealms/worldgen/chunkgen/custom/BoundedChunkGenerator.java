@@ -49,12 +49,12 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * Maximum chunk radius from world origin (0,0).
      * Creates 16x16 chunk play area (256x256 blocks).
      */
-    public static final int MAX_CHUNKS = 8;
+    private static final int MAX_CHUNKS = 8;
     private static final int MIN_CHUNKS = -MAX_CHUNKS;
     private RegistryAccess registryAccess;
     private RandomState customRandomState;
     private long customSeed;
-    private ChunkPos generationCenter;
+    private static ChunkPos generationCenter;
     /**
      * Constructs a bounded chunk generator.
      *
@@ -86,6 +86,14 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
                     this.customSeed
             );
         }
+    }
+
+    public static int getMaxChunks() {
+        return MAX_CHUNKS;
+    }
+
+    public static ChunkPos getGenerationCenter() {
+        return generationCenter;
     }
 
     @Override

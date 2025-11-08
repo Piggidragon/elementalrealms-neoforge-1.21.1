@@ -23,8 +23,6 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator.MAX_CHUNKS;
-
 /**
  * Manager for creating and managing portal-specific dimension instances using Infiniverse API.
  * Each portal gets its own actual dimension with custom chunk generator.
@@ -169,7 +167,7 @@ public class DynamicDimensionHandler {
                     layer++;
                 }
 
-                generationCenter = new ChunkPos(x * MAX_CHUNKS * 2, z * MAX_CHUNKS * 2);
+                generationCenter = new ChunkPos(x * BoundedChunkGenerator.getMaxChunks() * 2, z * BoundedChunkGenerator.getMaxChunks() * 2);
                 if (!generationCenters.contains(generationCenter)) {
                     generationCenters.add(generationCenter);
                     return generationCenter;

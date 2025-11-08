@@ -33,12 +33,12 @@ public class DimensionBorderHandler {
 
     public static void setupWorldBorder(ServerLevel level) {
         WorldBorder border = level.getWorldBorder();
-        border.setCenter(0.0, 0.0);
-        border.setSize(BoundedChunkGenerator.MAX_CHUNKS * 16 * 2);
+        border.setCenter(BoundedChunkGenerator.getGenerationCenter().x * 16, BoundedChunkGenerator.getGenerationCenter().z * 16);
+        border.setSize(BoundedChunkGenerator.getMaxChunks() * 16 * 2);
         border.setWarningBlocks(10);
         border.setDamagePerBlock(1.0);
 
         ElementalRealms.LOGGER.info("World border set for dimension {} - Size: {}x{} blocks",
-                level.dimension().location(), BoundedChunkGenerator.MAX_CHUNKS * 16 * 2, BoundedChunkGenerator.MAX_CHUNKS * 16 * 2);
+                level.dimension().location(), BoundedChunkGenerator.getMaxChunks() * 16 * 2, BoundedChunkGenerator.getMaxChunks() * 16 * 2);
     }
 }
