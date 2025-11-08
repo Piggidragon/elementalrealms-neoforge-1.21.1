@@ -43,12 +43,12 @@ public class DynamicDimensionHandler {
             return portalTargetLevel;
         }
 
-        // Create unique dimension key
+        // Create unique dimension key with variant name
         ResourceKey<Level> dimensionKey = ResourceKey.create(
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm" + "_" + portal.getVariant().getName() + "_" + dimensionCounter++
+                        "realm_" + portal.getVariant().getName() + "_" + dimensionCounter++
                 )
         );
 
@@ -81,10 +81,11 @@ public class DynamicDimensionHandler {
 
     /**
      * Creates a custom LevelStem with a NEW chunk generator instance.
-     * Each dimension gets its own generator with unique seed based on dimension key.
+     * Each dimension gets its own generator - the unique dimension key
+     * provides a unique seed automatically through Minecraft's internal seeding.
      *
      * @param server The server instance
-     * @param dimensionKey The dimension key (provides unique seed via its name)
+     * @param dimensionKey The dimension key (provides unique seed automatically)
      * @return A LevelStem with custom settings
      */
     private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> dimensionKey) {
@@ -97,23 +98,22 @@ public class DynamicDimensionHandler {
 
         LevelStem templateStem = templateStemHolder.value();
 
-        // Get generator from template (should be NoiseBasedChunkGenerator)
+        // Get generator from template
         if (!(templateStem.generator() instanceof NoiseBasedChunkGenerator templateGenerator)) {
             throw new IllegalStateException("Template generator is not NoiseBasedChunkGenerator!");
         }
 
         // Get components from template
-        BiomeSource templateBiomeSource = templateGenerator.getBiomeSource();
+        BiomeSource biomeSource = templateGenerator.getBiomeSource();
         Holder<NoiseGeneratorSettings> noiseSettings = templateGenerator.generatorSettings();
 
-        // Create a NEW BoundedChunkGenerator instance
-        // The unique dimension key ensures each dimension gets a different seed automatically
         BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(
-                templateBiomeSource,
+                biomeSource,
                 noiseSettings
         );
 
-        ElementalRealms.LOGGER.info("Created new generator for dimension {}", dimensionKey.location());
+        ElementalRealms.LOGGER.info("Created new BoundedChunkGenerator for dimension {}",
+                dimensionKey.location());
 
         // Return new LevelStem with the new generator instance
         return new LevelStem(
@@ -132,7 +132,7 @@ public class DynamicDimensionHandler {
 
         ResourceKey<Level> dimensionKey = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
 
-        if (dimensionKey != Level.OVERWORLD) {
+        if (dimensionKey != null && dimensionKey != Level.OVERWORLD) {
             ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
 
             portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);

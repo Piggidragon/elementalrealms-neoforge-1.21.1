@@ -4,6 +4,8 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -39,7 +41,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     public static final MapCodec<BoundedChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("biome_source").forGetter(ChunkGenerator::getBiomeSource),
-                    NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter(gen -> gen.generatorSettings())
+                    NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter(NoiseBasedChunkGenerator::generatorSettings)
             ).apply(instance, BoundedChunkGenerator::new)
     );
 
@@ -49,6 +51,9 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      */
     public static final int MAX_CHUNKS = 8;
     private static final int MIN_CHUNKS = -MAX_CHUNKS;
+    private RegistryAccess registryAccess;
+    private RandomState customRandomState;
+    private long customSeed;
 
     /**
      * Constructs a bounded chunk generator.
@@ -58,6 +63,24 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      */
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings) {
         super(biomeSource, settings);
+    }
+
+    public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, RegistryAccess registryAccess, long seed) {
+        this(biomeSource, settings);
+        this.registryAccess = registryAccess;
+        this.customSeed = seed;
+
+        initRandomState(this.registryAccess);
+    }
+
+    private void initRandomState(RegistryAccess registryAccess) {
+        if (this.customRandomState == null && registryAccess != null) {
+            this.customRandomState = RandomState.create(
+                    generatorSettings().value(),
+                    registryAccess.lookupOrThrow(Registries.NOISE),
+                    this.customSeed
+            );
+        }
     }
 
     @Override
