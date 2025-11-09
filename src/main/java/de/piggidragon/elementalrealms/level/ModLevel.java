@@ -4,6 +4,7 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 
@@ -79,7 +80,9 @@ public class ModLevel {
     }
 
     public static ResourceKey<Level> getRandomLevel() {
-        return LEVEL_RANDOM_SOURCE.get((int) (Math.random() * LEVELS.size()));
+        RandomSource randomSource = RandomSource.create();
+        int index = randomSource.nextInt(LEVEL_RANDOM_SOURCE.size());
+        return LEVEL_RANDOM_SOURCE.get(index);
     }
 
     public static ResourceKey<LevelStem> getStemForLevel(ResourceKey<Level> level) {
