@@ -49,8 +49,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * Maximum chunk radius from world origin (0,0).
      * Creates 16x16 chunk play area (256x256 blocks).
      */
-    private static final int MAX_CHUNKS = 8;
-    private static final int MIN_CHUNKS = -MAX_CHUNKS;
+    private static final int RADIUS = 10;
     private RegistryAccess registryAccess;
     private RandomState customRandomState;
     private long customSeed;
@@ -88,8 +87,8 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         }
     }
 
-    public static int getMaxChunks() {
-        return MAX_CHUNKS;
+    public static int getTotalSize() {
+        return (RADIUS * 2 + 1) * 16;
     }
 
     public static ChunkPos getGenerationCenter() {
@@ -187,7 +186,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      */
     @Override
     public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos blockPos) {
-        list.add("Bounds: " + MIN_CHUNKS + " to " + MAX_CHUNKS + " chunks");
+        list.add("Bounds: " + (-RADIUS) + " to " + RADIUS + " chunks");
         super.addDebugScreenInfo(list, randomState, blockPos);
     }
 
@@ -198,8 +197,8 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * @return true if within bounds, false otherwise
      */
     private boolean isWithinBounds(ChunkPos pos) {
-        return pos.x >= MIN_CHUNKS + generationCenter.x && pos.x < MAX_CHUNKS + generationCenter.x &&
-                pos.z >= MIN_CHUNKS + generationCenter.z && pos.z < MAX_CHUNKS + generationCenter.z;
+        return pos.x >= -RADIUS + generationCenter.x && pos.x <= RADIUS + generationCenter.x &&
+                pos.z >= -RADIUS + generationCenter.z && pos.z <= RADIUS + generationCenter.z;
     }
 
     /**
