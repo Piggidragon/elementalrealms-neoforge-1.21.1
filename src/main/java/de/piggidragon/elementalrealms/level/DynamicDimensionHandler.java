@@ -21,8 +21,6 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
-import java.util.List;
-
 /**
  * Manager for creating and managing portal-specific dimension instances using Infiniverse API.
  * Each portal gets its own actual dimension with custom chunk generator.
@@ -45,20 +43,6 @@ public class DynamicDimensionHandler {
         generationCenters = GenerationCenterData.get(server);
         ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
                 generationCenters.getGenerationCenterCount());
-    }
-
-    /**
-     * Gets the list of all generation centers.
-     * Returns empty list if not yet initialized (instead of crashing).
-     *
-     * @return List of generation centers
-     */
-    public static List<ChunkPos> getGenerationCenters() {
-        if (generationCenters == null) {
-            ElementalRealms.LOGGER.warn("getGenerationCenters() called before initialization!");
-            return List.of(); // Return empty list instead of crashing
-        }
-        return generationCenters.getGenerationCenters();
     }
 
     /**
@@ -101,6 +85,8 @@ public class DynamicDimensionHandler {
                     dimensionKey,
                     () -> createCustomLevelStem(server, dimensionKey, generationCenter)
             );
+
+            generationCenters.addGenerationCenter(dimensionKey, generationCenter);
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
@@ -206,7 +192,6 @@ public class DynamicDimensionHandler {
         // First center at origin
         if (dimensionCounter == 0) {
             generationCenter = new ChunkPos(0, 0);
-            generationCenters.addGenerationCenter(generationCenter);
             return generationCenter;
         }
 
@@ -222,8 +207,7 @@ public class DynamicDimensionHandler {
                         z * (BoundedChunkGenerator.getRadius() * 2 + 1)
                 );
 
-                if (!generationCenters.getGenerationCenters().contains(generationCenter)) {
-                    generationCenters.addGenerationCenter(generationCenter);
+                if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
                     return generationCenter;
                 }
             }

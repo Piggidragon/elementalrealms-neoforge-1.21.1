@@ -82,15 +82,12 @@ public class GenerationCenterData extends SavedData {
      * Adds a new generation center to the global list
      *
      * @param center The generation center to add
-     * @return true if added, false if already exists
      */
-    public boolean addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {
-        if (!generationCenters.values().contains(center)) {
+    public void addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {
+        if (!generationCenters.containsValue(center)) {
             generationCenters.put(level, center);
             this.setDirty();
-            return true;
         }
-        return false;
     }
 
     /**
