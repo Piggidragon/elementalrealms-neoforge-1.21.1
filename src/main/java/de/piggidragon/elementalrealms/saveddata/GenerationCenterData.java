@@ -20,7 +20,7 @@ import java.util.Map;
 public class GenerationCenterData extends SavedData {
 
     // Codec for ResourceKey<Level> to ChunkPos mapping
-    public static final Codec<GenerationCenterData> CODEC = RecordCodecBuilder.create(
+    private static final Codec<GenerationCenterData> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
                     // Codec for Map<ResourceKey<Level>, ChunkPos>
                     Codec.unboundedMap(
