@@ -32,7 +32,34 @@ public class DynamicDimensionHandler {
     // Counter for unique dimension IDs (only used for new dimensions)
     private static int dimensionCounter = 0;
     private static int layer = 1;
-    static GenerationCenterData generationCenters;
+    private static GenerationCenterData generationCenters;
+
+    /**
+     * Initialize the handler with the server instance.
+     * MUST be called during ServerStarting/ServerStarted event!
+     *
+     * @param server The Minecraft server instance
+     */
+    public static void initialize(MinecraftServer server) {
+        // Store server reference
+        generationCenters = GenerationCenterData.get(server);
+        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
+                generationCenters.getGenerationCenterCount());
+    }
+
+    /**
+     * Gets the list of all generation centers.
+     * Returns empty list if not yet initialized (instead of crashing).
+     *
+     * @return List of generation centers
+     */
+    public static List<ChunkPos> getGenerationCenters() {
+        if (generationCenters == null) {
+            ElementalRealms.LOGGER.warn("getGenerationCenters() called before initialization!");
+            return List.of(); // Return empty list instead of crashing
+        }
+        return generationCenters.getGenerationCenters();
+    }
 
     /**
      * Creates a new dimension instance for a specific portal using Infiniverse API.
@@ -42,6 +69,11 @@ public class DynamicDimensionHandler {
      * @return The ResourceKey for the dimension
      */
     public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal) {
+
+        // Ensure initialization (defensive programming)
+        if (generationCenters == null) {
+            initialize(server);
+        }
 
         // Check if portal already has a dimension
         ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
@@ -54,15 +86,14 @@ public class DynamicDimensionHandler {
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + portal.getVariant().getName() + "_" + dimensionCounter++
+                        "realm_" + portal.getVariant().getName() + "_" + dimensionCounter
                 )
         );
 
         ElementalRealms.LOGGER.info("Creating new dimension {} for portal {}", dimensionKey.location(), portal);
 
         try {
-            generationCenters = GenerationCenterData.get(server);
-            ChunkPos generationCenter = createNewGenerationCenter(generationCenters);
+            ChunkPos generationCenter = createNewGenerationCenter();
 
             // Use Infiniverse to create dimension with custom chunk generator
             ServerLevel newLevel = InfiniverseAPI.get().getOrCreateLevel(
@@ -79,6 +110,7 @@ public class DynamicDimensionHandler {
 
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
+                dimensionCounter++;
                 return dimensionKey;
             }
         } catch (Exception e) {
@@ -95,6 +127,7 @@ public class DynamicDimensionHandler {
      *
      * @param server The server instance
      * @param dimensionKey The dimension key (provides unique seed automatically)
+     * @param generationCenter The center position for chunk generation
      * @return A LevelStem with custom settings
      */
     private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> dimensionKey, ChunkPos generationCenter) {
@@ -150,27 +183,45 @@ public class DynamicDimensionHandler {
             // Use Infiniverse API to unregister the dimension
             InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
 
+
             ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
         }
     }
 
-    public static ChunkPos createNewGenerationCenter(GenerationCenterData generationCenters) throws IllegalArgumentException {
+    /**
+     * Creates a new generation center in ring form around the origin.
+     * Automatically saves to persistent storage.
+     *
+     * @return The newly created generation center position
+     * @throws IllegalStateException if unable to create a new center
+     */
+    public static ChunkPos createNewGenerationCenter() throws IllegalStateException {
+
+        if (generationCenters == null) {
+            throw new IllegalStateException("DynamicDimensionHandler not initialized! Call initialize() first.");
+        }
 
         ChunkPos generationCenter;
 
+        // First center at origin
         if (dimensionCounter == 0) {
             generationCenter = new ChunkPos(0, 0);
             generationCenters.addGenerationCenter(generationCenter);
             return generationCenter;
         }
 
+        // Ring generation logic
         for (int x = -layer; x <= layer; x++) {
             for (int z = -layer; z <= layer; z++) {
                 if (x == layer && z == layer) {
                     layer++;
                 }
 
-                generationCenter = new ChunkPos(x * BoundedChunkGenerator.getMaxChunks() * 2, z * BoundedChunkGenerator.getMaxChunks() * 2);
+                generationCenter = new ChunkPos(
+                        x * (BoundedChunkGenerator.getRadius() * 2 + 1),
+                        z * (BoundedChunkGenerator.getRadius() * 2 + 1)
+                );
+
                 if (!generationCenters.getGenerationCenters().contains(generationCenter)) {
                     generationCenters.addGenerationCenter(generationCenter);
                     return generationCenter;
@@ -179,9 +230,5 @@ public class DynamicDimensionHandler {
         }
 
         throw new IllegalStateException("Failed to create new generation center");
-    }
-
-    public static List<ChunkPos> getGenerationCenters() {
-        return generationCenters.getGenerationCenters();
     }
 }

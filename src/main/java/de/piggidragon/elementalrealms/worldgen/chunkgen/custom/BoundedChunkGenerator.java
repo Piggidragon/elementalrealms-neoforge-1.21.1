@@ -91,6 +91,10 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         return (RADIUS * 2 + 1) * 16;
     }
 
+    public static int getRadius() {
+        return RADIUS;
+    }
+
     public static ChunkPos getGenerationCenter() {
         return generationCenter;
     }
