@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
@@ -424,10 +425,11 @@ public class PortalEntity extends Entity {
                 } else {
                     ChunkPos spawnChunk = BoundedChunkGenerator.getGenerationCenter();
                     destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
-                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
-                    destinationPos = new Vec3(0.5 + spawnChunk.x * 16, terrainHeight, 0.5 + spawnChunk.z * 16);
+                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
+                    destinationPos = new Vec3(0.5 + spawnChunk.getMiddleBlockX(), terrainHeight, 0.5 + spawnChunk.getMiddleBlockZ());
                 }
 
+                ElementalRealms.LOGGER.info("Teleporting to {} at {}", destinationLevel, destinationPos);
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
                 player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
