@@ -21,6 +21,8 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
+import java.util.Collection;
+
 /**
  * Manager for creating and managing portal-specific dimension instances using Infiniverse API.
  * Each portal gets its own actual dimension with custom chunk generator.
@@ -43,6 +45,10 @@ public class DynamicDimensionHandler {
         generationCenters = GenerationCenterData.get(server);
         ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
                 generationCenters.getGenerationCenterCount());
+    }
+
+    public static Collection<ChunkPos> getUsedGenerationCenters() {
+        return generationCenters.getGenerationCenters().values();
     }
 
     /**

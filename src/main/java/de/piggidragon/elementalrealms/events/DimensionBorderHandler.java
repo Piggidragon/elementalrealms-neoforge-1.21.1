@@ -32,7 +32,7 @@ public class DimensionBorderHandler {
             ServerLevel serverLevel = event.getServer().getLevel(level);
             if (serverLevel != null) {
                 // Get generation centers (now safe because we initialized above)
-                for (ChunkPos generationCenter : DynamicDimensionHandler.getGenerationCenters()) {
+                for (ChunkPos generationCenter : DynamicDimensionHandler.getUsedGenerationCenters()) {
                     setupWorldBorder(serverLevel, generationCenter);
                 }
             }
