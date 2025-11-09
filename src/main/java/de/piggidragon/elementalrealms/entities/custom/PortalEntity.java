@@ -426,7 +426,7 @@ public class PortalEntity extends Entity {
                             .get(targetLevel);
                     ChunkAccess chunk = level.getChunk(spawnChunk.x, spawnChunk.z, ChunkStatus.FULL, true);
                     assert chunk != null;
-                    int terrainHeight = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
+                    int terrainHeight = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
                     destinationPos = new Vec3(0.5 + spawnChunk.getMiddleBlockX(), terrainHeight, 0.5 + spawnChunk.getMiddleBlockZ());
                 }
 

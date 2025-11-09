@@ -37,10 +37,44 @@ public class ModLevel {
     );
 
     /**
+     * Development/testing dimension.
+     */
+    public static final ResourceKey<Level> TEST_DIMENSION2 = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test2")
+    );
+
+    public static final ResourceKey<LevelStem> TEST_DIMENSION2_STEM = ResourceKey.create(
+            Registries.LEVEL_STEM,
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test2")
+    );
+
+    /**
      * List of all custom dimensions for batch operations.
      */
     public static final List<ResourceKey<Level>> LEVELS = List.of(
             SCHOOL_DIMENSION,
-            TEST_DIMENSION
+            TEST_DIMENSION,
+            TEST_DIMENSION2
     );
+    public static final List<ResourceKey<Level>> LEVEL_RANDOM_SOURCE = List.of(
+            TEST_DIMENSION,
+            TEST_DIMENSION2
+    );
+    public static final List<ResourceKey<LevelStem>> LEVEL_STEMS = List.of(
+            TEST_DIMENSION_STEM,
+            TEST_DIMENSION2_STEM
+    );
+
+    public static ResourceKey<Level> getRandomLevel() {
+        return LEVEL_RANDOM_SOURCE.get((int) (Math.random() * LEVELS.size()));
+    }
+
+    public static ResourceKey<LevelStem> getStemForLevel(ResourceKey<Level> level) {
+        int index = LEVELS.indexOf(level);
+        if (index != -1) {
+            return LEVEL_STEMS.get(index);
+        }
+        return null;
+    }
 }

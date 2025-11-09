@@ -124,7 +124,7 @@ public class DynamicDimensionHandler {
                 .lookupOrThrow(Registries.LEVEL_STEM);
 
         // Get your test dimension template
-        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.TEST_DIMENSION_STEM)
+        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(dimensionKey))
                 .orElseThrow(() -> new IllegalStateException("Test dimension template not found!"));
 
         LevelStem templateStem = templateStemHolder.value();

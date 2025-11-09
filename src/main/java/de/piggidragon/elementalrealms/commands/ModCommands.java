@@ -106,7 +106,7 @@ public class ModCommands {
                                             player.getUUID()
                                     );
 
-                                    if (dimensionKey == ModLevel.TEST_DIMENSION) {
+                                    if (dimensionKey == ModLevel.LEVEL_RANDOM_SOURCE) {
                                         portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal));
                                     }
 
