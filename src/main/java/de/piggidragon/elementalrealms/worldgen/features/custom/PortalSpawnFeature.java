@@ -64,7 +64,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal));
 
-
         // Position portal centered on block with random rotation
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         portal.setYRot(randomSource.nextFloat() * 360.0F);

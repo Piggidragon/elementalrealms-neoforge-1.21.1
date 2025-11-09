@@ -54,7 +54,6 @@ public class PortalEntity extends Entity {
 
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
-    private ChunkPos spawnChunk;
     private UUID ownerUUID = null;
     private boolean initialized = false;
     private boolean discard = false; // Remove portal after single use
@@ -170,10 +169,6 @@ public class PortalEntity extends Entity {
 
     public void setTargetLevel(ResourceKey<Level> targetLevel) {
         this.targetLevel = targetLevel;
-    }
-
-    public void setSpawnChunk(ChunkPos spawnChunk) {
-        this.spawnChunk = spawnChunk;
     }
 
     /**
@@ -426,6 +421,9 @@ public class PortalEntity extends Entity {
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
                     destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn point
                 } else {
+                    ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationSavedData()
+                            .getGenerationCenters()
+                            .get(targetLevel);
                     ChunkAccess chunk = level.getChunk(spawnChunk.x, spawnChunk.z, ChunkStatus.FULL, true);
                     assert chunk != null;
                     int terrainHeight = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
