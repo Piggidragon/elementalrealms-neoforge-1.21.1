@@ -2,15 +2,16 @@ package de.piggidragon.elementalrealms.saveddata;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Global storage for all generation centers across all dimensions.
@@ -18,28 +19,30 @@ import java.util.List;
  */
 public class GenerationCenterData extends SavedData {
 
-    // Codec for serialization/deserialization
+    // Codec for ResourceKey<Level> to ChunkPos mapping
     public static final Codec<GenerationCenterData> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
-                    // Serialize the list of ChunkPos
-                    ChunkPos.CODEC.listOf().fieldOf("generationCenters").forGetter(data -> data.generationCenters)
+                    // Codec for Map<ResourceKey<Level>, ChunkPos>
+                    Codec.unboundedMap(
+                            Level.RESOURCE_KEY_CODEC,  // Key codec: ResourceKey<Level>
+                            ChunkPos.CODEC              // Value codec: ChunkPos
+                    ).fieldOf("generationCenters").forGetter(data -> data.generationCenters)
             ).apply(instance, GenerationCenterData::new)
     );
     // SavedDataType with codec (similar to MapItemSavedData)
     private static final SavedDataType<GenerationCenterData> TYPE = new SavedDataType<>(
             "generation_centers",
             GenerationCenterData::new,
-            CODEC,
-            DataFixTypes.CHUNK
+            CODEC
     );
-    // Global list of all generation centers used by any dimension
-    private final List<ChunkPos> generationCenters;
+    // Map of dimension to its generation center
+    private final Map<ResourceKey<Level>, ChunkPos> generationCenters;
 
     /**
      * Default constructor (for new data)
      */
     public GenerationCenterData() {
-        this.generationCenters = new ArrayList<>();
+        this.generationCenters = new HashMap<>();
     }
 
     /**
@@ -47,8 +50,8 @@ public class GenerationCenterData extends SavedData {
      *
      * @param generationCenters The list of generation centers loaded from disk
      */
-    private GenerationCenterData(List<ChunkPos> generationCenters) {
-        this.generationCenters = new ArrayList<>(generationCenters);
+    private GenerationCenterData(Map<ResourceKey<Level>, ChunkPos> generationCenters) {
+        this.generationCenters = new HashMap<>(generationCenters);
     }
 
     /**
@@ -71,7 +74,7 @@ public class GenerationCenterData extends SavedData {
      *
      * @return The list of generation centers
      */
-    public List<ChunkPos> getGenerationCenters() {
+    public Map<ResourceKey<Level>, ChunkPos> getGenerationCenters() {
         return generationCenters;
     }
 
@@ -81,24 +84,10 @@ public class GenerationCenterData extends SavedData {
      * @param center The generation center to add
      * @return true if added, false if already exists
      */
-    public boolean addGenerationCenter(ChunkPos center) {
-        if (!generationCenters.contains(center)) {
-            generationCenters.add(center);
-            setDirty(); // Mark for saving
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Removes a generation center from the global list
-     *
-     * @param center The generation center to remove
-     * @return true if removed, false if not found
-     */
-    public boolean removeGenerationCenter(ChunkPos center) {
-        if (generationCenters.remove(center)) {
-            setDirty(); // Mark for saving
+    public boolean addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {
+        if (!generationCenters.values().contains(center)) {
+            generationCenters.put(level, center);
+            this.setDirty();
             return true;
         }
         return false;
