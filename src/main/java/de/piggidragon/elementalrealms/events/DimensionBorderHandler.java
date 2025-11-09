@@ -26,7 +26,7 @@ public class DimensionBorderHandler {
     public static void onServerStarting(ServerStartingEvent event) {
         DynamicDimensionHandler.initialize(event.getServer());
 
-        for (ResourceKey<Level> level : ModLevel.LEVELS) {
+        for (ResourceKey<Level> level : ModLevel.getLevels()) {
             ServerLevel serverLevel = event.getServer().getLevel(level);
             if (serverLevel != null) {
                 // Get generation centers (now safe because we initialized above)

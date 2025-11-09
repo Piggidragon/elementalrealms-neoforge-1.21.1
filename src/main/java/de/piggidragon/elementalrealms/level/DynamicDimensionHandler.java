@@ -56,7 +56,7 @@ public class DynamicDimensionHandler {
      * @param portal The portal entity requesting the dimension
      * @return The ResourceKey for the dimension
      */
-    public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal) {
+    public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal, ResourceKey<Level> levelResourceKey) {
 
         if (generationCenters == null) {
             initialize(server);
@@ -86,7 +86,7 @@ public class DynamicDimensionHandler {
             ServerLevel newLevel = InfiniverseAPI.get().getOrCreateLevel(
                     server,
                     dimensionKey,
-                    () -> createCustomLevelStem(server, dimensionKey, generationCenter)
+                    () -> createCustomLevelStem(server, levelResourceKey, generationCenter)
             );
 
             generationCenters.addGenerationCenter(dimensionKey, generationCenter);
@@ -115,16 +115,16 @@ public class DynamicDimensionHandler {
      * provides a unique seed automatically through Minecraft's internal seeding.
      *
      * @param server The server instance
-     * @param dimensionKey The dimension key (provides unique seed automatically)
+     * @param levelResourceKey The level type key
      * @param generationCenter The center position for chunk generation
      * @return A LevelStem with custom settings
      */
-    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> dimensionKey, ChunkPos generationCenter) {
+    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ChunkPos generationCenter) {
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
                 .lookupOrThrow(Registries.LEVEL_STEM);
 
         // Get your test dimension template
-        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(dimensionKey))
+        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey))
                 .orElseThrow(() -> new IllegalStateException("Test dimension template not found!"));
 
         LevelStem templateStem = templateStemHolder.value();
@@ -143,9 +143,6 @@ public class DynamicDimensionHandler {
                 noiseSettings,
                 generationCenter
         );
-
-        ElementalRealms.LOGGER.info("Created new BoundedChunkGenerator for dimension {}",
-                dimensionKey.location());
 
         // Return new LevelStem with the new generator instance
         return new LevelStem(

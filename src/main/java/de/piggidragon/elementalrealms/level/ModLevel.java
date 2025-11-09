@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Resource keys for custom dimensions.
@@ -52,29 +53,36 @@ public class ModLevel {
     /**
      * List of all custom dimensions for batch operations.
      */
-    public static final List<ResourceKey<Level>> LEVELS = List.of(
+    private static final List<ResourceKey<Level>> LEVELS = List.of(
             SCHOOL_DIMENSION,
             TEST_DIMENSION,
             TEST_DIMENSION2
     );
-    public static final List<ResourceKey<Level>> LEVEL_RANDOM_SOURCE = List.of(
+    private static final List<ResourceKey<Level>> LEVEL_RANDOM_SOURCE = List.of(
             TEST_DIMENSION,
             TEST_DIMENSION2
     );
-    public static final List<ResourceKey<LevelStem>> LEVEL_STEMS = List.of(
+    private static final Map<ResourceKey<Level>, ResourceKey<LevelStem>> LEVEL_STEMS = Map.of(
+            TEST_DIMENSION,
             TEST_DIMENSION_STEM,
+
+            TEST_DIMENSION2,
             TEST_DIMENSION2_STEM
     );
+
+    public static List<ResourceKey<Level>> getLevels() {
+        return LEVELS;
+    }
+
+    public static List<ResourceKey<Level>> getLevelsRandomSource() {
+        return LEVEL_RANDOM_SOURCE;
+    }
 
     public static ResourceKey<Level> getRandomLevel() {
         return LEVEL_RANDOM_SOURCE.get((int) (Math.random() * LEVELS.size()));
     }
 
     public static ResourceKey<LevelStem> getStemForLevel(ResourceKey<Level> level) {
-        int index = LEVELS.indexOf(level);
-        if (index != -1) {
-            return LEVEL_STEMS.get(index);
-        }
-        return null;
+        return LEVEL_STEMS.get(level);
     }
 }

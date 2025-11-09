@@ -5,6 +5,7 @@ import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
+import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import net.minecraft.core.BlockPos;
@@ -62,7 +63,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
                 level.getLevel()
         );
 
-        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal));
+        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal, ModLevel.getRandomLevel()));
 
         // Position portal centered on block with random rotation
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);

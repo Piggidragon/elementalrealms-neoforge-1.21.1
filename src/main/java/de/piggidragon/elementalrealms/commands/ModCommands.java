@@ -46,7 +46,7 @@ public class ModCommands {
      * Provides auto-completion suggestions for valid dimension names.
      */
     public static final SuggestionProvider<CommandSourceStack> LEVEL_SUGGESTIONS = (context, builder) -> {
-        for (ResourceKey<Level> level : ModLevel.LEVELS) {
+        for (ResourceKey<Level> level : ModLevel.getLevels()) {
             builder.suggest(level.location().toString());
         }
         return builder.buildFuture();
@@ -83,6 +83,39 @@ public class ModCommands {
                         )
                 )
                 .then(Commands.literal("spawn")
+                        .then(Commands.literal("random")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+
+                                    ResourceKey<Level> levelResourceKey = ModLevel.getRandomLevel();
+
+                                    // Create portal entity
+                                    PortalEntity portal = new PortalEntity(
+                                            ModEntities.PORTAL_ENTITY.get(),
+                                            player.level(),
+                                            false,
+                                            -1,
+                                            null,
+                                            player.getUUID()
+                                    );
+
+                                    portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal, levelResourceKey));
+
+                                    // Position portal 2 blocks in front of player
+                                    Vec3 lookVec = player.getLookAngle();
+                                    double distance = 2.0;
+                                    Vec3 targetPos = new Vec3(
+                                            player.getX() + lookVec.x * distance,
+                                            player.getY() + 0.5,
+                                            player.getZ() + lookVec.z * distance
+                                    );
+
+                                    portal.setPos(targetPos.x, targetPos.y, targetPos.z);
+                                    portal.setYRot(player.getYRot());
+                                    player.level().addFreshEntity(portal);
+                                    return 1;
+                                })
+                        )
                         .then(Commands.argument("dimension", StringArgumentType.greedyString())
                                 .suggests(LEVEL_SUGGESTIONS)
                                 .executes(ctx -> {
@@ -91,7 +124,7 @@ public class ModCommands {
                                     ResourceLocation location = ResourceLocation.parse(dimString);
                                     ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, location);
 
-                                    if (!ModLevel.LEVELS.contains(dimensionKey)) {
+                                    if (!ModLevel.getLevels().contains(dimensionKey)) {
                                         ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
                                         return 0;
                                     }
@@ -102,12 +135,12 @@ public class ModCommands {
                                             player.level(),
                                             false,
                                             -1,
-                                            dimensionKey,
+                                            null,
                                             player.getUUID()
                                     );
 
-                                    if (dimensionKey == ModLevel.LEVEL_RANDOM_SOURCE) {
-                                        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal));
+                                    if (ModLevel.getLevelsRandomSource().contains(dimensionKey)) {
+                                        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal, dimensionKey));
                                     }
 
                                     // Position portal 2 blocks in front of player
