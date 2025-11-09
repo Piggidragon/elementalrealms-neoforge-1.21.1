@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
@@ -30,7 +29,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -424,16 +422,20 @@ public class PortalEntity extends Entity {
                     ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationSavedData()
                             .getGenerationCenters()
                             .get(targetLevel);
-                    ChunkAccess chunk = level.getChunk(spawnChunk.x, spawnChunk.z, ChunkStatus.FULL, true);
-                    assert chunk != null;
+
+                    assert destinationLevel != null;
+
+                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
+                    ChunkAccess chunk = destinationLevel.getChunk(spawnChunk.x, spawnChunk.z);
                     int terrainHeight = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
+                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, false);
+
                     destinationPos = new Vec3(0.5 + spawnChunk.getMiddleBlockX(), terrainHeight, 0.5 + spawnChunk.getMiddleBlockZ());
                 }
 
-                ElementalRealms.LOGGER.info("Teleporting to {} at {}", destinationLevel, destinationPos);
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
                 assert destinationLevel != null;
-                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y + 1, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 if (discard) {
@@ -441,7 +443,7 @@ public class PortalEntity extends Entity {
                 }
 
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 128);
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), 128);
 
                 if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
@@ -449,7 +451,7 @@ public class PortalEntity extends Entity {
                             destinationLevel,
                             returnLevel
                     );
-                    portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
+                    portal.setPos(player.position().x, player.position().y + 5, player.position().z);
                     destinationLevel.addFreshEntity(portal);
                 }
 
