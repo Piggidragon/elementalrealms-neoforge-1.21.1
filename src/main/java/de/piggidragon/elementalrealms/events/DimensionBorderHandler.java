@@ -24,10 +24,8 @@ public class DimensionBorderHandler {
 
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
-        // FIRST: Initialize the DynamicDimensionHandler with server instance
         DynamicDimensionHandler.initialize(event.getServer());
 
-        // NOW: Configure world borders for each mod dimension
         for (ResourceKey<Level> level : ModLevel.LEVELS) {
             ServerLevel serverLevel = event.getServer().getLevel(level);
             if (serverLevel != null) {

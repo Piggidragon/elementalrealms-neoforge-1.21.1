@@ -4,8 +4,6 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -50,10 +48,8 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * Creates 16x16 chunk play area (256x256 blocks).
      */
     private static final int RADIUS = 10;
-    private RegistryAccess registryAccess;
     private RandomState customRandomState;
-    private long customSeed;
-    private static ChunkPos generationCenter;
+    private ChunkPos generationCenter;
     /**
      * Constructs a bounded chunk generator.
      *
@@ -69,24 +65,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         this.generationCenter = generationCenter;
     }
 
-    public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, RegistryAccess registryAccess, long seed) {
-        this(biomeSource, settings);
-        this.registryAccess = registryAccess;
-        this.customSeed = seed;
-
-        initRandomState(this.registryAccess);
-    }
-
-    private void initRandomState(RegistryAccess registryAccess) {
-        if (this.customRandomState == null && registryAccess != null) {
-            this.customRandomState = RandomState.create(
-                    generatorSettings().value(),
-                    registryAccess.lookupOrThrow(Registries.NOISE),
-                    this.customSeed
-            );
-        }
-    }
-
     public static int getTotalSize() {
         return (RADIUS * 2 + 1) * 16;
     }
@@ -95,7 +73,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         return RADIUS;
     }
 
-    public static ChunkPos getGenerationCenter() {
+    public ChunkPos getGenerationCenter() {
         return generationCenter;
     }
 

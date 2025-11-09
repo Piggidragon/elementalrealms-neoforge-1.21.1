@@ -60,7 +60,6 @@ public class DynamicDimensionHandler {
      */
     public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal) {
 
-        // Ensure initialization (defensive programming)
         if (generationCenters == null) {
             initialize(server);
         }
@@ -93,6 +92,7 @@ public class DynamicDimensionHandler {
             );
 
             generationCenters.addGenerationCenter(dimensionKey, generationCenter);
+            portal.setSpawnChunk(generationCenter);
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);

@@ -8,7 +8,6 @@ import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
-import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -30,6 +29,8 @@ import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -53,6 +54,7 @@ public class PortalEntity extends Entity {
 
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
+    private ChunkPos spawnChunk;
     private UUID ownerUUID = null;
     private boolean initialized = false;
     private boolean discard = false; // Remove portal after single use
@@ -168,6 +170,10 @@ public class PortalEntity extends Entity {
 
     public void setTargetLevel(ResourceKey<Level> targetLevel) {
         this.targetLevel = targetLevel;
+    }
+
+    public void setSpawnChunk(ChunkPos spawnChunk) {
+        this.spawnChunk = spawnChunk;
     }
 
     /**
@@ -415,22 +421,20 @@ public class PortalEntity extends Entity {
 
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
-                assert destinationLevel != null;
-
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                    destinationLevel.setChunkForced(0, 0, true);
-                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn
+                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn point
                 } else {
-                    ChunkPos spawnChunk = BoundedChunkGenerator.getGenerationCenter();
-                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
-                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
+                    ChunkAccess chunk = level.getChunk(spawnChunk.x, spawnChunk.z, ChunkStatus.FULL, true);
+                    assert chunk != null;
+                    int terrainHeight = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
                     destinationPos = new Vec3(0.5 + spawnChunk.getMiddleBlockX(), terrainHeight, 0.5 + spawnChunk.getMiddleBlockZ());
                 }
 
                 ElementalRealms.LOGGER.info("Teleporting to {} at {}", destinationLevel, destinationPos);
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
+                assert destinationLevel != null;
                 player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
