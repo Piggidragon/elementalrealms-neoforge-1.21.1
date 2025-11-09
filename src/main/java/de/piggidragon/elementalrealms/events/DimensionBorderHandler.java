@@ -24,10 +24,14 @@ public class DimensionBorderHandler {
 
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
-        // Configure world borders for each mod dimension
+        // FIRST: Initialize the DynamicDimensionHandler with server instance
+        DynamicDimensionHandler.initialize(event.getServer());
+
+        // NOW: Configure world borders for each mod dimension
         for (ResourceKey<Level> level : ModLevel.LEVELS) {
             ServerLevel serverLevel = event.getServer().getLevel(level);
             if (serverLevel != null) {
+                // Get generation centers (now safe because we initialized above)
                 for (ChunkPos generationCenter : DynamicDimensionHandler.getGenerationCenters()) {
                     setupWorldBorder(serverLevel, generationCenter);
                 }
@@ -35,14 +39,24 @@ public class DimensionBorderHandler {
         }
     }
 
+    /**
+     * Sets up the world border for a dimension at the given generation center.
+     *
+     * @param level            The server level to configure
+     * @param generationCenter The center position for the world border
+     */
     public static void setupWorldBorder(ServerLevel level, ChunkPos generationCenter) {
         WorldBorder border = level.getWorldBorder();
         border.setCenter(generationCenter.getMiddleBlockX(), generationCenter.getMiddleBlockZ());
-        border.setSize(BoundedChunkGenerator.getMaxChunks() * 16 * 2);
+        border.setSize(BoundedChunkGenerator.getTotalSize());
         border.setWarningBlocks(10);
         border.setDamagePerBlock(1.0);
 
-        ElementalRealms.LOGGER.info("World border set for dimension {} - Size: {}x{} blocks",
-                level.dimension().location(), BoundedChunkGenerator.getMaxChunks() * 16 * 2, BoundedChunkGenerator.getMaxChunks() * 16 * 2);
+        ElementalRealms.LOGGER.info("World border set for dimension {} - Center: [{}, {}], Size: {}x{} blocks",
+                level.dimension().location(),
+                generationCenter.getMiddleBlockX() * 16,
+                generationCenter.getMiddleBlockZ() * 16,
+                BoundedChunkGenerator.getTotalSize(),
+                BoundedChunkGenerator.getTotalSize());
     }
 }
