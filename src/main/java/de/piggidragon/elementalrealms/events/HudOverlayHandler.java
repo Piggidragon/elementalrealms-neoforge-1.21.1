@@ -24,7 +24,7 @@ public class HudOverlayHandler {
                 VanillaGuiLayers.HOTBAR,  // Render above hotbar
                 ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "affinity_hud"),
                 (GuiGraphics graphics, DeltaTracker deltaTracker) -> {
-                    AffinityHudOverlay.render(graphics, deltaTracker);
+                    AffinityHudOverlay.render(graphics);
                 }
         );
 

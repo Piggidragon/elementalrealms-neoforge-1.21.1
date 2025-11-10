@@ -2,7 +2,9 @@ package de.piggidragon.elementalrealms.guis.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * HUD overlay that shows affinity stones on the right side of the screen
@@ -51,7 +54,7 @@ public class AffinityHudOverlay {
      * Renders the affinity HUD overlay
      * Called by RenderGuiLayerEvent
      */
-    public static void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+    public static void render(GuiGraphics graphics) {
         if (!visible) {
             return; // Don't render if toggled off
         }
@@ -61,9 +64,13 @@ public class AffinityHudOverlay {
             return;
         }
 
-        // TODO: Get actual affinity data from player
-        // For now, use example data
-        List<AffinityData> affinities = getPlayerAffinities(mc.player);
+        Map<Affinity, Integer> affinityMap = mc.player.getData(ModAttachments.AFFINITIES.get());
+
+        // Convert map to list for rendering
+        List<AffinityData> affinities = new ArrayList<>();
+        for (Map.Entry<Affinity, Integer> entry : affinityMap.entrySet()) {
+            affinities.add(new AffinityData(entry.getKey(), entry.getValue()));
+        }
 
         if (affinities.isEmpty()) {
             return;
@@ -227,21 +234,6 @@ public class AffinityHudOverlay {
             int green = (int) (0x88 + (255 - 0x88) * ratio);
             return 0xFF000000 | (red << 16) | (green << 8);
         }
-    }
-
-    /**
-     * Gets player's affinity data
-     * TODO: Replace with actual data from player capability/attachment
-     */
-    private static List<AffinityData> getPlayerAffinities(net.minecraft.world.entity.player.Player player) {
-        // Example data - replace with your actual system
-        return List.of(
-                new AffinityData(Affinity.FIRE, 100),
-                new AffinityData(Affinity.WATER, 75),
-                new AffinityData(Affinity.EARTH, 50),
-                new AffinityData(Affinity.WIND, 25),
-                new AffinityData(Affinity.LIGHTNING, 10)
-        );
     }
 
     /**
