@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
@@ -145,8 +146,7 @@ public class PortalEntity extends Entity {
      * Handles entity collision pushing.
      */
     @Override
-    public void push(Entity entity) {
-    }
+    public void push(Entity entity) {}
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
@@ -233,8 +233,7 @@ public class PortalEntity extends Entity {
      * Defines synchronized data for client-server communication.
      */
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-    }
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
 
     /**
      * Updates the portal every tick.
@@ -361,6 +360,7 @@ public class PortalEntity extends Entity {
 
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
                 assert destinationLevel != null;
+                ElementalRealms.LOGGER.info("Teleporting player {} to dimension {} at position {}", player.getName().getString(), targetLevel.location(), destinationPos);
                 player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y + 1, destinationPos.z, relatives, yaw, pitch);
                 player.setPortalCooldown();
 
