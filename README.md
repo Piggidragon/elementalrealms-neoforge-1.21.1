@@ -1,28 +1,43 @@
+# 🌟 Elemental Realms
 
-Installation information
-=======
+> A Minecraft magic and dimension mod for NeoForge 1.21.1
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg)](https://minecraft.net)
+[![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-orange.svg)](https://neoforged.net)
+[![License](https://img.shields.io/badge/License-Custom-blue.svg)](LICENSE)
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+Elemental Realms brings mystical dimensions and powerful magical items to your Minecraft world. Travel between realms using custom staffs and discover new magical possibilities.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## ✨ Features
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+### 🔮 Affinity System
+Harness the power of elemental affinities to enhance your magical abilities.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+### 🪄 Magical Items
 
-# Shoutouts for textures:
-- https://github.com/Futureazoo/TextureRepository/tree/master/futureazoo
+#### Dimension Staff
+
+### 🌍 Dimensions
+
+#### School Dimension
+A mystical realm accessible through the Dimension Staff (coming soon).
+
+## 📋 Requirements
+
+- **Minecraft:** 1.21.1
+- **Mod Loader:** NeoForge 21.1.x
+- **Java:** 21 or higher
+- **Infiniverse Library:** Included in the mod jar
+- **Lodestone Library:** Included in the mod jar
+
+## 📥 Installation
+
+### For Players
+
+1. Download and install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1
+2. Download the latest release of Elemental Realms from [Releases](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/releases)
+3. Place the `.jar` file in your `.minecraft/mods` folder
+4. Launch Minecraft with the NeoForge profile
+
+### Bug Reporting
+If you encounter any issues, please report them on my [GitHub Issues](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/issues)
