@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.level;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.events.DimensionBorderHandler;
 import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
 import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.commoble.infiniverse.api.InfiniverseAPI;
@@ -92,8 +91,6 @@ public class DynamicDimensionHandler {
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
-
-                DimensionBorderHandler.setupWorldBorder(newLevel, generationCenter);
 
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
