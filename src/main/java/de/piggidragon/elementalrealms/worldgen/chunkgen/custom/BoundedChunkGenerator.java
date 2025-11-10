@@ -65,15 +65,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     }
 
     /**
-     * Gets the total world size in blocks.
-     *
-     * @return Total size in blocks
-     */
-    public static int getTotalSize() {
-        return (RADIUS * 2 + 1) * 16;
-    }
-
-    /**
      * Gets the chunk radius from generation center.
      *
      * @return Chunk radius
@@ -139,7 +130,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         if (isWithinBounds(pos)) {
             super.applyCarvers(level, seed, random, biomeManager, structureManager, chunk, step);
         }
-        super.applyCarvers(level, seed, random, biomeManager, structureManager, chunk, step);
     }
 
     /**
