@@ -62,10 +62,10 @@ public class PortalUtils {
         double nearestDistance = Double.MAX_VALUE;
 
         for (PortalEntity portal : portals) {
-                double distance = portal.position().distanceTo(position);
-                if (distance < nearestDistance) {
-                    nearestDistance = distance;
-                    nearestPortal = portal;
+            double distance = portal.position().distanceTo(position);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestPortal = portal;
 
             }
         }

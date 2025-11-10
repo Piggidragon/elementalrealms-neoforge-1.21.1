@@ -72,26 +72,23 @@ public class ModPacketHandler {
             double offsetZ = (level.random.nextDouble() - 0.5);
 
             switch (affinity) {
-                case FIRE ->
-                        level.addParticle(ParticleTypes.FLAME,
-                                player.getX() + offsetX,
-                                player.getY() + 0.8 + offsetY,
-                                player.getZ() + offsetZ,
-                                0.0, 0.05, 0.0);
+                case FIRE -> level.addParticle(ParticleTypes.FLAME,
+                        player.getX() + offsetX,
+                        player.getY() + 0.8 + offsetY,
+                        player.getZ() + offsetZ,
+                        0.0, 0.05, 0.0);
 
-                case ICE ->
-                        level.addParticle(ParticleTypes.SNOWFLAKE,
-                                player.getX() + offsetX,
-                                player.getY() + 0.8 + offsetY,
-                                player.getZ() + offsetZ,
-                                offsetX * 0.02, -0.02, offsetZ * 0.02);
+                case ICE -> level.addParticle(ParticleTypes.SNOWFLAKE,
+                        player.getX() + offsetX,
+                        player.getY() + 0.8 + offsetY,
+                        player.getZ() + offsetZ,
+                        offsetX * 0.02, -0.02, offsetZ * 0.02);
 
-                default ->
-                        level.addParticle(ParticleTypes.ENCHANT,
-                                player.getX() + offsetX,
-                                player.getY() + 0.8 + offsetY,
-                                player.getZ() + offsetZ,
-                                offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
+                default -> level.addParticle(ParticleTypes.ENCHANT,
+                        player.getX() + offsetX,
+                        player.getY() + 0.8 + offsetY,
+                        player.getZ() + offsetZ,
+                        offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
             }
         }
     }

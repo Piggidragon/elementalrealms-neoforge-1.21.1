@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.entities.custom;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
+import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
@@ -27,6 +28,7 @@ import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -46,9 +48,8 @@ public class PortalEntity extends Entity {
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState spawnAnimationState = new AnimationState();
-    private int idleAnimationTimer = -1;
-
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
+    private int idleAnimationTimer = -1;
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
     private boolean initialized = false;
@@ -59,7 +60,7 @@ public class PortalEntity extends Entity {
     /**
      * Creates a portal entity with default settings.
      *
-     * @param type the entity type
+     * @param type  the entity type
      * @param level the world level
      */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level) {
@@ -94,12 +95,12 @@ public class PortalEntity extends Entity {
     /**
      * Creates a fully configured portal entity.
      *
-     * @param type the entity type
-     * @param level the world level
-     * @param discard whether to remove portal after use
-     * @param despawnTimeout ticks until automatic removal
-     * @param targetLevel the dimension to teleport to
-     * @param ownerUUID the UUID of the player who created this portal
+     * @param type           the entity type
+     * @param level          the world level
+     * @param discard        whether to remove portal after use
+     * @param despawnTimeout ticks until automatic removal (-1 for never)
+     * @param targetLevel    the dimension to teleport to
+     * @param ownerUUID      the UUID of the player who created this portal
      */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
         this(type, level);
@@ -118,8 +119,26 @@ public class PortalEntity extends Entity {
         return this.ownerUUID;
     }
 
+    /**
+     * Gets the portal's position as a vector.
+     *
+     * @return the position vector
+     */
+    public Vec3 getPositionVec() {
+        return new Vec3(this.getX(), this.getY(), this.getZ());
+    }
+
     private MinecraftServer getServer() {
         return level().getServer();
+    }
+
+    @Nullable
+    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
+        MinecraftServer server = this.getServer();
+        if (server == null) {
+            return null;
+        }
+        return server.getLevel(targetLevel);
     }
 
     /**
@@ -145,22 +164,13 @@ public class PortalEntity extends Entity {
         this.entityData.set(DATA_VARIANT, variant.getId());
     }
 
-    @Nullable
-    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
-        MinecraftServer server = this.getServer();
-        if (server == null) {
-            return null;
-        }
-        return server.getLevel(targetLevel);
-    }
-
     /**
-     * Gets the portal's position as a vector.
+     * Sets the target dimension for portal teleportation.
      *
-     * @return the position vector
+     * @param targetLevel the dimension key to teleport to
      */
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
+    public void setTargetLevel(ResourceKey<Level> targetLevel) {
+        this.targetLevel = targetLevel;
     }
 
     /**
@@ -179,16 +189,25 @@ public class PortalEntity extends Entity {
         this.primed = true;
     }
 
+    /**
+     * Determines if the portal is invulnerable to damage.
+     */
     @Override
     public boolean isInvulnerable() {
         return false;
     }
 
+    /**
+     * Determines if the portal can be pushed by entities.
+     */
     @Override
     public boolean isPushable() {
         return false;
     }
 
+    /**
+     * Handles entity collision pushing.
+     */
     @Override
     public void push(Entity entity) {
     }
@@ -201,6 +220,9 @@ public class PortalEntity extends Entity {
         return false;
     }
 
+    /**
+     * Determines if the portal is affected by gravity.
+     */
     @Override
     public boolean isNoGravity() {
         return true;
@@ -227,7 +249,7 @@ public class PortalEntity extends Entity {
      */
     public void setupAnimationStates() {
         if (this.idleAnimationTimer <= 0) {
-            this.idleAnimationTimer = 160; // Reset timer for next cycle
+            this.idleAnimationTimer = 160;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimer;
@@ -330,7 +352,6 @@ public class PortalEntity extends Entity {
             if (tickCount % 5 == 0) {
                 ServerLevel serverLevel = (ServerLevel) level();
 
-                // Create 3 particles in a rotating pattern
                 for (int i = 0; i < 3; i++) {
                     double angle = (tickCount * 0.1 + i * Math.PI * 2 / 3);
                     double radius = 0.8;
@@ -356,10 +377,32 @@ public class PortalEntity extends Entity {
     }
 
     /**
+     * Handles portal removal and dimension cleanup.
+     */
+    @Override
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
+
+        if (!reason.equals(RemovalReason.DISCARDED) && !reason.equals(RemovalReason.KILLED)) return;
+
+        if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
+            ResourceKey<Level> targetDimension = this.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+
+            // Remove dimension if it's not school dimension
+            if (!targetDimension.equals(Level.OVERWORLD) && !targetDimension.equals(ModLevel.SCHOOL_DIMENSION)) {
+                DynamicDimensionHandler.removeDimensionForPortal(
+                        serverLevel.getServer(),
+                        this
+                );
+            }
+        }
+    }
+
+    /**
      * Teleports a player through the portal to the target dimension.
      * Creates a return portal at the destination if traveling from vanilla dimensions.
      *
-     * @param level the current level
+     * @param level  the current level
      * @param player the player to teleport
      */
     private void teleportPlayer(Level level, ServerPlayer player) {
@@ -387,21 +430,28 @@ public class PortalEntity extends Entity {
 
                 ServerLevel destinationLevel = getLevelfromKey(targetLevel);
 
-                ChunkPos spawnChunk = new ChunkPos(0, 0);
-                assert destinationLevel != null;
-                destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
-
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
-                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn
+                    destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn point
                 } else {
-                    int terrainHeight = destinationLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
-                    destinationPos = new Vec3(0.5, terrainHeight, 0.5);
+                    ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationCenterData()
+                            .getGenerationCenters()
+                            .get(targetLevel);
+
+                    assert destinationLevel != null;
+
+                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
+                    ChunkAccess chunk = destinationLevel.getChunk(spawnChunk.x, spawnChunk.z);
+                    int terrainHeight = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawnChunk.getMiddleBlockX(), spawnChunk.getMiddleBlockZ());
+                    destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, false);
+
+                    destinationPos = new Vec3(0.5 + spawnChunk.getMiddleBlockX(), terrainHeight, 0.5 + spawnChunk.getMiddleBlockZ());
                 }
 
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
-                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y, destinationPos.z, relatives, yaw, pitch, setCamera);
+                assert destinationLevel != null;
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y + 1, destinationPos.z, relatives, yaw, pitch, setCamera);
                 player.setPortalCooldown();
 
                 if (discard) {
@@ -409,15 +459,16 @@ public class PortalEntity extends Entity {
                 }
 
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, destinationPos, 128);
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), 128);
 
+                // Create return portal if none exists nearby
                 if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
                             ModEntities.PORTAL_ENTITY.get(),
                             destinationLevel,
                             returnLevel
                     );
-                    portal.setPos(destinationPos.x, destinationPos.y + 5, destinationPos.z);
+                    portal.setPos(player.position().x, player.position().y + 5, player.position().z);
                     destinationLevel.addFreshEntity(portal);
                 }
 
@@ -431,7 +482,7 @@ public class PortalEntity extends Entity {
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x, returnPos.y, returnPos.z, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch, setCamera);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 
