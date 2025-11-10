@@ -458,7 +458,7 @@ public class PortalEntity extends Entity {
             } else {
                 // Handle return teleportation from custom dimension to vanilla
                 Map<ResourceKey<Level>, Vec3> returnLevelPos = player.getData(ModAttachments.RETURN_LEVEL_POS.get());
-                if (returnLevelPos.isEmpty()) {
+                if (returnLevelPos == null || returnLevelPos.isEmpty()) {
                     player.displayClientMessage(Component.literal("No return position found!"), true);
                     return;
                 }
