@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_wind",
-    "S": "elementalrealms:affinity_shard_wind"
+    "E": {
+      "item": "elementalrealms:essence_wind"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_wind"
+    }
   },
   "pattern": [
     "SSS",

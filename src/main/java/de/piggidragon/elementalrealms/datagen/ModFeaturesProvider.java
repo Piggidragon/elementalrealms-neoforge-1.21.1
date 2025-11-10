@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.ModLevel;
+import de.piggidragon.elementalrealms.worldgen.ModBiomeTags;
 import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import net.minecraft.core.HolderGetter;
@@ -66,7 +66,6 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             new ConfiguredFeature<>(
                                     ModFeatures.PORTAL_FEATURE.get(),
                                     new PortalConfiguration(
-                                            PortalVariant.RANDOM,
                                             ModLevel.getRandomLevel()
                                     )
                             )
@@ -114,7 +113,7 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                             ResourceKey.create(NeoForgeRegistries.Keys.BIOME_MODIFIERS,
                                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "add_portal")),
                             new BiomeModifiers.AddFeaturesBiomeModifier(
-                                    biomeGetter.getOrThrow(ModBiomeTagsProvider.ALL_SPAWNABLE_DIMENSIONS),
+                                    biomeGetter.getOrThrow(ModBiomeTags.ALL_SPAWNABLE_DIMENSIONS),
                                     HolderSet.direct(
                                             List.of(
                                                     placed.getOrThrow(PORTAL_PLACED_SURFACE),

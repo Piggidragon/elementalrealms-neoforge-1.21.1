@@ -1,7 +1,6 @@
 {
   "type": "elementalrealms:portal_feature",
   "config": {
-    "portal_variant": "random",
     "target_dimension": "elementalrealms:test"
   }
 }

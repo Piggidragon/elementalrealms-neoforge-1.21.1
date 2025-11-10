@@ -23,8 +23,8 @@ public record AffinitySuccessPacket(
     /**
      * Unique packet type identifier for network routing.
      */
-    public static final CustomPacketPayload.Type<AffinitySuccessPacket> TYPE =
-            new CustomPacketPayload.Type<>(
+    public static final Type<AffinitySuccessPacket> TYPE =
+            new Type<>(
                     ResourceLocation.fromNamespaceAndPath("elementalrealms", "affinity_success")
             );
 

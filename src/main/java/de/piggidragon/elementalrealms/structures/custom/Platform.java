@@ -66,7 +66,7 @@ public class Platform extends Structure {
      * @param dimensionPadding        Vertical bounds padding
      * @param liquidSettings          Waterlogging behavior
      */
-    public Platform(Structure.StructureSettings config,
+    public Platform(StructureSettings config,
                     Holder<StructureTemplatePool> startPool,
                     Optional<ResourceLocation> startJigsawName,
                     int size,
@@ -90,7 +90,7 @@ public class Platform extends Structure {
      * Calculates structure position and assembles jigsaw pieces.
      */
     @Override
-    public Optional<Structure.GenerationStub> findGenerationPoint(Structure.GenerationContext context) {
+    public Optional<GenerationStub> findGenerationPoint(GenerationContext context) {
 
         // Sample Y from height provider
         int startY = this.startHeight.sample(context.random(), new WorldGenerationContext(context.chunkGenerator(), context.heightAccessor()));
@@ -99,7 +99,7 @@ public class Platform extends Structure {
         BlockPos blockPos = new BlockPos(chunkPos.getMinBlockX(), startY, chunkPos.getMinBlockZ());
 
         // Assemble structure pieces using jigsaw algorithm
-        Optional<Structure.GenerationStub> structurePiecesGenerator =
+        Optional<GenerationStub> structurePiecesGenerator =
                 JigsawPlacement.addPieces(
                         context,
                         this.startPool,

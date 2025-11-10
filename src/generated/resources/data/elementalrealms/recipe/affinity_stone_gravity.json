@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_gravity",
-    "S": "elementalrealms:affinity_shard_gravity"
+    "E": {
+      "item": "elementalrealms:essence_gravity"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_gravity"
+    }
   },
   "pattern": [
     "SSS",

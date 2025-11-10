@@ -2,10 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "D": "minecraft:diamond",
-    "G": "minecraft:gold_ingot",
-    "L": "minecraft:lightning_rod",
-    "Q": "minecraft:quartz"
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "L": {
+      "item": "minecraft:lightning_rod"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
+    }
   },
   "pattern": [
     "GQG",

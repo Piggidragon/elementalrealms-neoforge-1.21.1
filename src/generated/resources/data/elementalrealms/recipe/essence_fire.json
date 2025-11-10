@@ -2,10 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": "minecraft:blaze_powder",
-    "D": "minecraft:diamond",
-    "L": "minecraft:lava_bucket",
-    "M": "minecraft:magma_block"
+    "B": {
+      "item": "minecraft:blaze_powder"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "L": {
+      "item": "minecraft:lava_bucket"
+    },
+    "M": {
+      "item": "minecraft:magma_block"
+    }
   },
   "pattern": [
     "MBM",

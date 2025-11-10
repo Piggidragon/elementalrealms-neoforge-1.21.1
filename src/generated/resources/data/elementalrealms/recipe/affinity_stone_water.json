@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_water",
-    "S": "elementalrealms:affinity_shard_water"
+    "E": {
+      "item": "elementalrealms:essence_water"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_water"
+    }
   },
   "pattern": [
     "SSS",

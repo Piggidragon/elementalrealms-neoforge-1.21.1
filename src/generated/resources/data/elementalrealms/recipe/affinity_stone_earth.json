@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_earth",
-    "S": "elementalrealms:affinity_shard_earth"
+    "E": {
+      "item": "elementalrealms:essence_earth"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_earth"
+    }
   },
   "pattern": [
     "SSS",

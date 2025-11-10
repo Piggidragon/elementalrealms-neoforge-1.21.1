@@ -44,12 +44,6 @@ public class DataGenerators {
                 )
         );
 
-        // Biome tags provider (server-side)
-        generator.addProvider(
-                event.includeServer(),  // Changed from true to event.includeServer()
-                new ModBiomeTagsProvider(packOutput, lookupProvider)
-        );
-
         event.createDatapackRegistryObjects(ModFeaturesProvider.createBuilder());
     }
 }

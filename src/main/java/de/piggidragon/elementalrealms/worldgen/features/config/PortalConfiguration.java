@@ -12,7 +12,6 @@ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfigur
  * Configuration for portal worldgen feature.
  * Specifies visual variant and target dimension for spawned portals.
  *
- * @param portalVariant   Visual appearance of portal
  * @param targetDimension Dimension this portal leads to
  */
 public record PortalConfiguration(ResourceKey<Level> targetDimension) implements FeatureConfiguration {
@@ -32,7 +31,6 @@ public record PortalConfiguration(ResourceKey<Level> targetDimension) implements
     /**
      * Constructor matching the Codec - converts ResourceLocation to ResourceKey.
      *
-     * @param portalVariant   Visual variant for portal
      * @param targetDimension Target dimension as ResourceLocation
      */
     public PortalConfiguration(ResourceLocation targetDimension) {

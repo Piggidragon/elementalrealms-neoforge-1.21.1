@@ -74,7 +74,7 @@ public class GenerationCenterData extends SavedData {
     public static GenerationCenterData get(MinecraftServer server) {
         DimensionDataStorage storage = server.overworld().getDataStorage();
         return storage.computeIfAbsent(
-                new SavedData.Factory<>(
+                new Factory<>(
                         GenerationCenterData::new,  // Supplier for new data
                         GenerationCenterData::load, // Function to load from NBT
                         null                         // DataFixType (optional)

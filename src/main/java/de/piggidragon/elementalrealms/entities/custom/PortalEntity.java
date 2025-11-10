@@ -10,8 +10,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -21,7 +19,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.RelativeMovement;
@@ -41,13 +38,7 @@ import java.util.*;
  */
 public class PortalEntity extends Entity {
 
-    private static final EntityDataAccessor<Integer> DATA_VARIANT =
-            SynchedEntityData.defineId(PortalEntity.class, EntityDataSerializers.INT);
-
-    public final AnimationState idleAnimationState = new AnimationState();
-    public final AnimationState spawnAnimationState = new AnimationState();
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
-    private final int idleAnimationTimer = -1;
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
     private boolean initialized = false;
@@ -67,10 +58,6 @@ public class PortalEntity extends Entity {
 
         if (!level.isClientSide() && level.getServer() != null) {
             this.targetLevel = Level.OVERWORLD;
-        }
-
-        if (level.isClientSide()) {
-            this.spawnAnimationState.start(0);
         }
     }
 

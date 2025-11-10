@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_fire",
-    "S": "elementalrealms:affinity_shard_fire"
+    "E": {
+      "item": "elementalrealms:essence_fire"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_fire"
+    }
   },
   "pattern": [
     "SSS",
