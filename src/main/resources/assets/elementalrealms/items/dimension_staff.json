@@ -2,5 +2,9 @@
   "model": {
     "type": "minecraft:model",
     "model": "elementalrealms:item/dimension_staff"
+  },
+  "properties": {
+    "use_animation": true,
+    "hand_animation_on_swap": true
   }
 }

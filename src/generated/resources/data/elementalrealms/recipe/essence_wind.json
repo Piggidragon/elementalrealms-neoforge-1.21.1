@@ -2,10 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": "minecraft:breeze_rod",
-    "D": "minecraft:diamond",
-    "F": "minecraft:feather",
-    "P": "minecraft:phantom_membrane"
+    "B": {
+      "item": "minecraft:breeze_rod"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "P": {
+      "item": "minecraft:phantom_membrane"
+    }
   },
   "pattern": [
     "FBF",

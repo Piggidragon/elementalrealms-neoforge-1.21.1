@@ -50,7 +50,7 @@ public class ElementalRealms {
         ModFeatures.register(modEventBus);
 
         // Client-only: register configuration screen
-        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
 

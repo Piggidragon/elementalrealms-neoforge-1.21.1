@@ -1,5 +1,5 @@
-// 1.21.10	2025-11-02T19:55:07.8267167	Registries
+// 1.21.1	2025-11-10T17:57:27.0744931	Registries
 d8da6d8a4b25fe8b6898907cd43723300b192eb7 data/elementalrealms/neoforge/biome_modifier/add_portal.json
-be67ded1640cb7e4773add30dbb694a57c556d75 data/elementalrealms/worldgen/configured_feature/portal_configured.json
+da3a9bd0a301af79a82414c473d7eb95d38341fc data/elementalrealms/worldgen/configured_feature/portal_configured.json
 42b10c354326b3edb2cd1edf11652a24f5e32e78 data/elementalrealms/worldgen/placed_feature/portal_placed_surface.json
 9f3910b30966aef1d3527855211ef3e2892fbe28 data/elementalrealms/worldgen/placed_feature/portal_placed_under.json

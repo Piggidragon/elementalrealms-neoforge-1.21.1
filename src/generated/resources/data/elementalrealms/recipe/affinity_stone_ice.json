@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_ice",
-    "S": "elementalrealms:affinity_shard_ice"
+    "E": {
+      "item": "elementalrealms:essence_ice"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_ice"
+    }
   },
   "pattern": [
     "SSS",

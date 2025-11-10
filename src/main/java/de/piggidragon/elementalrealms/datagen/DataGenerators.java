@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.advancements.AdvancementGenerator;
-import de.piggidragon.elementalrealms.datagen.recipes.affinities.AffinityRecipeProvider;
+import de.piggidragon.elementalrealms.datagen.recipes.AffinityRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -16,31 +16,34 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Registers all data generators for automated JSON file creation.
  */
-@EventBusSubscriber(modid = ElementalRealms.MODID)
+@EventBusSubscriber(modid = ElementalRealms.MODID)  // Add bus = MOD
 public class DataGenerators {
 
     /**
      * Registers all data generators during the data generation phase.
      */
     @SubscribeEvent
-    public static void onGatherData(GatherDataEvent.Client event) {
+    public static void onGatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        generator.addProvider(true, new ModModelProvider(packOutput));
+        // Model provider (client-side)
+        generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, event.getExistingFileHelper()));
 
-        generator.addProvider(true, new AffinityRecipeProvider.Runner(packOutput, lookupProvider));
+        // Recipe provider (server-side)
+        generator.addProvider(event.includeServer(), new AffinityRecipeProvider(packOutput, lookupProvider));
 
-        generator.addProvider(true, new ModAdvancementProvider(
-                packOutput,
-                lookupProvider,
-                List.of(new AdvancementGenerator())
-        ));
-
-        generator.addProvider(true, new ModBiomeTagsProvider(packOutput, lookupProvider));
+        // Advancement provider (server-side)
+        generator.addProvider(
+                event.includeServer(),  // Changed from true to event.includeServer()
+                new ModAdvancementProvider(
+                        packOutput,
+                        lookupProvider,
+                        List.of(new AdvancementGenerator())
+                )
+        );
 
         event.createDatapackRegistryObjects(ModFeaturesProvider.createBuilder());
     }
-
 }

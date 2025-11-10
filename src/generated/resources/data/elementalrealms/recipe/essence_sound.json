@@ -2,10 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": "minecraft:amethyst_shard",
-    "D": "minecraft:diamond",
-    "J": "minecraft:jukebox",
-    "N": "minecraft:note_block"
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "J": {
+      "item": "minecraft:jukebox"
+    },
+    "N": {
+      "item": "minecraft:note_block"
+    }
   },
   "pattern": [
     "NAN",

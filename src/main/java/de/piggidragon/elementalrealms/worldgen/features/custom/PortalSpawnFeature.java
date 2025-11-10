@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.worldgen.features.custom;
 import com.mojang.serialization.Codec;
 import de.piggidragon.elementalrealms.entities.ModEntities;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.util.PortalUtils;
@@ -62,12 +61,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         portal.setYRot(randomSource.nextFloat() * 360.0F);
-
-        if (config.portalVariant() != PortalVariant.RANDOM) {
-            portal.setVariant(config.portalVariant());
-        } else {
-            portal.setRandomVariant();
-        }
 
         // Prime underground portals for explosion
         if (pos.getY() < 41) portal.prime();

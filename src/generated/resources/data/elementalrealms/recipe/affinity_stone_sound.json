@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_sound",
-    "S": "elementalrealms:affinity_shard_sound"
+    "E": {
+      "item": "elementalrealms:essence_sound"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_sound"
+    }
   },
   "pattern": [
     "SSS",

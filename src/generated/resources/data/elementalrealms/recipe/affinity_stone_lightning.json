@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "elementalrealms:essence_lightning",
-    "S": "elementalrealms:affinity_shard_lightning"
+    "E": {
+      "item": "elementalrealms:essence_lightning"
+    },
+    "S": {
+      "item": "elementalrealms:affinity_shard_lightning"
+    }
   },
   "pattern": [
     "SSS",

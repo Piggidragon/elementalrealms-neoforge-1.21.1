@@ -14,13 +14,12 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.function.Consumer;
+import java.util.List;
 
 /**
  * Consumable item that grants or removes player affinities.
@@ -77,7 +76,7 @@ public class AffinityStone extends Item {
                 }
 
                 if (success) {
-                    ServerLevel serverLevel = player.level();
+                    ServerLevel serverLevel = (ServerLevel) player.level();
 
                     // Spawn colored particles
                     AffinityParticles.createCustomAffinityParticles(serverLevel, player, stone.affinity);
@@ -100,28 +99,33 @@ public class AffinityStone extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay tooltipDisplay, Consumer<Component> tooltipAdder, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         // Add affinity-specific description
         switch (stack.getItem() instanceof AffinityStone stone ? stone.affinity : Affinity.VOID) {
-            case FIRE -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.fire"));
+            case FIRE ->
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.fire"));
             case WATER ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.water"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.water"));
             case EARTH ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.earth"));
-            case WIND -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.wind"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.earth"));
+            case WIND ->
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.wind"));
             case LIGHTNING ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.lightning"));
-            case ICE -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.ice"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.lightning"));
+            case ICE -> tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.ice"));
             case GRAVITY ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.gravity"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.gravity"));
             case SOUND ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.sound"));
-            case TIME -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.time"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.sound"));
+            case TIME ->
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.time"));
             case SPACE ->
-                    tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.space"));
-            case LIFE -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.life"));
-            case VOID -> tooltipAdder.accept(Component.translatable("itemtooltip.elementalrealms.affinity_stone.void"));
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.space"));
+            case LIFE ->
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.life"));
+            case VOID ->
+                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.void"));
         }
-        super.appendHoverText(stack, context, tooltipDisplay, tooltipAdder, flag);
+        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

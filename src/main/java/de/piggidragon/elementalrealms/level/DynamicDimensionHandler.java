@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.level;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.events.DimensionBorderHandler;
 import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
 import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.commoble.infiniverse.api.InfiniverseAPI;
@@ -73,7 +72,7 @@ public class DynamicDimensionHandler {
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + portal.getVariant().getName() + "_" + dimensionCounter
+                        "realm_" + "_" + dimensionCounter
                 )
         );
 
@@ -92,8 +91,6 @@ public class DynamicDimensionHandler {
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
-
-                DimensionBorderHandler.setupWorldBorder(newLevel, generationCenter);
 
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
@@ -117,13 +114,12 @@ public class DynamicDimensionHandler {
      * @return A LevelStem with custom settings
      */
     private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ResourceKey<Level> level) {
+
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
-                .lookupOrThrow(Registries.LEVEL_STEM);
+                .registry(Registries.LEVEL_STEM)
+                .orElseThrow();
 
-        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey))
-                .orElseThrow(() -> new IllegalStateException("Test dimension template not found!"));
-
-        LevelStem templateStem = templateStemHolder.value();
+        LevelStem templateStem = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey));
 
         if (!(templateStem.generator() instanceof NoiseBasedChunkGenerator templateGenerator)) {
             throw new IllegalStateException("Template generator is not NoiseBasedChunkGenerator!");
@@ -196,10 +192,10 @@ public class DynamicDimensionHandler {
         while (attempts < maxAttempts) {
             // Top and bottom sides (x varies, z fixed)
             for (int x = -currentLayer; x <= currentLayer; x++) {
-                for (int z : new int[] { -currentLayer, currentLayer }) {
+                for (int z : new int[]{-currentLayer, currentLayer}) {
                     generationCenter = new ChunkPos(
-                        x * radius,
-                        z * radius
+                            x * radius,
+                            z * radius
                     );
                     attempts++;
                     ElementalRealms.LOGGER.info("Tried generation center at: " + generationCenter);
@@ -210,10 +206,10 @@ public class DynamicDimensionHandler {
             }
             // Left and right sides (z varies, x fixed), skip corners to avoid duplicates
             for (int z = -currentLayer + 1; z <= currentLayer - 1; z++) {
-                for (int x : new int[] { -currentLayer, currentLayer }) {
+                for (int x : new int[]{-currentLayer, currentLayer}) {
                     generationCenter = new ChunkPos(
-                        x * radius,
-                        z * radius
+                            x * radius,
+                            z * radius
                     );
                     attempts++;
                     if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {

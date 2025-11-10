@@ -2,10 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": "minecraft:anvil",
-    "B": "minecraft:lodestone",
-    "D": "minecraft:diamond",
-    "O": "minecraft:obsidian"
+    "A": {
+      "item": "minecraft:anvil"
+    },
+    "B": {
+      "item": "minecraft:lodestone"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
   },
   "pattern": [
     "OAO",

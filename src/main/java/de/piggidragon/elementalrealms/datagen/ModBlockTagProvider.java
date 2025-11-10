@@ -1,9 +1,10 @@
 package de.piggidragon.elementalrealms.datagen;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -13,8 +14,9 @@ import java.util.concurrent.CompletableFuture;
  * Currently empty as no custom blocks require tags yet.
  */
 public class ModBlockTagProvider extends BlockTagsProvider {
-    public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
-        super(output, lookupProvider, ElementalRealms.MODID);
+
+    public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, String modId, @Nullable ExistingFileHelper existingFileHelper) {
+        super(output, lookupProvider, modId, existingFileHelper);
     }
 
     /**

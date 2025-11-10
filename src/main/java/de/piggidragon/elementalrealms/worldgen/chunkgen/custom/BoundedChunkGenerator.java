@@ -14,10 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
-import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.levelgen.blending.Blender;
 
 import java.util.Arrays;
@@ -65,15 +62,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, ResourceKey<Level> level) {
         this(biomeSource, settings);
         this.level = level;
-    }
-
-    /**
-     * Gets the total world size in blocks.
-     *
-     * @return Total size in blocks
-     */
-    public static int getTotalSize() {
-        return (RADIUS * 2 + 1) * 16;
     }
 
     /**
@@ -131,23 +119,16 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         }
     }
 
-    /**
-     * Applies terrain carvers (caves, canyons) to chunk if within bounds.
-     */
     @Override
-    public void applyCarvers(WorldGenRegion worldGenRegion, long seed, RandomState randomState,
-                             BiomeManager biomeManager, StructureManager structureManager,
-                             ChunkAccess chunkAccess) {
-        if (level == null) {
-            super.applyCarvers(worldGenRegion, seed, randomState, biomeManager,
-                    structureManager, chunkAccess);
+    public void applyCarvers(WorldGenRegion level, long seed, RandomState random, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {
+        if (this.level == null) {
+            super.applyCarvers(level, seed, random, biomeManager, structureManager, chunk, step);
             return;
         }
 
-        ChunkPos pos = chunkAccess.getPos();
+        ChunkPos pos = chunk.getPos();
         if (isWithinBounds(pos)) {
-            super.applyCarvers(worldGenRegion, seed, randomState, biomeManager,
-                    structureManager, chunkAccess);
+            super.applyCarvers(level, seed, random, biomeManager, structureManager, chunk, step);
         }
     }
 
@@ -225,13 +206,13 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     private void generateVoidChunk(ChunkAccess chunkAccess) {
         BlockState air = Blocks.AIR.defaultBlockState();
 
-        int minY = chunkAccess.getMinY();
-        int maxY = chunkAccess.getMaxY();
+        int minY = chunkAccess.getMinBuildHeight();
+        int maxY = chunkAccess.getMaxBuildHeight();
 
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 for (int y = minY; y < maxY; y++) {
-                    chunkAccess.setBlockState(new BlockPos(x, y, z), air);
+                    chunkAccess.setBlockState(new BlockPos(x, y, z), air, true);
                 }
             }
         }

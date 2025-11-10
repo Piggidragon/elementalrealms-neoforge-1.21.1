@@ -10,7 +10,6 @@ import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.KilledTrigger;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.data.advancements.AdvancementSubProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -46,13 +45,12 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                         KilledTrigger.TriggerInstance.playerKilledEntity(
                                 Optional.of(
                                         EntityPredicate.Builder.entity()
-                                                .of(provider.lookupOrThrow(Registries.ENTITY_TYPE), EntityType.ENDER_DRAGON)
+                                                .of(EntityType.ENDER_DRAGON)
                                                 .build()
                                 )
                         )
                 )
-                .save(consumer, ResourceLocation.fromNamespaceAndPath("elementalrealms", "root"));
-
+                .save(consumer, "elementalrealms:root");
         // Get Dimension Staff
         Advancement.Builder.advancement()
                 .parent(rootAdvancement)
@@ -69,6 +67,6 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                 .addCriterion("has_staff",
                         InventoryChangeTrigger.TriggerInstance.hasItems(DimensionItems.DIMENSION_STAFF.get())
                 )
-                .save(consumer, ResourceLocation.fromNamespaceAndPath("elementalrealms", "get_staff"));
+                .save(consumer, "elementalrealms:get_staff");
     }
 }

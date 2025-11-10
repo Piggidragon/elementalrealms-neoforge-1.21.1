@@ -39,7 +39,7 @@ public class Platform extends Structure {
                     Codec.intRange(0, 30).fieldOf("size").forGetter(structure -> structure.size),
                     HeightProvider.CODEC.fieldOf("start_height").forGetter(structure -> structure.startHeight),
                     Heightmap.Types.CODEC.optionalFieldOf("project_start_to_heightmap").forGetter(structure -> structure.projectStartToHeightmap),
-                    JigsawStructure.MaxDistance.CODEC.fieldOf("max_distance_from_center").forGetter(structure -> structure.maxDistanceFromCenter),
+                    Codec.intRange(1, 128).fieldOf("max_distance_from_center").forGetter(structure -> structure.maxDistanceFromCenter),
                     DimensionPadding.CODEC.optionalFieldOf("dimension_padding", JigsawStructure.DEFAULT_DIMENSION_PADDING).forGetter(structure -> structure.dimensionPadding),
                     LiquidSettings.CODEC.optionalFieldOf("liquid_settings", JigsawStructure.DEFAULT_LIQUID_SETTINGS).forGetter(structure -> structure.liquidSettings)
             ).apply(instance, Platform::new));
@@ -49,7 +49,7 @@ public class Platform extends Structure {
     private final int size;
     private final HeightProvider startHeight;
     private final Optional<Heightmap.Types> projectStartToHeightmap;
-    private final JigsawStructure.MaxDistance maxDistanceFromCenter;
+    private final int maxDistanceFromCenter;
     private final DimensionPadding dimensionPadding;
     private final LiquidSettings liquidSettings;
 
@@ -62,17 +62,17 @@ public class Platform extends Structure {
      * @param size                    Jigsaw branching depth (0-30)
      * @param startHeight             Y-level provider for placement
      * @param projectStartToHeightmap Optional terrain-relative placement
-     * @param maxDistanceFromCenter   Maximum piece placement radius
+     * @param maxDistanceFromCenter   Maximum piece placement radius (in blocks)
      * @param dimensionPadding        Vertical bounds padding
      * @param liquidSettings          Waterlogging behavior
      */
-    public Platform(Structure.StructureSettings config,
+    public Platform(StructureSettings config,
                     Holder<StructureTemplatePool> startPool,
                     Optional<ResourceLocation> startJigsawName,
                     int size,
                     HeightProvider startHeight,
                     Optional<Heightmap.Types> projectStartToHeightmap,
-                    JigsawStructure.MaxDistance maxDistanceFromCenter,
+                    int maxDistanceFromCenter,
                     DimensionPadding dimensionPadding,
                     LiquidSettings liquidSettings) {
         super(config);
@@ -90,16 +90,16 @@ public class Platform extends Structure {
      * Calculates structure position and assembles jigsaw pieces.
      */
     @Override
-    public Optional<Structure.GenerationStub> findGenerationPoint(Structure.GenerationContext context) {
+    public Optional<GenerationStub> findGenerationPoint(GenerationContext context) {
 
         // Sample Y from height provider
         int startY = this.startHeight.sample(context.random(), new WorldGenerationContext(context.chunkGenerator(), context.heightAccessor()));
 
         ChunkPos chunkPos = context.chunkPos();
-        BlockPos blockPos = new BlockPos(0, 60, 0);
+        BlockPos blockPos = new BlockPos(chunkPos.getMinBlockX(), startY, chunkPos.getMinBlockZ());
 
         // Assemble structure pieces using jigsaw algorithm
-        Optional<Structure.GenerationStub> structurePiecesGenerator =
+        Optional<GenerationStub> structurePiecesGenerator =
                 JigsawPlacement.addPieces(
                         context,
                         this.startPool,
@@ -107,7 +107,7 @@ public class Platform extends Structure {
                         this.size,
                         blockPos,
                         false,
-                        Optional.empty(),
+                        this.projectStartToHeightmap,
                         this.maxDistanceFromCenter,
                         PoolAliasLookup.EMPTY,
                         this.dimensionPadding,

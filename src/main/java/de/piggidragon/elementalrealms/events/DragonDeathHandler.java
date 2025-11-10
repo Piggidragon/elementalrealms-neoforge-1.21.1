@@ -79,7 +79,7 @@ public class DragonDeathHandler {
         );
 
         // Find safe spawn position at world spawn
-        BlockPos worldSpawn = overworld.getRespawnData().globalPos().pos();
+        BlockPos worldSpawn = overworld.getSharedSpawnPos();
         BlockPos safePos = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, worldSpawn);
 
         portal.setPos(safePos.getX(), safePos.getY() + 5, safePos.getZ() + 2);

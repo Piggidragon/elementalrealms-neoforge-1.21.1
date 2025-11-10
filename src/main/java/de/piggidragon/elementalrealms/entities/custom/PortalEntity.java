@@ -1,17 +1,16 @@
 package de.piggidragon.elementalrealms.entities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.entities.ModEntities;
-import de.piggidragon.elementalrealms.entities.variants.PortalVariant;
 import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.level.ModLevel;
 import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -21,17 +20,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,13 +39,7 @@ import java.util.*;
  */
 public class PortalEntity extends Entity {
 
-    private static final EntityDataAccessor<Integer> DATA_VARIANT =
-            SynchedEntityData.defineId(PortalEntity.class, EntityDataSerializers.INT);
-
-    public final AnimationState idleAnimationState = new AnimationState();
-    public final AnimationState spawnAnimationState = new AnimationState();
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
-    private int idleAnimationTimer = -1;
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
     private boolean initialized = false;
@@ -67,16 +57,8 @@ public class PortalEntity extends Entity {
         super(type, level);
         this.portalLevel = level.dimension();
 
-        if (!level.isClientSide()) {
-            this.setVariant(PortalVariant.SCHOOL);
-        }
-
         if (!level.isClientSide() && level.getServer() != null) {
             this.targetLevel = Level.OVERWORLD;
-        }
-
-        if (level.isClientSide()) {
-            this.spawnAnimationState.start(0);
         }
     }
 
@@ -119,19 +101,6 @@ public class PortalEntity extends Entity {
         return this.ownerUUID;
     }
 
-    /**
-     * Gets the portal's position as a vector.
-     *
-     * @return the position vector
-     */
-    public Vec3 getPositionVec() {
-        return new Vec3(this.getX(), this.getY(), this.getZ());
-    }
-
-    private MinecraftServer getServer() {
-        return level().getServer();
-    }
-
     @Nullable
     private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
         MinecraftServer server = this.getServer();
@@ -142,44 +111,12 @@ public class PortalEntity extends Entity {
     }
 
     /**
-     * Gets the visual variant of this portal.
-     *
-     * @return the portal variant
-     */
-    public PortalVariant getVariant() {
-        try {
-            return PortalVariant.byId(this.entityData.get(DATA_VARIANT));
-        } catch (Exception e) {
-            return PortalVariant.SCHOOL;
-        }
-    }
-
-    /**
-     * Sets the visual variant of this portal.
-     *
-     * @param variant the portal variant to set
-     */
-    public void setVariant(PortalVariant variant) {
-        if (variant == null) variant = PortalVariant.SCHOOL;
-        this.entityData.set(DATA_VARIANT, variant.getId());
-    }
-
-    /**
      * Sets the target dimension for portal teleportation.
      *
      * @param targetLevel the dimension key to teleport to
      */
     public void setTargetLevel(ResourceKey<Level> targetLevel) {
         this.targetLevel = targetLevel;
-    }
-
-    /**
-     * Sets a random variant from non-school types.
-     */
-    public void setRandomVariant() {
-        PortalVariant[] variants = {PortalVariant.ELEMENTAL, PortalVariant.DEVIANT, PortalVariant.ETERNAL};
-        int randomIndex = this.level().random.nextInt(variants.length);
-        this.setVariant(variants[randomIndex]);
     }
 
     /**
@@ -212,11 +149,8 @@ public class PortalEntity extends Entity {
     public void push(Entity entity) {
     }
 
-    /**
-     * Handles damage to the portal.
-     */
     @Override
-    public boolean hurtServer(ServerLevel serverLevel, DamageSource damageSource, float v) {
+    public boolean hurt(DamageSource source, float amount) {
         return false;
     }
 
@@ -236,80 +170,63 @@ public class PortalEntity extends Entity {
         return InteractionResult.PASS;
     }
 
-    /**
-     * Determines if the portal can be collided with.
-     */
     @Override
-    public boolean canBeCollidedWith(@Nullable Entity entity) {
+    public boolean canBeCollidedWith() {
         return false;
-    }
-
-    /**
-     * Manages animation states for the portal.
-     */
-    public void setupAnimationStates() {
-        if (this.idleAnimationTimer <= 0) {
-            this.idleAnimationTimer = 160;
-            this.idleAnimationState.start(this.tickCount);
-        } else {
-            --this.idleAnimationTimer;
-        }
     }
 
     /**
      * Reads entity data from NBT.
      */
     @Override
-    protected void readAdditionalSaveData(ValueInput valueInput) {
-        this.despawnTimeout = valueInput.getIntOr("DespawnTimer", 0);
-        this.discard = valueInput.getBooleanOr("Discard", false);
-        this.primed = valueInput.getBooleanOr("IsNatural", false);
-        this.initialized = valueInput.getBooleanOr("Initialized", false);
+    protected void readAdditionalSaveData(CompoundTag compound) {
+        this.despawnTimeout = compound.getInt("DespawnTimer");
+        this.discard = compound.getBoolean("Discard");
+        this.primed = compound.getBoolean("IsNatural");
+        this.initialized = compound.getBoolean("Initialized");
 
         // Parse target dimension from saved string
-        String levelKey = valueInput.getStringOr("TargetLevel", "");
-        if (!levelKey.isEmpty() && !this.level().isClientSide()) {
-            ResourceLocation location = ResourceLocation.tryParse(levelKey);
-            if (location != null) {
-                this.targetLevel = ResourceKey.create(Registries.DIMENSION, location);
-            } else {
-                this.targetLevel = Level.OVERWORLD; // Fallback to overworld
+        if (compound.contains("TargetLevel")) {
+            String levelKey = compound.getString("TargetLevel");
+            if (!levelKey.isEmpty() && !this.level().isClientSide()) {
+                ResourceLocation location = ResourceLocation.tryParse(levelKey);
+                if (location != null) {
+                    this.targetLevel = ResourceKey.create(Registries.DIMENSION, location);
+                } else {
+                    this.targetLevel = Level.OVERWORLD; // Fallback to overworld
+                }
             }
-        } else if (levelKey.isEmpty() && !this.level().isClientSide() && this.getServer() != null) {
+        } else if (!this.level().isClientSide() && this.getServer() != null) {
             this.targetLevel = Level.OVERWORLD;
         }
 
         // Parse owner UUID from string
-        String uuidString = valueInput.getStringOr("OwnerUUID", "");
-        if (!uuidString.isEmpty()) {
+        if (compound.contains("OwnerUUID")) {
+            String uuidString = compound.getString("OwnerUUID");
             try {
                 this.ownerUUID = UUID.fromString(uuidString);
             } catch (IllegalArgumentException e) {
                 this.ownerUUID = null;
             }
         }
-
-        int variantId = valueInput.getIntOr("Variant", PortalVariant.SCHOOL.getId());
-        this.setVariant(PortalVariant.byId(variantId));
     }
 
     /**
      * Saves entity data to NBT.
      */
     @Override
-    protected void addAdditionalSaveData(ValueOutput valueOutput) {
-        valueOutput.putInt("DespawnTimer", this.despawnTimeout);
-        valueOutput.putBoolean("Discard", this.discard);
-        valueOutput.putBoolean("IsNatural", this.primed);
-        valueOutput.putBoolean("Initialized", this.initialized);
-        valueOutput.putInt("Variant", this.getVariant().getId());
+    protected void addAdditionalSaveData(CompoundTag compound) {
+        compound.putInt("DespawnTimer", this.despawnTimeout);
+        compound.putBoolean("Discard", this.discard);
+        compound.putBoolean("IsNatural", this.primed);
+        compound.putBoolean("Initialized", this.initialized);
 
         if (this.targetLevel != null) {
-            valueOutput.putString("TargetLevel", this.targetLevel.location().toString());
+            compound.putString("TargetLevel", this.targetLevel.location().toString());
         }
 
         if (this.ownerUUID != null) {
-            valueOutput.putString("OwnerUUID", this.ownerUUID.toString());
+            compound.putString("OwnerUUID", this.ownerUUID.toString());
         }
     }
 
@@ -318,7 +235,6 @@ public class PortalEntity extends Entity {
      */
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(DATA_VARIANT, PortalVariant.SCHOOL.getId());
     }
 
     /**
@@ -327,10 +243,6 @@ public class PortalEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-
-        if (this.level().isClientSide()) {
-            this.setupAnimationStates();
-        }
 
         // Trigger explosion on first tick for naturally spawned portals
         if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && primed) {
@@ -416,10 +328,9 @@ public class PortalEntity extends Entity {
                 return;
             }
 
-            Set<Relative> relatives = Collections.emptySet();
+            Set<RelativeMovement> relatives = Collections.emptySet();
             float yaw = player.getYRot();
             float pitch = player.getXRot();
-            boolean setCamera = true;
 
             // Handle teleportation from vanilla dimensions to custom dimensions
             if (PortalUtils.isVanilla(portalLevel)) {
@@ -451,7 +362,8 @@ public class PortalEntity extends Entity {
 
                 player.setData(ModAttachments.RETURN_LEVEL_POS.get(), returnLevelPos);
                 assert destinationLevel != null;
-                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y + 1, destinationPos.z, relatives, yaw, pitch, setCamera);
+                ElementalRealms.LOGGER.info("Teleporting player {} to dimension {} at position {}", player.getName().getString(), targetLevel.location(), destinationPos);
+                player.teleportTo(destinationLevel, destinationPos.x, destinationPos.y + 1, destinationPos.z, relatives, yaw, pitch);
                 player.setPortalCooldown();
 
                 if (discard) {
@@ -482,7 +394,7 @@ public class PortalEntity extends Entity {
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch, setCamera);
+                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 

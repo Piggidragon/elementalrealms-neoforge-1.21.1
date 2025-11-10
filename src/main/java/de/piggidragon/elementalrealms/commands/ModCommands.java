@@ -67,7 +67,7 @@ public class ModCommands {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                                     int radius = IntegerArgumentType.getInteger(ctx, "radius");
 
-                                    ServerLevel level = player.level();
+                                    ServerLevel level = (ServerLevel) player.level();
                                     PortalEntity portal = PortalUtils.findNearestPortal(level, player.position(), radius);
 
                                     if (portal != null) {

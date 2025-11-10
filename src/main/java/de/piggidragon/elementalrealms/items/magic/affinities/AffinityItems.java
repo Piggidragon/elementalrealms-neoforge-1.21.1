@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.items.magic.affinities;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.items.magic.affinities.custom.AffinityStone;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.util.ModRarities;
 import net.minecraft.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -30,13 +29,13 @@ public class AffinityItems {
         registerAffinityStone(map, Affinity.WATER, Rarity.EPIC);
         registerAffinityStone(map, Affinity.WIND, Rarity.EPIC);
         registerAffinityStone(map, Affinity.EARTH, Rarity.EPIC);
-        registerAffinityStone(map, Affinity.LIGHTNING, ModRarities.LEGENDARY.getValue());
-        registerAffinityStone(map, Affinity.ICE, ModRarities.LEGENDARY.getValue());
-        registerAffinityStone(map, Affinity.SOUND, ModRarities.LEGENDARY.getValue());
-        registerAffinityStone(map, Affinity.GRAVITY, ModRarities.LEGENDARY.getValue());
-        registerAffinityStone(map, Affinity.TIME, ModRarities.MYTHIC.getValue());
-        registerAffinityStone(map, Affinity.SPACE, ModRarities.MYTHIC.getValue());
-        registerAffinityStone(map, Affinity.LIFE, ModRarities.MYTHIC.getValue());
+        registerAffinityStone(map, Affinity.LIGHTNING, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.ICE, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.SOUND, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.GRAVITY, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.TIME, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.SPACE, Rarity.EPIC);
+        registerAffinityStone(map, Affinity.LIFE, Rarity.EPIC);
         registerAffinityStone(map, Affinity.VOID, Rarity.RARE); // Void stone
     });
 
