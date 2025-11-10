@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.items.magic.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.items.magic.affinities.custom.AffinityShard;
 import de.piggidragon.elementalrealms.items.magic.affinities.custom.AffinityStone;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.Util;
@@ -80,7 +81,7 @@ public class AffinityItems {
         String name = "affinity_shard_" + affinity.getName();
         DeferredItem<Item> shard = ITEMS.registerItem(
                 name,
-                (p) -> new Item(p.rarity(rarity))
+                (p) -> new AffinityShard(p.rarity(rarity), affinity)
         );
         map.put(affinity, shard);
     }
