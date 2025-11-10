@@ -43,7 +43,7 @@ public class ModPacketHandler {
     private static void handleAffinitySuccess(AffinitySuccessPacket packet, IPayloadContext context) {
         // Execute on main thread to prevent concurrent modification
         context.enqueueWork(() -> {
-            if (FMLEnvironment.getDist() == Dist.CLIENT) {
+            if (FMLEnvironment.dist == Dist.CLIENT) {
                 Minecraft minecraft = Minecraft.getInstance();
 
                 if (minecraft.player != null) {
