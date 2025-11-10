@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.items.magic.affinities.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import de.piggidragon.elementalrealms.packets.AffinitySuccessPacket;
@@ -10,13 +9,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -25,7 +25,6 @@ import java.util.List;
  * Consumable item that grants or removes player affinities.
  * Regular stones add specific affinities, void stone clears all.
  */
-@EventBusSubscriber(modid = ElementalRealms.MODID)
 public class AffinityStone extends Item {
 
     private final Affinity affinity;
@@ -42,90 +41,94 @@ public class AffinityStone extends Item {
     }
 
     /**
-     * Handles right-click usage of affinity stones.
-     * Adds affinity to player or clears all affinities (void stone).
+     * Called when the player right-clicks with the item in hand
+     * Handles affinity addition/removal logic
      */
-    @SubscribeEvent
-    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
-        if (!event.getEntity().level().isClientSide() && event.getEntity() instanceof ServerPlayer player) {
-            ItemStack itemStack = event.getItemStack();
-            if (itemStack.getItem() instanceof AffinityStone stone) {
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack itemStack = player.getItemInHand(hand);
 
-                ItemStack originalItemStack = itemStack.copy();
+        // Only execute on server side
+        if (level.isClientSide()) {
+            return InteractionResultHolder.success(itemStack);
+        }
 
-                boolean success = false;
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return InteractionResultHolder.fail(itemStack);
+        }
 
-                // Void stone clears all affinities
-                if (stone.affinity == Affinity.VOID) {
-                    try {
-                        ModAffinities.clearAffinities(player);
-                        success = true;
-                        itemStack.shrink(1);
-                    } catch (Exception e) {
-                        player.displayClientMessage(Component.literal(e.getMessage()), true);
-                    }
-                } else {
-                    // Regular stones add specific affinity
-                    try {
-                        ModAffinities.addAffinity(player, stone.affinity);
-                        success = true;
-                        itemStack.shrink(1);
-                    } catch (Exception e) {
-                        player.displayClientMessage(Component.literal(e.getMessage()), true);
-                    }
-                }
+        ItemStack originalItemStack = itemStack.copy();
+        boolean success = false;
 
-                if (success) {
-                    ServerLevel serverLevel = (ServerLevel) player.level();
-
-                    // Spawn colored particles
-                    AffinityParticles.createCustomAffinityParticles(serverLevel, player, stone.affinity);
-
-                    // Play sound with pitch varying by affinity
-                    float pitch = 0.25F + (stone.affinity.ordinal() * 0.1F);
-                    serverLevel.playSound(null, player.blockPosition(),
-                            SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, pitch);
-
-                    // Send packet to client for additional effects
-                    PacketDistributor.sendToPlayer(player,
-                            new AffinitySuccessPacket(originalItemStack, stone.affinity)
-                    );
-                }
-
-                event.setCancellationResult(InteractionResult.SUCCESS);
-                event.setCanceled(true);
+        // Void stone clears all affinities
+        if (this.affinity == Affinity.VOID) {
+            try {
+                ModAffinities.clearAffinities(serverPlayer);
+                success = true;
+                itemStack.shrink(1);
+            } catch (IllegalStateException e) {
+                serverPlayer.displayClientMessage(
+                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
+                        true
+                );
+                return InteractionResultHolder.fail(itemStack);
+            }
+        } else {
+            // Regular stones add specific affinity
+            try {
+                ModAffinities.addAffinity(serverPlayer, this.affinity);
+                success = true;
+                itemStack.shrink(1);
+            } catch (IllegalStateException e) {
+                serverPlayer.displayClientMessage(
+                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
+                        true
+                );
+                return InteractionResultHolder.fail(itemStack);
             }
         }
+
+        if (success) {
+            ServerLevel serverLevel = (ServerLevel) level;
+
+            // Spawn colored particles
+            AffinityParticles.createCustomAffinityParticles(serverLevel, serverPlayer, this.affinity);
+
+            // Play sound with pitch varying by affinity
+            float pitch = 0.25F + (this.affinity.ordinal() * 0.1F);
+            serverLevel.playSound(
+                    null,
+                    serverPlayer.blockPosition(),
+                    SoundEvents.TOTEM_USE,
+                    SoundSource.PLAYERS,
+                    0.8F,
+                    pitch
+            );
+
+            // Send packet to client for additional effects
+            PacketDistributor.sendToPlayer(
+                    serverPlayer,
+                    new AffinitySuccessPacket(originalItemStack, this.affinity)
+            );
+
+            return InteractionResultHolder.success(itemStack);
+        }
+
+        return InteractionResultHolder.fail(itemStack);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+    public void appendHoverText(
+            ItemStack stack,
+            TooltipContext context,
+            List<Component> tooltipComponents,
+            TooltipFlag tooltipFlag
+    ) {
         // Add affinity-specific description
-        switch (stack.getItem() instanceof AffinityStone stone ? stone.affinity : Affinity.VOID) {
-            case FIRE ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.fire"));
-            case WATER ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.water"));
-            case EARTH ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.earth"));
-            case WIND ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.wind"));
-            case LIGHTNING ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.lightning"));
-            case ICE -> tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.ice"));
-            case GRAVITY ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.gravity"));
-            case SOUND ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.sound"));
-            case TIME ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.time"));
-            case SPACE ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.space"));
-            case LIFE ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.life"));
-            case VOID ->
-                    tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.affinity_stone.void"));
-        }
+        String tooltipKey = "itemtooltip.elementalrealms.affinity_stone."
+                + this.affinity.name().toLowerCase();
+        tooltipComponents.add(Component.translatable(tooltipKey));
+
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }
