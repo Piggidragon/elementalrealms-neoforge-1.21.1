@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.saveddata;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -94,7 +95,7 @@ public class GenerationCenterData extends SavedData {
         return CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag)
                 .resultOrPartial(error -> {
                     // Log error if parsing fails
-                    System.err.println("Failed to load GenerationCenterData: " + error);
+                    ElementalRealms.LOGGER.error("Failed to load GenerationCenterData: " + error);
                 })
                 .orElseGet(GenerationCenterData::new);
     }
@@ -111,7 +112,7 @@ public class GenerationCenterData extends SavedData {
         CODEC.encodeStart(lookupProvider.createSerializationContext(NbtOps.INSTANCE), this)
                 .resultOrPartial(error -> {
                     // Log error if encoding fails
-                    System.err.println("Failed to save GenerationCenterData: " + error);
+                    ElementalRealms.LOGGER.error("Failed to save GenerationCenterData: " + error);
                 })
                 .ifPresent(encodedTag -> tag.merge((CompoundTag) encodedTag));
         return tag;
