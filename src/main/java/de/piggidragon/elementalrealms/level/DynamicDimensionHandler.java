@@ -73,7 +73,7 @@ public class DynamicDimensionHandler {
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + portal.getVariant().getName() + "_" + dimensionCounter
+                        "realm_" + "_" + dimensionCounter
                 )
         );
 
@@ -117,13 +117,12 @@ public class DynamicDimensionHandler {
      * @return A LevelStem with custom settings
      */
     private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ResourceKey<Level> level) {
+
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
-                .lookupOrThrow(Registries.LEVEL_STEM);
+                .registry(Registries.LEVEL_STEM)
+                .orElseThrow();
 
-        Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey))
-                .orElseThrow(() -> new IllegalStateException("Test dimension template not found!"));
-
-        LevelStem templateStem = templateStemHolder.value();
+        LevelStem templateStem = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey));
 
         if (!(templateStem.generator() instanceof NoiseBasedChunkGenerator templateGenerator)) {
             throw new IllegalStateException("Template generator is not NoiseBasedChunkGenerator!");
