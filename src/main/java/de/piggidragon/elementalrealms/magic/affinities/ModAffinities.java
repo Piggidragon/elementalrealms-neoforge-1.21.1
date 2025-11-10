@@ -7,8 +7,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,35 +26,69 @@ public class ModAffinities {
     public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
         Map<Affinity, Integer> affinities = getAffinities(player);
 
+        // Validate before adding
+        validateAffinityCanBeAdded(affinity, affinities);
+
+        // Add affinity with 100% completion
+        affinities.put(affinity, 100);
+
+        // Save changes
+        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+    }
+
+    public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) throws IllegalStateException {
+        Map<Affinity, Integer> affinities = getAffinities(player);
+
+        // Validate before adding
+        validateAffinityCanBeAdded(affinity, affinities);
+
+        // Add affinity with 0% completion
+        affinities.put(affinity, increment);
+
+        // Save changes
+        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+    }
+
+    /**
+     * Validates if an affinity can be added to the player
+     * Throws exception if validation fails
+     */
+    private static void validateAffinityCanBeAdded(
+            Affinity affinity,
+            Map<Affinity, Integer> currentAffinities
+    ) {
         // Prevent duplicate
-        if (affinities.containsKey(affinity)) {
+        if (currentAffinities.containsKey(affinity)) {
             throw new IllegalStateException("Player already has affinity: " + affinity);
         }
 
-        // Check ETERNAL limit (only one per player)
-        if (affinity.getType() == AffinityType.ETERNAL) {
-            for (Affinity a : affinities.keySet()) {
-                if (a.getType() == AffinityType.ETERNAL) {
-                    throw new IllegalStateException("Player already has an eternal affinity: " + a);
-                }
-            }
+        // Check ETERNAL limit
+        if (affinity.getType() == AffinityType.ETERNAL && hasEternalAffinity(currentAffinities)) {
+            throw new IllegalStateException("Player already has an eternal affinity");
         }
 
         // Check DEVIANT requires base elemental
-        if (affinity.getType() == AffinityType.DEVIANT) {
-            boolean hasBase = false;
-            for (Affinity a : affinities.keySet()) {
-                if (a.getDeviant() == affinity) {
-                    hasBase = true;
-                    break;
-                }
-            }
-            if (!hasBase) {
-                throw new IllegalStateException("Player is missing base affinity: " + affinity.getElemental());
-            }
+        if (affinity.getType() == AffinityType.DEVIANT && !hasBaseAffinity(currentAffinities, affinity)) {
+            throw new IllegalStateException(
+                    "Player is missing base affinity for deviant: " + affinity.getElemental()
+            );
         }
-        affinities.put(affinity, 100);
-        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+    }
+
+    /**
+     * Checks if player has an eternal affinity
+     */
+    private static boolean hasEternalAffinity(Map<Affinity, Integer> affinities) {
+        return affinities.keySet().stream()
+                .anyMatch(a -> a.getType() == AffinityType.ETERNAL);
+    }
+
+    /**
+     * Checks if player has the required base affinity for a deviant
+     */
+    private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
+        return affinities.keySet().stream()
+                .anyMatch(a -> a.getDeviant() == deviant);
     }
 
     /**
@@ -111,7 +143,7 @@ public class ModAffinities {
             }
 
             // Roll and assign random affinities
-            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player)) {
+            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
                 if (affinity != Affinity.VOID) {
                     try {
                         addAffinity(player, affinity);
