@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.guis.menus.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.FriendlyByteBuf;
@@ -32,21 +31,15 @@ public class AffinityMenu extends AbstractContainerMenu {
     public AffinityMenu(int containerId, Inventory playerInv, FriendlyByteBuf extraData) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
 
-        ElementalRealms.LOGGER.info("=== CLIENT MENU CONSTRUCTOR CALLED ===");
-
         // Read all affinities with their completion percentages from buffer
         int count = extraData.readInt();
-        ElementalRealms.LOGGER.info("=== READING " + count + " AFFINITIES FROM BUFFER ===");
 
         this.affinities = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             Affinity affinity = extraData.readEnum(Affinity.class);
             int completion = extraData.readInt(); // 0-100 percentage
             this.affinities.add(new AffinityData(affinity, completion));
-            ElementalRealms.LOGGER.info("Read affinity: " + affinity + " = " + completion + "%");
         }
-
-        ElementalRealms.LOGGER.info("=== CLIENT MENU CONSTRUCTOR FINISHED ===");
     }
 
     /**
@@ -60,12 +53,8 @@ public class AffinityMenu extends AbstractContainerMenu {
     public AffinityMenu(int containerId, Inventory playerInv, List<AffinityData> affinities) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
 
-        ElementalRealms.LOGGER.info("=== SERVER MENU CONSTRUCTOR CALLED WITH " + affinities.size() + " AFFINITIES ===");
-
         // Store the affinity data directly (no need to read from buffer)
         this.affinities = new ArrayList<>(affinities);
-
-        ElementalRealms.LOGGER.info("=== SERVER MENU CONSTRUCTOR FINISHED ===");
     }
 
     /**

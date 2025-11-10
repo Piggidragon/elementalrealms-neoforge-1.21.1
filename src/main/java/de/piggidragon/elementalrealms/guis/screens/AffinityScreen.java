@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.guis.screens;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.guis.menus.custom.AffinityMenu;
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -28,8 +29,6 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
     public AffinityScreen(AffinityMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
 
-        ElementalRealms.LOGGER.info("=== AFFINITY SCREEN CONSTRUCTOR CALLED ===");
-
         // Set GUI dimensions (background texture size)
         this.imageWidth = 176;
         this.imageHeight = 190; // Increased height for affinity list
@@ -39,22 +38,17 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
 
         // Hide player inventory label (we don't show player inventory)
         this.inventoryLabelY = 10000; // Move offscreen
-
-        ElementalRealms.LOGGER.info("=== SCREEN CONSTRUCTOR FINISHED ===");
     }
 
     @Override
     protected void init() {
         super.init();
 
-        ElementalRealms.LOGGER.info("=== SCREEN INIT CALLED ===");
-
         // NOW we can safely use this.font
         // Center the title
         this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
         this.titleLabelY = 6;
 
-        ElementalRealms.LOGGER.info("=== SCREEN INIT FINISHED ===");
         // leftPos and topPos are automatically calculated here
         // They represent the top-left corner of the GUI
     }
@@ -114,17 +108,15 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
         );
 
         // Render affinities list
-        this.renderAffinities(graphics, mouseX, mouseY);
+        this.renderAffinities(graphics);
     }
 
     /**
      * Renders all affinities with completion bars
      * Coordinates are relative to leftPos/topPos
      * @param graphics The graphics context
-     * @param mouseX Mouse X position (screen coordinates)
-     * @param mouseY Mouse Y position (screen coordinates)
      */
-    private void renderAffinities(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderAffinities(GuiGraphics graphics) {
         int startY = 25; // Relative Y position
         int xOffset = 10; // Relative X offset
 
@@ -146,7 +138,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
 
             // Render each completed affinity
             for (AffinityMenu.AffinityData data : completed) {
-                renderAffinityEntry(graphics, data, xOffset, startY, mouseX, mouseY);
+                renderAffinityEntry(graphics, data, xOffset, startY);
                 startY += 18;  // Move down for next entry
             }
 
@@ -167,7 +159,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
 
             // Render each incomplete affinity
             for (AffinityMenu.AffinityData data : incomplete) {
-                renderAffinityEntry(graphics, data, xOffset, startY, mouseX, mouseY);
+                renderAffinityEntry(graphics, data, xOffset, startY);
                 startY += 18;
             }
         }
@@ -180,44 +172,115 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
      * @param data The affinity data to render
      * @param x Relative X position
      * @param y Relative Y position
-     * @param mouseX Mouse X position (screen coordinates)
-     * @param mouseY Mouse Y position (screen coordinates)
      */
     private void renderAffinityEntry(
             GuiGraphics graphics,
             AffinityMenu.AffinityData data,
             int x,
-            int y,
-            int mouseX,
-            int mouseY
+            int y
     ) {
-        // 1. Render affinity name
+        // Get affinity-specific color for the name
+        int affinityColor = getAffinityColor(data.getAffinity());
+        boolean isCompleted = data.isCompleted();
+        int completion = data.getCompletionPercent();
+
+        // Get color based on completion percentage (red → orange → green)
+        int progressColor = getProgressColor(completion);
+
+        // 1. Render affinity name with element color
         Component name = Component.translatable(
                 "affinity.elementalrealms." + data.getAffinity().name().toLowerCase()
         );
-        graphics.drawString(this.font, name, x, y, 0xFFFFFF, false);
+        graphics.drawString(
+                this.font,
+                name,
+                x,
+                y,
+                affinityColor,
+                isCompleted
+        );
 
-        // 2. Render completion percentage text
-        String percentText = data.getCompletionPercent() + "%";
-        int textColor = data.isCompleted() ? 0x55FF55 : 0xFFFFFF;
-        graphics.drawString(this.font, percentText, x + 120, y, textColor, false);
+        // 2. Render completion percentage text with dynamic color
+        String percentText = completion + "%";
+        graphics.drawString(this.font, percentText, x + 120, y, progressColor, false);
 
-        // 3. Render progress bar
-        int barX = x;
-        int barY = y + 10;
-        int barWidth = 150;
-        int barHeight = 4;
+        // 3. Render progress bar ONLY if not completed
+        if (!isCompleted) {
+            int barX = x;
+            int barY = y + 10;
+            int barWidth = 150;
+            int barHeight = 4;
 
-        // Background bar (dark)
-        graphics.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF3C3C3C);
+            // Background bar (dark)
+            graphics.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF3C3C3C);
 
-        // Progress fill (colored)
-        int progressWidth = (int) (barWidth * (data.getCompletionPercent() / 100.0f));
-        int barColor = data.isCompleted() ? 0xFF55FF55 : 0xFFFFAA00;
-        graphics.fill(barX, barY, barX + progressWidth, barY + barHeight, barColor);
+            // Progress fill with color gradient
+            int progressWidth = (int) (barWidth * (completion / 100.0f));
+            graphics.fill(barX, barY, barX + progressWidth, barY + barHeight, progressColor);
 
-        // Border
-        graphics.renderOutline(barX, barY, barWidth, barHeight, 0xFF8B8B8B);
+            // Border
+            graphics.renderOutline(barX, barY, barWidth, barHeight, 0xFF8B8B8B);
+        }
+    }
+
+    /**
+     * Calculates a smooth color gradient from red to green based on percentage
+     * 0% = Red (0xFFFF0000)
+     * 50% = Orange (0xFFFF8800)
+     * 100% = Green (0xFF00FF00)
+     *
+     * @param percent Completion percentage (0-100)
+     * @return ARGB color integer
+     */
+    private int getProgressColor(int percent) {
+        // Clamp to 0-100 range
+        percent = Math.clamp(percent, 0, 100);
+
+        if (percent < 50) {
+            // Transition from RED to ORANGE (0% to 50%)
+            // Red: 0xFF FF 00 00
+            // Orange: 0xFF FF 88 00
+            float ratio = percent / 50.0f; // 0.0 to 1.0
+
+            int red = 255;
+            int green = (int) (0x88 * ratio); // 0 → 136
+            int blue = 0;
+
+            return 0xFF000000 | (red << 16) | (green << 8) | blue;
+
+        } else {
+            // Transition from ORANGE to GREEN (50% to 100%)
+            // Orange: 0xFF FF 88 00
+            // Green: 0xFF 00 FF 00
+            float ratio = (percent - 50) / 50.0f; // 0.0 to 1.0
+
+            int red = (int) (255 * (1 - ratio)); // 255 → 0
+            int green = (int) (0x88 + (255 - 0x88) * ratio); // 136 → 255
+            int blue = 0;
+
+            return 0xFF000000 | (red << 16) | (green << 8) | blue;
+        }
+    }
+
+    /**
+     * Gets the color for a specific affinity type
+     * Used for the affinity name display
+     */
+    private int getAffinityColor(Affinity affinity) {
+        return switch (affinity) {
+            case VOID -> 0xFF000000;       // Black (void space)
+            case FIRE -> 0xFFFF4500;      // Orange-Red (fire flames)
+            case WATER -> 0xFF1E90FF;     // Dodger Blue (ocean water)
+            case EARTH -> 0xFF8B4513;     // Saddle Brown (soil/earth)
+            case WIND -> 0xFFE0FFFF;      // Light Cyan (sky/air)
+            case LIGHTNING -> 0xFFFFFF00; // Yellow (lightning bolt)
+            case ICE -> 0xFF87CEEB;       // Sky Blue (ice/frost)
+            case SOUND -> 0xFFDA70D6;     // Orchid (sound waves)
+            case GRAVITY -> 0xFF4B0082;   // Indigo (deep space/gravity)
+            case TIME -> 0xFFFFD700;      // Gold (clockwork/time)
+            case SPACE -> 0xFF191970;     // Midnight Blue (outer space)
+            case LIFE -> 0xFF32CD32;      // Lime Green (nature/plants)
+        };
     }
 
     @Override

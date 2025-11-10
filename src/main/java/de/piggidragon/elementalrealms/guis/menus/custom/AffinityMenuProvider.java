@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.guis.menus.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -56,14 +55,11 @@ public class AffinityMenuProvider implements MenuProvider {
         );
 
         AffinityMenuProvider provider = new AffinityMenuProvider(affinities);
-        ElementalRealms.LOGGER.info("AffinityMenuProvider: " + provider);
-        //player.openMenu(provider, buf -> writeAffinityData(buf, affinities));
         // Use SimpleMenuProvider - it handles createMenu() automatically
         player.openMenu(
                 new SimpleMenuProvider(
                         // This lambda creates the server-side menu
                         (containerId, playerInventory, p) -> {
-                            ElementalRealms.LOGGER.info("=== SERVER MENU CONSTRUCTOR CALLED ===");
                             // Create server menu with actual data
                             return new AffinityMenu(containerId, playerInventory, affinities);
                         },
@@ -72,9 +68,7 @@ public class AffinityMenuProvider implements MenuProvider {
                 ),
                 // This lambda writes data to the buffer for the client
                 buf -> {
-                    ElementalRealms.LOGGER.info("=== WRITING DATA TO BUFFER ===");
                     writeAffinityData(buf, affinities);
-                    ElementalRealms.LOGGER.info("=== FINISHED WRITING DATA ===");
                 }
         );
     }
@@ -95,7 +89,6 @@ public class AffinityMenuProvider implements MenuProvider {
         for (AffinityMenu.AffinityData affinity : affinities) {
             buf.writeEnum(affinity.getAffinity());
             buf.writeInt(affinity.getCompletionPercent());
-            ElementalRealms.LOGGER.info("Wrote affinity to buffer: " + affinity);
         }
     }
 }
