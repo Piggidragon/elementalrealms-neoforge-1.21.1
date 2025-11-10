@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.packets;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -25,7 +26,7 @@ public record AffinitySuccessPacket(
      */
     public static final Type<AffinitySuccessPacket> TYPE =
             new Type<>(
-                    ResourceLocation.fromNamespaceAndPath("elementalrealms", "affinity_success")
+                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "affinity_success")
             );
 
     /**
