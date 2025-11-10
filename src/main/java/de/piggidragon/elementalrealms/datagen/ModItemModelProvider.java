@@ -52,6 +52,7 @@ public class ModItemModelProvider extends ItemModelProvider {
      * @param item The item to generate a model for
      * @return
      */
+    @Override
     public ItemModelBuilder basicItem(Item item) {
         ResourceLocation itemLocation = ResourceLocation.fromNamespaceAndPath(
                 ElementalRealms.MODID,

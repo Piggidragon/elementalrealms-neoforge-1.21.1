@@ -80,35 +80,42 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
         }
     }
 
-    // Codec getter methods
+    @Override
     public Vec3i locateOffset() {
         return this.locateOffset;
     }
 
+    @Override
     public FrequencyReductionMethod frequencyReductionMethod() {
         return this.frequencyReductionMethod;
     }
 
+    @Override
     public float frequency() {
         return this.frequency;
     }
 
+    @Override
     public int salt() {
         return this.salt;
     }
 
+    @Override
     public Optional<ExclusionZone> exclusionZone() {
         return this.exclusionZone;
     }
 
+    @Override
     public int spacing() {
         return this.spacing;
     }
 
+    @Override
     public int separation() {
         return this.separation;
     }
 
+    @Override
     public RandomSpreadType spreadType() {
         return this.spreadType;
     }
