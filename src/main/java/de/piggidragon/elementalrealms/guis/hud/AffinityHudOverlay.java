@@ -1,0 +1,250 @@
+package de.piggidragon.elementalrealms.guis.hud;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * HUD overlay that shows affinity stones on the right side of the screen
+ * Can be toggled on/off and doesn't pause the game
+ */
+public class AffinityHudOverlay {
+
+    private static final int ICON_SIZE = 32;
+    private static final int ICON_SPACING = 8;
+    private static final int MARGIN_RIGHT = 10; // Distance from right edge
+
+    // Toggle state - controlled by keybind
+    private static boolean visible = false;
+
+    /**
+     * Toggles the visibility of the affinity HUD
+     */
+    public static void toggle() {
+        visible = !visible;
+        ElementalRealms.LOGGER.info("Affinity HUD toggled: " + visible);
+    }
+
+    /**
+     * Sets the visibility of the affinity HUD
+     */
+    public static void setVisible(boolean isVisible) {
+        visible = isVisible;
+    }
+
+    /**
+     * Checks if the affinity HUD is currently visible
+     */
+    public static boolean isVisible() {
+        return visible;
+    }
+
+    /**
+     * Renders the affinity HUD overlay
+     * Called by RenderGuiLayerEvent
+     */
+    public static void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+        if (!visible) {
+            return; // Don't render if toggled off
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) {
+            return;
+        }
+
+        // TODO: Get actual affinity data from player
+        // For now, use example data
+        List<AffinityData> affinities = getPlayerAffinities(mc.player);
+
+        if (affinities.isEmpty()) {
+            return;
+        }
+
+        // Calculate positions
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
+
+        int startX = screenWidth - ICON_SIZE - MARGIN_RIGHT;
+        int totalHeight = affinities.size() * (ICON_SIZE + ICON_SPACING) - ICON_SPACING;
+        int startY = (screenHeight - totalHeight) / 2; // Centered vertically
+
+        int currentY = startY;
+
+        // Get mouse position for hover detection
+        double mouseX = mc.mouseHandler.xpos() * screenWidth / mc.getWindow().getScreenWidth();
+        double mouseY = mc.mouseHandler.ypos() * screenHeight / mc.getWindow().getScreenHeight();
+
+        // Render each affinity icon
+        AffinityData hoveredAffinity = null;
+        int hoveredMouseX = 0;
+        int hoveredMouseY = 0;
+
+        for (AffinityData data : affinities) {
+            int x = startX;
+            int y = currentY;
+
+            // Check hover
+            boolean isHovering = mouseX >= x && mouseX <= x + ICON_SIZE
+                    && mouseY >= y && mouseY <= y + ICON_SIZE;
+
+            renderAffinityIcon(graphics, data, x, y);
+
+            if (isHovering) {
+                hoveredAffinity = data;
+                hoveredMouseX = (int) mouseX;
+                hoveredMouseY = (int) mouseY;
+            }
+
+            currentY += ICON_SIZE + ICON_SPACING;
+        }
+
+        // Render tooltip last (on top of everything)
+        if (hoveredAffinity != null) {
+            renderTooltip(graphics, hoveredAffinity, hoveredMouseX, hoveredMouseY);
+        }
+    }
+
+    /**
+     * Renders a single affinity icon with fill-up effect
+     */
+    private static void renderAffinityIcon(GuiGraphics graphics, AffinityData data, int x, int y) {
+        ResourceLocation texture = getAffinityTexture(data.affinity);
+
+        int completion = data.completionPercent;
+        int fillHeight = (int) (ICON_SIZE * (completion / 100.0f));
+        int grayHeight = ICON_SIZE - fillHeight;
+
+        // Enable blending for transparency
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // 1. Render GRAY top part
+        if (grayHeight > 0) {
+            graphics.setColor(0.3f, 0.3f, 0.3f, 1.0f);
+            graphics.blit(
+                    texture,
+                    x, y,
+                    0, 0,
+                    ICON_SIZE, grayHeight,
+                    ICON_SIZE, ICON_SIZE
+            );
+            graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+
+        // 2. Render COLOR bottom part
+        if (fillHeight > 0) {
+            graphics.blit(
+                    texture,
+                    x, y + grayHeight,
+                    0, grayHeight,
+                    ICON_SIZE, fillHeight,
+                    ICON_SIZE, ICON_SIZE
+            );
+        }
+
+        RenderSystem.disableBlend();
+
+        // Draw border based on completion
+        int borderColor = data.isCompleted() ? 0xFF00FF00 : 0xFF666666;
+        graphics.renderOutline(x - 1, y - 1, ICON_SIZE + 2, ICON_SIZE + 2, borderColor);
+    }
+
+    /**
+     * Renders tooltip for hovered affinity
+     */
+    private static void renderTooltip(GuiGraphics graphics, AffinityData data, int mouseX, int mouseY) {
+        Minecraft mc = Minecraft.getInstance();
+
+        Component name = Component.translatable(
+                "affinity.elementalrealms." + data.affinity.name().toLowerCase()
+        );
+
+        List<Component> tooltipLines = new ArrayList<>();
+        tooltipLines.add(name);
+
+        if (data.isCompleted()) {
+            tooltipLines.add(
+                    Component.literal("✓ COMPLETED").withStyle(style -> style.withColor(0x00FF00))
+            );
+        } else {
+            int color = getProgressColor(data.completionPercent);
+            tooltipLines.add(
+                    Component.literal(data.completionPercent + "%")
+                            .withStyle(style -> style.withColor(color))
+            );
+        }
+
+        graphics.renderComponentTooltip(mc.font, tooltipLines, mouseX, mouseY);
+    }
+
+    /**
+     * Gets affinity texture location
+     */
+    private static ResourceLocation getAffinityTexture(Affinity affinity) {
+        String textureName = "affinity_stone_" + affinity.name().toLowerCase();
+        return ResourceLocation.fromNamespaceAndPath(
+                ElementalRealms.MODID,
+                "textures/item/" + textureName + ".png"
+        );
+    }
+
+    /**
+     * Calculates progress color gradient
+     */
+    private static int getProgressColor(int percent) {
+        percent = Math.clamp(percent, 0, 100);
+
+        if (percent < 50) {
+            float ratio = percent / 50.0f;
+            int red = 255;
+            int green = (int) (0x88 * ratio);
+            return 0xFF000000 | (red << 16) | (green << 8);
+        } else {
+            float ratio = (percent - 50) / 50.0f;
+            int red = (int) (255 * (1 - ratio));
+            int green = (int) (0x88 + (255 - 0x88) * ratio);
+            return 0xFF000000 | (red << 16) | (green << 8);
+        }
+    }
+
+    /**
+     * Gets player's affinity data
+     * TODO: Replace with actual data from player capability/attachment
+     */
+    private static List<AffinityData> getPlayerAffinities(net.minecraft.world.entity.player.Player player) {
+        // Example data - replace with your actual system
+        return List.of(
+                new AffinityData(Affinity.FIRE, 100),
+                new AffinityData(Affinity.WATER, 75),
+                new AffinityData(Affinity.EARTH, 50),
+                new AffinityData(Affinity.WIND, 25),
+                new AffinityData(Affinity.LIGHTNING, 10)
+        );
+    }
+
+    /**
+     * Data class for affinity information
+     */
+    private static class AffinityData {
+        final Affinity affinity;
+        final int completionPercent;
+
+        AffinityData(Affinity affinity, int completionPercent) {
+            this.affinity = affinity;
+            this.completionPercent = Math.clamp(completionPercent, 0, 100);
+        }
+
+        boolean isCompleted() {
+            return completionPercent >= 100;
+        }
+    }
+}

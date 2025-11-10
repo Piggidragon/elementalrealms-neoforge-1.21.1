@@ -54,5 +54,16 @@
   "elementalrealms.configuration.section.elementalrealms.common.toml": "Elemental Realms Configs",
   "elementalrealms.configuration.section.elementalrealms.common.toml.title": "Elemental Realms Configs",
   "key.elementalrealms.open_affinity_gui": "Affinities",
-  "key.categories.elementalrealms": "Elemental Realms"
+  "key.categories.elementalrealms": "Elemental Realms",
+  "affinity.elementalrealms.fire": "Fire",
+  "affinity.elementalrealms.water": "Water",
+  "affinity.elementalrealms.earth": "Earth",
+  "affinity.elementalrealms.wind": "Wind",
+  "affinity.elementalrealms.lightning": "Lightning",
+  "affinity.elementalrealms.ice": "Ice",
+  "affinity.elementalrealms.sound": "Sound",
+  "affinity.elementalrealms.gravity": "Gravity",
+  "affinity.elementalrealms.time": "Time",
+  "affinity.elementalrealms.space": "Space",
+  "affinity.elementalrealms.life": "Life"
 }
