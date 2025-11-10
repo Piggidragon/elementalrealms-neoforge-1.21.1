@@ -2,13 +2,12 @@ package de.piggidragon.elementalrealms.worldgen.chunkgen.custom;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelHeightAccessor;
-import net.minecraft.world.level.NoiseColumn;
-import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
@@ -48,22 +47,15 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * Creates 16x16 chunk play area (256x256 blocks).
      */
     private static final int RADIUS = 10;
-    private RandomState customRandomState;
-    private ChunkPos generationCenter;
+    ResourceKey<Level> level;
 
-    /**
-     * Constructs a bounded chunk generator.
-     *
-     * @param biomeSource Biome distribution source
-     * @param settings    Noise generation settings for terrain
-     */
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings) {
         super(biomeSource, settings);
     }
 
-    public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, ChunkPos generationCenter) {
+    public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, ResourceKey<Level> level) {
         this(biomeSource, settings);
-        this.generationCenter = generationCenter;
+        this.level = level;
     }
 
     public static int getTotalSize() {
@@ -72,10 +64,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
 
     public static int getRadius() {
         return RADIUS;
-    }
-
-    public ChunkPos getGenerationCenter() {
-        return generationCenter;
     }
 
     @Override
@@ -90,6 +78,10 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState,
                                                         StructureManager structureManager,
                                                         ChunkAccess chunkAccess) {
+        if (level == null) {
+            return super.fillFromNoise(blender, randomState, structureManager, chunkAccess);
+        }
+
         ChunkPos pos = chunkAccess.getPos();
 
         // Check if chunk is within bounds
@@ -109,6 +101,11 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     @Override
     public void buildSurface(WorldGenRegion worldGenRegion, StructureManager structureManager,
                              RandomState randomState, ChunkAccess chunkAccess) {
+        if (level == null) {
+            super.buildSurface(worldGenRegion, structureManager, randomState, chunkAccess);
+            return;
+        }
+
         ChunkPos pos = chunkAccess.getPos();
         if (isWithinBounds(pos)) {
             super.buildSurface(worldGenRegion, structureManager, randomState, chunkAccess);
@@ -122,6 +119,12 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     public void applyCarvers(WorldGenRegion worldGenRegion, long seed, RandomState randomState,
                              BiomeManager biomeManager, StructureManager structureManager,
                              ChunkAccess chunkAccess) {
+        if (level == null) {
+            super.applyCarvers(worldGenRegion, seed, randomState, biomeManager,
+                    structureManager, chunkAccess);
+            return;
+        }
+
         ChunkPos pos = chunkAccess.getPos();
         if (isWithinBounds(pos)) {
             super.applyCarvers(worldGenRegion, seed, randomState, biomeManager,
@@ -135,6 +138,11 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     @Override
     public int getBaseHeight(int x, int z, Heightmap.Types heightmapType,
                              LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
+
+        if (level == null) {
+            return super.getBaseHeight(x, z, heightmapType, levelHeightAccessor, randomState);
+        }
+
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
 
@@ -151,6 +159,10 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     @Override
     public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor levelHeightAccessor,
                                      RandomState randomState) {
+        if (level == null) {
+            return super.getBaseColumn(x, z, levelHeightAccessor, randomState);
+        }
+
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
 
@@ -180,6 +192,9 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
      * @return true if within bounds, false otherwise
      */
     private boolean isWithinBounds(ChunkPos pos) {
+
+        ChunkPos generationCenter = DynamicDimensionHandler.getGenerationCenterData().getGenerationCenters().get(level);
+
         return pos.x >= -RADIUS + generationCenter.x && pos.x <= RADIUS + generationCenter.x &&
                 pos.z >= -RADIUS + generationCenter.z && pos.z <= RADIUS + generationCenter.z;
     }
@@ -207,6 +222,4 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         // Initialize heightmaps for void chunks
         Heightmap.primeHeightmaps(chunkAccess, Set.of(Heightmap.Types.values()));
     }
-
-
 }

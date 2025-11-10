@@ -6,9 +6,8 @@ import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGener
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
-import java.util.function.Supplier;
 
 /**
  * Registry for custom chunk generator types.
@@ -23,7 +22,7 @@ public class ModChunkgen {
      * Bounded chunk generator codec for limited-size dimensions.
      * Used in School dimension to create floating island effect.
      */
-    public static final Supplier<MapCodec<BoundedChunkGenerator>> BOUNDED_GENERATOR =
+    public static final DeferredHolder<MapCodec<? extends ChunkGenerator>, MapCodec<BoundedChunkGenerator>> BOUNDED =
             CHUNK_GENERATORS.register("bounded_generator", () -> BoundedChunkGenerator.MAP_CODEC);
 
     /**

@@ -29,7 +29,6 @@ public class DynamicDimensionHandler {
 
     // Counter for unique dimension IDs (only used for new dimensions)
     private static int dimensionCounter = 0;
-    private static int layer = 1;
     private static GenerationCenterData generationCenters;
 
     /**
@@ -45,7 +44,7 @@ public class DynamicDimensionHandler {
                 generationCenters.getGenerationCenterCount());
     }
 
-    public static GenerationCenterData getGenerationSavedData() {
+    public static GenerationCenterData getGenerationCenterData() {
         return generationCenters;
     }
 
@@ -57,10 +56,6 @@ public class DynamicDimensionHandler {
      * @return The ResourceKey for the dimension
      */
     public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal, ResourceKey<Level> levelResourceKey) {
-
-        if (generationCenters == null) {
-            initialize(server);
-        }
 
         // Check if portal already has a dimension
         ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
@@ -80,16 +75,15 @@ public class DynamicDimensionHandler {
         ElementalRealms.LOGGER.info("Creating new dimension {} for portal {}", dimensionKey.location(), portal);
 
         try {
-            ChunkPos generationCenter = createNewGenerationCenter();
+            ChunkPos generationCenter = getOrCreateGenerationCenter(server);
+            generationCenters.addGenerationCenter(dimensionKey, generationCenter);
 
             // Use Infiniverse to create dimension with custom chunk generator
             ServerLevel newLevel = InfiniverseAPI.get().getOrCreateLevel(
                     server,
                     dimensionKey,
-                    () -> createCustomLevelStem(server, levelResourceKey, generationCenter)
+                    () -> createCustomLevelStem(server, levelResourceKey, dimensionKey)
             );
-
-            generationCenters.addGenerationCenter(dimensionKey, generationCenter);
 
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
@@ -116,10 +110,9 @@ public class DynamicDimensionHandler {
      *
      * @param server           The server instance
      * @param levelResourceKey The level type key
-     * @param generationCenter The center position for chunk generation
      * @return A LevelStem with custom settings
      */
-    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ChunkPos generationCenter) {
+    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ResourceKey<Level> level) {
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
                 .lookupOrThrow(Registries.LEVEL_STEM);
 
@@ -141,7 +134,7 @@ public class DynamicDimensionHandler {
         BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(
                 biomeSource,
                 noiseSettings,
-                generationCenter
+                level
         );
 
         // Return new LevelStem with the new generator instance
@@ -181,10 +174,10 @@ public class DynamicDimensionHandler {
      * @return The newly created generation center position
      * @throws IllegalStateException if unable to create a new center
      */
-    public static ChunkPos createNewGenerationCenter() throws IllegalStateException {
+    public static ChunkPos getOrCreateGenerationCenter(MinecraftServer server) throws IllegalStateException {
 
         if (generationCenters == null) {
-            throw new IllegalStateException("DynamicDimensionHandler not initialized! Call initialize() first.");
+            initialize(server);
         }
 
         ChunkPos generationCenter;
@@ -199,7 +192,7 @@ public class DynamicDimensionHandler {
         int radius = BoundedChunkGenerator.getRadius() * 2 + 1;
         int maxAttempts = 10000; // safety to prevent infinite loop
         int attempts = 0;
-        int currentLayer = 1;
+        int currentLayer = generationCenters.getCurrentLayer();
         while (attempts < maxAttempts) {
             // Top and bottom sides (x varies, z fixed)
             for (int x = -currentLayer; x <= currentLayer; x++) {
@@ -209,6 +202,7 @@ public class DynamicDimensionHandler {
                         z * radius
                     );
                     attempts++;
+                    ElementalRealms.LOGGER.info("Tried generation center at: " + generationCenter);
                     if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
                         return generationCenter;
                     }
@@ -227,7 +221,7 @@ public class DynamicDimensionHandler {
                     }
                 }
             }
-            currentLayer++;
+            generationCenters.incrementLayer();
         }
 
         throw new IllegalStateException("Failed to create new generation center");

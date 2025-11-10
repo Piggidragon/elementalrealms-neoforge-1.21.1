@@ -418,7 +418,7 @@ public class PortalEntity extends Entity {
                 if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
                     destinationPos = new Vec3(-1.5, 61, 0.5); // Fixed spawn point
                 } else {
-                    ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationSavedData()
+                    ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationCenterData()
                             .getGenerationCenters()
                             .get(targetLevel);
 

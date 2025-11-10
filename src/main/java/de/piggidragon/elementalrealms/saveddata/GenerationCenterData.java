@@ -26,7 +26,8 @@ public class GenerationCenterData extends SavedData {
                     Codec.unboundedMap(
                             Level.RESOURCE_KEY_CODEC,  // Key codec: ResourceKey<Level>
                             ChunkPos.CODEC              // Value codec: ChunkPos
-                    ).fieldOf("generationCenters").forGetter(data -> data.generationCenters)
+                    ).fieldOf("generationCenters").forGetter(data -> data.generationCenters),
+                    Codec.INT.fieldOf("layer").forGetter(data -> data.layer)
             ).apply(instance, GenerationCenterData::new)
     );
     // SavedDataType with codec (similar to MapItemSavedData)
@@ -37,6 +38,7 @@ public class GenerationCenterData extends SavedData {
     );
     // Map of dimension to its generation center
     private final Map<ResourceKey<Level>, ChunkPos> generationCenters;
+    private int layer = 1;
 
     /**
      * Default constructor (for new data)
@@ -50,8 +52,9 @@ public class GenerationCenterData extends SavedData {
      *
      * @param generationCenters The list of generation centers loaded from disk
      */
-    private GenerationCenterData(Map<ResourceKey<Level>, ChunkPos> generationCenters) {
+    private GenerationCenterData(Map<ResourceKey<Level>, ChunkPos> generationCenters, int layer) {
         this.generationCenters = new HashMap<>(generationCenters);
+        this.layer = layer;
     }
 
     /**
@@ -78,13 +81,22 @@ public class GenerationCenterData extends SavedData {
         return generationCenters;
     }
 
+    public int getCurrentLayer() {
+        return layer;
+    }
+
+    public void incrementLayer() {
+        layer++;
+        this.setDirty();
+    }
+
     /**
      * Adds a new generation center to the global list
      *
      * @param center The generation center to add
      */
     public void addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {
-        if (!generationCenters.containsValue(center)) {
+        if (!generationCenters.containsKey(level)) {
             generationCenters.put(level, center);
             this.setDirty();
         }
