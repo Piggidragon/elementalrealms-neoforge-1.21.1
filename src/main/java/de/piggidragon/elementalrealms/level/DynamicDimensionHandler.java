@@ -195,10 +195,10 @@ public class DynamicDimensionHandler {
         while (attempts < maxAttempts) {
             // Top and bottom sides (x varies, z fixed)
             for (int x = -currentLayer; x <= currentLayer; x++) {
-                for (int z : new int[] { -currentLayer, currentLayer }) {
+                for (int z : new int[]{-currentLayer, currentLayer}) {
                     generationCenter = new ChunkPos(
-                        x * radius,
-                        z * radius
+                            x * radius,
+                            z * radius
                     );
                     attempts++;
                     ElementalRealms.LOGGER.info("Tried generation center at: " + generationCenter);
@@ -209,10 +209,10 @@ public class DynamicDimensionHandler {
             }
             // Left and right sides (z varies, x fixed), skip corners to avoid duplicates
             for (int z = -currentLayer + 1; z <= currentLayer - 1; z++) {
-                for (int x : new int[] { -currentLayer, currentLayer }) {
+                for (int x : new int[]{-currentLayer, currentLayer}) {
                     generationCenter = new ChunkPos(
-                        x * radius,
-                        z * radius
+                            x * radius,
+                            z * radius
                     );
                     attempts++;
                     if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {

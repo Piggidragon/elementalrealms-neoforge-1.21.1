@@ -47,7 +47,7 @@ public class PortalEntity extends Entity {
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState spawnAnimationState = new AnimationState();
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
-    private int idleAnimationTimer = -1;
+    private final int idleAnimationTimer = -1;
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
     private boolean initialized = false;
