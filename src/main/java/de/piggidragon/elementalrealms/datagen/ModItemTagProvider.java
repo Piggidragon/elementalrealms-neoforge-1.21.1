@@ -1,9 +1,9 @@
 package de.piggidragon.elementalrealms.datagen;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
-import net.neoforged.neoforge.common.data.ItemTagsProvider;
+import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.world.level.block.Block;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -13,8 +13,9 @@ import java.util.concurrent.CompletableFuture;
  * Currently empty as no custom items require tags yet.
  */
 public class ModItemTagProvider extends ItemTagsProvider {
-    public ModItemTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
-        super(output, lookupProvider, ElementalRealms.MODID);
+
+    public ModItemTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, CompletableFuture<TagLookup<Block>> blockTags) {
+        super(output, lookupProvider, blockTags);
     }
 
     /**
