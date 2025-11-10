@@ -114,7 +114,7 @@ public class DynamicDimensionHandler {
      * Each dimension gets its own generator - the unique dimension key
      * provides a unique seed automatically through Minecraft's internal seeding.
      *
-     * @param server The server instance
+     * @param server           The server instance
      * @param levelResourceKey The level type key
      * @param generationCenter The center position for chunk generation
      * @return A LevelStem with custom settings

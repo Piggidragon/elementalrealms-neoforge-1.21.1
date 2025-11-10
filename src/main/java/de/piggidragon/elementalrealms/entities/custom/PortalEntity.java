@@ -48,9 +48,8 @@ public class PortalEntity extends Entity {
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState spawnAnimationState = new AnimationState();
-    private int idleAnimationTimer = -1;
-
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
+    private int idleAnimationTimer = -1;
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
     private boolean initialized = false;
@@ -61,7 +60,7 @@ public class PortalEntity extends Entity {
     /**
      * Creates a portal entity with default settings.
      *
-     * @param type the entity type
+     * @param type  the entity type
      * @param level the world level
      */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level) {
@@ -96,12 +95,12 @@ public class PortalEntity extends Entity {
     /**
      * Creates a fully configured portal entity.
      *
-     * @param type the entity type
-     * @param level the world level
-     * @param discard whether to remove portal after use
+     * @param type           the entity type
+     * @param level          the world level
+     * @param discard        whether to remove portal after use
      * @param despawnTimeout ticks until automatic removal
-     * @param targetLevel the dimension to teleport to
-     * @param ownerUUID the UUID of the player who created this portal
+     * @param targetLevel    the dimension to teleport to
+     * @param ownerUUID      the UUID of the player who created this portal
      */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level, boolean discard, int despawnTimeout, ResourceKey<Level> targetLevel, @Nullable UUID ownerUUID) {
         this(type, level);
@@ -386,7 +385,7 @@ public class PortalEntity extends Entity {
      * Teleports a player through the portal to the target dimension.
      * Creates a return portal at the destination if traveling from vanilla dimensions.
      *
-     * @param level the current level
+     * @param level  the current level
      * @param player the player to teleport
      */
     private void teleportPlayer(Level level, ServerPlayer player) {

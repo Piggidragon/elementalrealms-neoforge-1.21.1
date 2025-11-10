@@ -26,10 +26,19 @@ import java.util.stream.Stream;
  */
 public class ModAttachments {
 
+    /**
+     * Codec for serializing Vec3 positions to NBT.
+     */
+    public static final Codec<Vec3> VEC3_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Codec.DOUBLE.fieldOf("x").forGetter(Vec3::x),
+                    Codec.DOUBLE.fieldOf("y").forGetter(Vec3::y),
+                    Codec.DOUBLE.fieldOf("z").forGetter(Vec3::z)
+            ).apply(instance, Vec3::new)
+    );
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPE = DeferredRegister.create(
             NeoForgeRegistries.ATTACHMENT_TYPES,
             ElementalRealms.MODID);
-
     /**
      * Player's magical affinities. Persists through death.
      */
@@ -44,23 +53,16 @@ public class ModAttachments {
                     .copyOnDeath() // Preserve affinities when player dies
                     .build()
     );
-
-    /**
-     * Codec for serializing Vec3 positions to NBT.
-     */
-    public static final Codec<Vec3> VEC3_CODEC = RecordCodecBuilder.create(instance ->
-            instance.group(
-                    Codec.DOUBLE.fieldOf("x").forGetter(Vec3::x),
-                    Codec.DOUBLE.fieldOf("y").forGetter(Vec3::y),
-                    Codec.DOUBLE.fieldOf("z").forGetter(Vec3::z)
-            ).apply(instance, Vec3::new)
-    );
-
     /**
      * Codec for Level ResourceKeys.
      */
     static Codec<ResourceKey<Level>> resourceKeyCodec = ResourceKey.codec(Registries.DIMENSION);
-
+    public static final Supplier<AttachmentType<ResourceKey<Level>>> PORTAL_TARGET_LEVEL = ATTACHMENT_TYPE.register(
+            "portal_target_level",
+            () -> AttachmentType.builder(() -> Level.OVERWORLD)
+                    .serialize(resourceKeyCodec.fieldOf("portal_target_level"))
+                    .build()
+    );
     /**
      * Provides dimension keys for map codec.
      */
@@ -69,7 +71,6 @@ public class ModAttachments {
             "minecraft:the_nether",
             "minecraft:the_end"
     );
-
     /**
      * SimpleMapCodec for storing positions per dimension.
      */
@@ -78,7 +79,6 @@ public class ModAttachments {
             VEC3_CODEC,
             Keyable.forStrings(keys)
     );
-
     /**
      * Stores the return position and dimension for inter-dimensional travel.
      */
@@ -86,13 +86,6 @@ public class ModAttachments {
             "return_level_pos",
             () -> AttachmentType.builder(() -> Map.of(Level.OVERWORLD, Vec3.ZERO))
                     .serialize(VEC3_MAP_CODEC.fieldOf("return_level_pos"))
-                    .build()
-    );
-
-    public static final Supplier<AttachmentType<ResourceKey<Level>>> PORTAL_TARGET_LEVEL = ATTACHMENT_TYPE.register(
-            "portal_target_level",
-            () -> AttachmentType.builder(() -> Level.OVERWORLD)
-                    .serialize(resourceKeyCodec.fieldOf("portal_target_level"))
                     .build()
     );
 

@@ -50,6 +50,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
     private static final int RADIUS = 10;
     private RandomState customRandomState;
     private ChunkPos generationCenter;
+
     /**
      * Constructs a bounded chunk generator.
      *
