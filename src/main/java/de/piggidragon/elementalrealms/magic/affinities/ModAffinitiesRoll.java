@@ -4,7 +4,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Randomized affinity assignment for new players using weighted probability.
@@ -54,21 +56,21 @@ public class ModAffinitiesRoll {
      * @param player Target player
      * @return List of affinities to add
      */
-    public static List<Affinity> rollAffinities(ServerPlayer player) {
+    public static Map<Affinity, Integer> rollAffinities(ServerPlayer player) {
         RandomSource random = player.getRandom();
-        List<Affinity> affinitiesToAdd = new ArrayList<>();
+        Map<Affinity, Integer> affinitiesToAdd = new HashMap<>();
 
         // Roll with decreasing probability
         for (int x : new int[]{100, 25, 20, 20}) {
             Affinity newAffinity = randomElementalAffinity(player, x);
 
             if (newAffinity != Affinity.VOID) {
-                affinitiesToAdd.add(newAffinity);
+                affinitiesToAdd.put(newAffinity, 100);
 
                 // 25% chance for deviant variant
                 if (chance(random, 25)) {
                     Affinity deviant = newAffinity.getDeviant();
-                    affinitiesToAdd.add(deviant);
+                    affinitiesToAdd.put(deviant, 100);
                 }
             } else {
                 break;

@@ -7,7 +7,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manages player affinity data with validation rules.
@@ -23,19 +25,19 @@ public class ModAffinities {
      * @param affinity Affinity to add
      * @throws Exception If validation fails
      */
-    public static void addAffinity(ServerPlayer player, Affinity affinity) throws Exception {
-        List<Affinity> affinities = getAffinities(player);
+    public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
+        Map<Affinity, Integer> affinities = getAffinities(player);
 
         // Prevent duplicate
-        if (affinities.contains(affinity)) {
-            throw new Exception("Player already has affinity: " + affinity);
+        if (affinities.containsKey(affinity)) {
+            throw new IllegalStateException("Player already has affinity: " + affinity);
         }
 
         // Check ETERNAL limit (only one per player)
         if (affinity.getType() == AffinityType.ETERNAL) {
-            for (Affinity a : affinities) {
+            for (Affinity a : affinities.keySet()) {
                 if (a.getType() == AffinityType.ETERNAL) {
-                    throw new Exception("Player already has an eternal affinity: " + a);
+                    throw new IllegalStateException("Player already has an eternal affinity: " + a);
                 }
             }
         }
@@ -43,20 +45,18 @@ public class ModAffinities {
         // Check DEVIANT requires base elemental
         if (affinity.getType() == AffinityType.DEVIANT) {
             boolean hasBase = false;
-            for (Affinity a : affinities) {
+            for (Affinity a : affinities.keySet()) {
                 if (a.getDeviant() == affinity) {
                     hasBase = true;
                     break;
                 }
             }
             if (!hasBase) {
-                throw new Exception("Player is missing base affinity: " + affinity.getElemental());
+                throw new IllegalStateException("Player is missing base affinity: " + affinity.getElemental());
             }
         }
-
-        // Remove VOID placeholder before adding real affinity
-        affinities.remove(Affinity.VOID);
-        affinities.add(affinity);
+        affinities.put(affinity, 100);
+        player.setData(ModAttachments.AFFINITIES.get(), affinities);
     }
 
     /**
@@ -65,15 +65,16 @@ public class ModAffinities {
      * @param player Target player
      * @throws Exception If player already has no affinities
      */
-    public static void clearAffinities(ServerPlayer player) throws Exception {
-        List<Affinity> affinities = getAffinities(player);
+    public static void clearAffinities(ServerPlayer player) throws IllegalStateException {
+        Map<Affinity, Integer> affinities = getAffinities(player);
 
-        if (affinities.contains(Affinity.VOID)) {
-            throw new Exception("Player has no affinities to clear.");
+        if (affinities.containsKey(Affinity.VOID)) {
+            throw new IllegalStateException("Player has no affinities to clear.");
         }
 
         affinities.clear();
-        affinities.add(Affinity.VOID);
+        affinities.put(Affinity.VOID, null);
+        player.setData(ModAttachments.AFFINITIES.get(), affinities);
     }
 
     /**
@@ -83,7 +84,7 @@ public class ModAffinities {
      * @param player Target player
      * @return Mutable affinity list
      */
-    public static List<Affinity> getAffinities(ServerPlayer player) {
+    public static Map<Affinity, Integer> getAffinities(ServerPlayer player) {
         return player.getData(ModAttachments.AFFINITIES.get());
     }
 
@@ -95,7 +96,7 @@ public class ModAffinities {
      * @return true if player has this affinity
      */
     public static boolean hasAffinity(ServerPlayer player, Affinity affinity) {
-        return getAffinities(player).contains(affinity);
+        return getAffinities(player).containsKey(affinity);
     }
 
     /**
@@ -114,7 +115,7 @@ public class ModAffinities {
                 if (affinity != Affinity.VOID) {
                     try {
                         addAffinity(player, affinity);
-                    } catch (Exception ignored) {
+                    } catch (IllegalStateException ignored) {
                     }
                 }
             }
