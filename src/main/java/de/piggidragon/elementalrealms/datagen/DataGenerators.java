@@ -29,7 +29,7 @@ public class DataGenerators {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         // Model provider (client-side)
-        generator.addProvider(event.includeClient(), new ModModelProvider(packOutput, event.getExistingFileHelper()));
+        generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, event.getExistingFileHelper()));
 
         // Recipe provider (server-side)
         generator.addProvider(event.includeServer(), new AffinityRecipeProvider(packOutput, lookupProvider));
