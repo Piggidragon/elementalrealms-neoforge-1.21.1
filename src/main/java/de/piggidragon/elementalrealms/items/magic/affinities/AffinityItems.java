@@ -54,20 +54,6 @@ public class AffinityItems {
     });
 
     /**
-     * Essences mapped by type. Crafting material for shards.
-     */
-    public static final Map<Affinity, DeferredItem<Item>> ESSENCES = Util.make(new EnumMap<>(Affinity.class), map -> {
-        registerEssence(map, Affinity.FIRE);
-        registerEssence(map, Affinity.WATER);
-        registerEssence(map, Affinity.WIND);
-        registerEssence(map, Affinity.EARTH);
-        registerEssence(map, Affinity.LIGHTNING);
-        registerEssence(map, Affinity.ICE);
-        registerEssence(map, Affinity.SOUND);
-        registerEssence(map, Affinity.GRAVITY);
-    });
-
-    /**
      * Helper to register an affinity stone with given rarity.
      *
      * @param map      Map to store the registered stone
@@ -97,21 +83,6 @@ public class AffinityItems {
                 (p) -> new Item(p.rarity(rarity))
         );
         map.put(affinity, shard);
-    }
-
-    /**
-     * Helper to register an essence (always UNCOMMON rarity).
-     *
-     * @param map      Map to store the registered essence
-     * @param affinity Affinity type for this essence
-     */
-    private static void registerEssence(Map<Affinity, DeferredItem<Item>> map, Affinity affinity) {
-        String name = "essence_" + affinity.getName();
-        DeferredItem<Item> essence = ITEMS.registerItem(
-                name,
-                (p) -> new Item(p.rarity(Rarity.UNCOMMON))
-        );
-        map.put(affinity, essence);
     }
 
     /**

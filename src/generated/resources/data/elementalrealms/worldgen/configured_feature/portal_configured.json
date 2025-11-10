@@ -1,6 +1,6 @@
 {
   "type": "elementalrealms:portal_feature",
   "config": {
-    "target_dimension": "elementalrealms:test"
+    "target_dimension": "elementalrealms:test2"
   }
 }

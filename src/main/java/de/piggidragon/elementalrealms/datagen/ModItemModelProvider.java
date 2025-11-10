@@ -39,11 +39,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         AffinityItems.AFFINITY_SHARDS.values().forEach(item ->
                 basicItem(item.get())
         );
-
-        // Generate flat 2D models for all essences
-        AffinityItems.ESSENCES.values().forEach(item ->
-                basicItem(item.get())
-        );
     }
 
     /**
