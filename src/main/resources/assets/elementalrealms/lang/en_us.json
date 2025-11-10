@@ -52,5 +52,7 @@
   "advancements.elementalrealms.get_staff.description": "Obtain a Dimension Staff",
   "elementalrealms.configuration.title": "Elemental Realms Configs",
   "elementalrealms.configuration.section.elementalrealms.common.toml": "Elemental Realms Configs",
-  "elementalrealms.configuration.section.elementalrealms.common.toml.title": "Elemental Realms Configs"
+  "elementalrealms.configuration.section.elementalrealms.common.toml.title": "Elemental Realms Configs",
+  "key.elementalrealms.open_affinity_gui": "Affinities",
+  "key.categories.elementalrealms": "Elemental Realms"
 }
