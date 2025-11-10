@@ -1,9 +1,11 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.guis.menus.custom.AffinityMenuProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -25,12 +27,22 @@ public class ModPacketHandler {
      */
     @SubscribeEvent
     public static void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event) {
-        event.registrar("elementalrealms")
-                .playToClient(
-                        AffinitySuccessPacket.TYPE,
-                        AffinitySuccessPacket.CODEC,
-                        ModPacketHandler::handleAffinitySuccess
-                );
+        // Get the registrar for this mod
+        var registrar = event.registrar(ElementalRealms.MODID);
+
+        // Register AffinitySuccessPacket (Server -> Client)
+        registrar.playToClient(
+                AffinitySuccessPacket.TYPE,
+                AffinitySuccessPacket.CODEC,
+                ModPacketHandler::handleAffinitySuccess
+        );
+
+        // Register OpenAffinityGuiPacket (Client -> Server)
+        registrar.playToServer(
+                OpenAffinityGuiPacket.TYPE,
+                OpenAffinityGuiPacket.CODEC,
+                ModPacketHandler::handleOpenAffinityGui
+        );
     }
 
     /**
@@ -53,6 +65,25 @@ public class ModPacketHandler {
                     // Spawn additional particles for visual feedback
                     showClientParticles(minecraft.level, minecraft.player, packet.affinity());
                 }
+            }
+        });
+    }
+
+    /**
+     * Handles open affinity GUI packet on server side.
+     * Opens the affinity menu for the player who sent the packet.
+     *
+     * @param packet  Received packet (empty, no data)
+     * @param context Network context for thread-safe execution
+     */
+    private static void handleOpenAffinityGui(OpenAffinityGuiPacket packet, IPayloadContext context) {
+        // Execute on main thread to prevent concurrent modification
+        context.enqueueWork(() -> {
+            // Get the player who sent the packet
+            if (context.player() instanceof ServerPlayer serverPlayer) {
+                // Open the affinity menu for this player
+                ElementalRealms.LOGGER.info("Opening Affinity GUI");
+                AffinityMenuProvider.openForPlayer(serverPlayer);
             }
         });
     }
