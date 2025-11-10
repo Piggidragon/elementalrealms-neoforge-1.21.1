@@ -27,7 +27,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
  */
 public class DynamicDimensionHandler {
 
-    // Counter for unique dimension IDs (only used for new dimensions)
+    // Counter for unique dimension IDs
     private static int dimensionCounter = 0;
     private static GenerationCenterData generationCenters;
 
@@ -38,12 +38,16 @@ public class DynamicDimensionHandler {
      * @param server The Minecraft server instance
      */
     public static void initialize(MinecraftServer server) {
-        // Store server reference
         generationCenters = GenerationCenterData.get(server);
         ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
                 generationCenters.getGenerationCenterCount());
     }
 
+    /**
+     * Gets the generation center data storage.
+     *
+     * @return The generation center data instance
+     */
     public static GenerationCenterData getGenerationCenterData() {
         return generationCenters;
     }
@@ -51,9 +55,10 @@ public class DynamicDimensionHandler {
     /**
      * Creates a new dimension instance for a specific portal using Infiniverse API.
      *
-     * @param server The server instance
-     * @param portal The portal entity requesting the dimension
-     * @return The ResourceKey for the dimension
+     * @param server           The server instance
+     * @param portal           The portal entity requesting the dimension
+     * @param levelResourceKey The base level type to use for generation
+     * @return The ResourceKey for the created dimension
      */
     public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal, ResourceKey<Level> levelResourceKey) {
 
@@ -88,7 +93,6 @@ public class DynamicDimensionHandler {
             if (newLevel != null) {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
 
-                // Setup world border
                 DimensionBorderHandler.setupWorldBorder(newLevel, generationCenter);
 
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
@@ -105,29 +109,26 @@ public class DynamicDimensionHandler {
 
     /**
      * Creates a custom LevelStem with a NEW chunk generator instance.
-     * Each dimension gets its own generator - the unique dimension key
-     * provides a unique seed automatically through Minecraft's internal seeding.
+     * Each dimension gets its own generator with unique seeding.
      *
      * @param server           The server instance
-     * @param levelResourceKey The level type key
+     * @param levelResourceKey The level type key for template
+     * @param level            The new dimension key for generation center lookup
      * @return A LevelStem with custom settings
      */
     private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ResourceKey<Level> level) {
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
                 .lookupOrThrow(Registries.LEVEL_STEM);
 
-        // Get your test dimension template
         Holder.Reference<LevelStem> templateStemHolder = levelStemRegistry.get(ModLevel.getStemForLevel(levelResourceKey))
                 .orElseThrow(() -> new IllegalStateException("Test dimension template not found!"));
 
         LevelStem templateStem = templateStemHolder.value();
 
-        // Get generator from template
         if (!(templateStem.generator() instanceof NoiseBasedChunkGenerator templateGenerator)) {
             throw new IllegalStateException("Template generator is not NoiseBasedChunkGenerator!");
         }
 
-        // Get components from template
         BiomeSource biomeSource = templateGenerator.getBiomeSource();
         Holder<NoiseGeneratorSettings> noiseSettings = templateGenerator.generatorSettings();
 
@@ -137,7 +138,6 @@ public class DynamicDimensionHandler {
                 level
         );
 
-        // Return new LevelStem with the new generator instance
         return new LevelStem(
                 templateStem.type(),
                 customGenerator
@@ -159,9 +159,7 @@ public class DynamicDimensionHandler {
 
             portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
 
-            // Use Infiniverse API to unregister the dimension
             InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
-
 
             ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
         }
@@ -171,6 +169,7 @@ public class DynamicDimensionHandler {
      * Creates a new generation center in ring form around the origin.
      * Automatically saves to persistent storage.
      *
+     * @param server The server instance
      * @return The newly created generation center position
      * @throws IllegalStateException if unable to create a new center
      */
@@ -188,11 +187,12 @@ public class DynamicDimensionHandler {
             return generationCenter;
         }
 
-        // Proper ring generation logic: iterate over the perimeter of the square at each layer
+        // Ring generation: iterate over the perimeter of the square at each layer
         int radius = BoundedChunkGenerator.getRadius() * 2 + 1;
-        int maxAttempts = 10000; // safety to prevent infinite loop
+        int maxAttempts = 10000;
         int attempts = 0;
         int currentLayer = generationCenters.getCurrentLayer();
+
         while (attempts < maxAttempts) {
             // Top and bottom sides (x varies, z fixed)
             for (int x = -currentLayer; x <= currentLayer; x++) {

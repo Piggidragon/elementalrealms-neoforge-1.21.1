@@ -98,7 +98,7 @@ public class PortalEntity extends Entity {
      * @param type           the entity type
      * @param level          the world level
      * @param discard        whether to remove portal after use
-     * @param despawnTimeout ticks until automatic removal
+     * @param despawnTimeout ticks until automatic removal (-1 for never)
      * @param targetLevel    the dimension to teleport to
      * @param ownerUUID      the UUID of the player who created this portal
      */
@@ -164,6 +164,11 @@ public class PortalEntity extends Entity {
         this.entityData.set(DATA_VARIANT, variant.getId());
     }
 
+    /**
+     * Sets the target dimension for portal teleportation.
+     *
+     * @param targetLevel the dimension key to teleport to
+     */
     public void setTargetLevel(ResourceKey<Level> targetLevel) {
         this.targetLevel = targetLevel;
     }
@@ -184,16 +189,25 @@ public class PortalEntity extends Entity {
         this.primed = true;
     }
 
+    /**
+     * Determines if the portal is invulnerable to damage.
+     */
     @Override
     public boolean isInvulnerable() {
         return false;
     }
 
+    /**
+     * Determines if the portal can be pushed by entities.
+     */
     @Override
     public boolean isPushable() {
         return false;
     }
 
+    /**
+     * Handles entity collision pushing.
+     */
     @Override
     public void push(Entity entity) {
     }
@@ -206,6 +220,9 @@ public class PortalEntity extends Entity {
         return false;
     }
 
+    /**
+     * Determines if the portal is affected by gravity.
+     */
     @Override
     public boolean isNoGravity() {
         return true;
@@ -232,7 +249,7 @@ public class PortalEntity extends Entity {
      */
     public void setupAnimationStates() {
         if (this.idleAnimationTimer <= 0) {
-            this.idleAnimationTimer = 160; // Reset timer for next cycle
+            this.idleAnimationTimer = 160;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimer;
@@ -335,7 +352,6 @@ public class PortalEntity extends Entity {
             if (tickCount % 5 == 0) {
                 ServerLevel serverLevel = (ServerLevel) level();
 
-                // Create 3 particles in a rotating pattern
                 for (int i = 0; i < 3; i++) {
                     double angle = (tickCount * 0.1 + i * Math.PI * 2 / 3);
                     double radius = 0.8;
@@ -360,19 +376,20 @@ public class PortalEntity extends Entity {
         }
     }
 
+    /**
+     * Handles portal removal and dimension cleanup.
+     */
     @Override
     public void remove(RemovalReason reason) {
         super.remove(reason);
 
         if (!reason.equals(RemovalReason.DISCARDED) && !reason.equals(RemovalReason.KILLED)) return;
 
-        // Only handle on server
         if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
             ResourceKey<Level> targetDimension = this.getData(ModAttachments.PORTAL_TARGET_LEVEL);
 
             // Remove dimension if it's not school dimension
             if (!targetDimension.equals(Level.OVERWORLD) && !targetDimension.equals(ModLevel.SCHOOL_DIMENSION)) {
-
                 DynamicDimensionHandler.removeDimensionForPortal(
                         serverLevel.getServer(),
                         this
@@ -444,6 +461,7 @@ public class PortalEntity extends Entity {
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
                 PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), 128);
 
+                // Create return portal if none exists nearby
                 if (existingPortal == null) {
                     PortalEntity portal = new PortalEntity(
                             ModEntities.PORTAL_ENTITY.get(),

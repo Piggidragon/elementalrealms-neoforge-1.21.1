@@ -36,9 +36,11 @@ public class ModAttachments {
                     Codec.DOUBLE.fieldOf("z").forGetter(Vec3::z)
             ).apply(instance, Vec3::new)
     );
+
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPE = DeferredRegister.create(
             NeoForgeRegistries.ATTACHMENT_TYPES,
             ElementalRealms.MODID);
+
     /**
      * Player's magical affinities. Persists through death.
      */
@@ -50,19 +52,25 @@ public class ModAttachments {
                                     .fieldOf("affinities")
                                     .xmap(ArrayList::new, list -> list)
                     )
-                    .copyOnDeath() // Preserve affinities when player dies
+                    .copyOnDeath()
                     .build()
     );
+
     /**
      * Codec for Level ResourceKeys.
      */
     static Codec<ResourceKey<Level>> resourceKeyCodec = ResourceKey.codec(Registries.DIMENSION);
+
+    /**
+     * Target dimension for portal teleportation.
+     */
     public static final Supplier<AttachmentType<ResourceKey<Level>>> PORTAL_TARGET_LEVEL = ATTACHMENT_TYPE.register(
             "portal_target_level",
             () -> AttachmentType.builder(() -> Level.OVERWORLD)
                     .serialize(resourceKeyCodec.fieldOf("portal_target_level"))
                     .build()
     );
+
     /**
      * Provides dimension keys for map codec.
      */
@@ -71,6 +79,7 @@ public class ModAttachments {
             "minecraft:the_nether",
             "minecraft:the_end"
     );
+
     /**
      * SimpleMapCodec for storing positions per dimension.
      */
@@ -79,6 +88,7 @@ public class ModAttachments {
             VEC3_CODEC,
             Keyable.forStrings(keys)
     );
+
     /**
      * Stores the return position and dimension for inter-dimensional travel.
      */

@@ -39,7 +39,7 @@ public class ModLevel {
     );
 
     /**
-     * Development/testing dimension.
+     * Development/testing dimension variant 2.
      */
     public static final ResourceKey<Level> TEST_DIMENSION2 = ResourceKey.create(
             Registries.DIMENSION,
@@ -51,40 +51,60 @@ public class ModLevel {
             ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test2")
     );
 
-    /**
-     * List of all custom dimensions for batch operations.
-     */
+    // List of all custom dimensions for batch operations
     private static final List<ResourceKey<Level>> LEVELS = List.of(
             SCHOOL_DIMENSION,
             TEST_DIMENSION,
             TEST_DIMENSION2
     );
+
+    // Dimensions available for random portal generation
     private static final List<ResourceKey<Level>> LEVEL_RANDOM_SOURCE = List.of(
             TEST_DIMENSION,
             TEST_DIMENSION2
     );
-    private static final Map<ResourceKey<Level>, ResourceKey<LevelStem>> LEVEL_STEMS = Map.of(
-            TEST_DIMENSION,
-            TEST_DIMENSION_STEM,
 
-            TEST_DIMENSION2,
-            TEST_DIMENSION2_STEM
+    // Mapping of dimension keys to their level stem templates
+    private static final Map<ResourceKey<Level>, ResourceKey<LevelStem>> LEVEL_STEMS = Map.of(
+            TEST_DIMENSION, TEST_DIMENSION_STEM,
+            TEST_DIMENSION2, TEST_DIMENSION2_STEM
     );
 
+    /**
+     * Gets all registered custom dimensions.
+     *
+     * @return List of all dimension keys
+     */
     public static List<ResourceKey<Level>> getLevels() {
         return LEVELS;
     }
 
+    /**
+     * Gets dimensions available for random portal generation.
+     *
+     * @return List of randomizable dimension keys
+     */
     public static List<ResourceKey<Level>> getLevelsRandomSource() {
         return LEVEL_RANDOM_SOURCE;
     }
 
+    /**
+     * Selects a random dimension from available sources.
+     *
+     * @return Random dimension key
+     */
     public static ResourceKey<Level> getRandomLevel() {
         RandomSource randomSource = RandomSource.create();
         int index = randomSource.nextInt(LEVEL_RANDOM_SOURCE.size());
         return LEVEL_RANDOM_SOURCE.get(index);
     }
 
+    /**
+     * Gets the level stem template for a dimension.
+     *
+     * @param level The dimension key
+     * @return The corresponding level stem key
+     */
     public static ResourceKey<LevelStem> getStemForLevel(ResourceKey<Level> level) {
         return LEVEL_STEMS.get(level);
     }

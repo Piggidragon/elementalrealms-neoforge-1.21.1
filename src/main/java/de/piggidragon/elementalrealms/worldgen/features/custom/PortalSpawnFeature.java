@@ -32,7 +32,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
     /**
      * Attempts to place a portal entity during worldgen.
-     * Validates spawn conditions and creates portal with configured properties.
      */
     @Override
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
@@ -41,23 +40,19 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
         PortalConfiguration config = context.config();
         RandomSource randomSource = level.getRandom();
 
-        // Server required for cross-dimension portal references
         MinecraftServer server = level.getServer();
         if (server == null) {
             return false;
         }
 
-        // Validate dimension-specific spawn conditions
         if (!PortalUtils.isValidDimensionForSpawn(level, pos)) {
             return false;
         }
 
-        // Validate solid non-fluid base block
         if (!PortalUtils.isSuitableForPortalBase(level, pos.below(), level.getBlockState(pos.below()))) {
             return false;
         }
 
-        // Create portal entity with target dimension
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
                 level.getLevel()
@@ -65,18 +60,16 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal, ModLevel.getRandomLevel()));
 
-        // Position portal centered on block with random rotation
         portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         portal.setYRot(randomSource.nextFloat() * 360.0F);
 
-        // Apply configured variant or randomize
         if (config.portalVariant() != PortalVariant.RANDOM) {
             portal.setVariant(config.portalVariant());
         } else {
             portal.setRandomVariant();
         }
 
-        // Prime underground portals (Y < 41) for activation
+        // Prime underground portals for explosion
         if (pos.getY() < 41) portal.prime();
 
         level.addFreshEntity(portal);

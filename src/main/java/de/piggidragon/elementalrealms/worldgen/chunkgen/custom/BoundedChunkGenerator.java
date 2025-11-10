@@ -28,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Custom chunk generator limiting world generation to a bounded area.
  * Chunks outside the defined bounds are generated as void (air-filled).
- * Used for School dimension to create floating island effect.
  */
 public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
 
@@ -42,30 +41,53 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
             ).apply(instance, BoundedChunkGenerator::new)
     );
 
-    /**
-     * Maximum chunk radius from world origin (0,0).
-     * Creates 16x16 chunk play area (256x256 blocks).
-     */
+    // Maximum chunk radius from generation center
     private static final int RADIUS = 10;
     ResourceKey<Level> level;
 
+    /**
+     * Creates a bounded chunk generator without level reference.
+     *
+     * @param biomeSource The biome source for biome placement
+     * @param settings    Noise generation settings
+     */
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings) {
         super(biomeSource, settings);
     }
 
+    /**
+     * Creates a bounded chunk generator with level reference for generation center lookup.
+     *
+     * @param biomeSource The biome source for biome placement
+     * @param settings    Noise generation settings
+     * @param level       The dimension key for generation center lookup
+     */
     public BoundedChunkGenerator(BiomeSource biomeSource, Holder<NoiseGeneratorSettings> settings, ResourceKey<Level> level) {
         this(biomeSource, settings);
         this.level = level;
     }
 
+    /**
+     * Gets the total world size in blocks.
+     *
+     * @return Total size in blocks
+     */
     public static int getTotalSize() {
         return (RADIUS * 2 + 1) * 16;
     }
 
+    /**
+     * Gets the chunk radius from generation center.
+     *
+     * @return Chunk radius
+     */
     public static int getRadius() {
         return RADIUS;
     }
 
+    /**
+     * Returns the codec for serialization.
+     */
     @Override
     protected MapCodec<? extends ChunkGenerator> codec() {
         return MAP_CODEC;
@@ -84,14 +106,11 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
 
         ChunkPos pos = chunkAccess.getPos();
 
-        // Check if chunk is within bounds
         if (!isWithinBounds(pos)) {
-            // Generate void chunk for out-of-bounds areas
             generateVoidChunk(chunkAccess);
             return CompletableFuture.completedFuture(chunkAccess);
         }
 
-        // Use super for chunks within bounds (normal generation)
         return super.fillFromNoise(blender, randomState, structureManager, chunkAccess);
     }
 
@@ -147,7 +166,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         int chunkZ = z >> 4;
 
         if (!isWithinBounds(new ChunkPos(chunkX, chunkZ))) {
-            return getMinY(); // Return minimum height for void areas
+            return getMinY();
         }
 
         return super.getBaseHeight(x, z, heightmapType, levelHeightAccessor, randomState);
@@ -167,7 +186,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         int chunkZ = z >> 4;
 
         if (!isWithinBounds(new ChunkPos(chunkX, chunkZ))) {
-            // Return air column for void areas
             BlockState[] states = new BlockState[getGenDepth()];
             Arrays.fill(states, Blocks.AIR.defaultBlockState());
             return new NoiseColumn(getMinY(), states);
@@ -210,7 +228,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         int minY = chunkAccess.getMinY();
         int maxY = chunkAccess.getMaxY();
 
-        // Fill entire chunk with air
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 for (int y = minY; y < maxY; y++) {
@@ -219,7 +236,6 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
             }
         }
 
-        // Initialize heightmaps for void chunks
         Heightmap.primeHeightmaps(chunkAccess, Set.of(Heightmap.Types.values()));
     }
 }

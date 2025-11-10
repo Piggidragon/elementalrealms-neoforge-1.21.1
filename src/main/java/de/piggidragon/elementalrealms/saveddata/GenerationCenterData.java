@@ -22,35 +22,36 @@ public class GenerationCenterData extends SavedData {
     // Codec for ResourceKey<Level> to ChunkPos mapping
     private static final Codec<GenerationCenterData> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
-                    // Codec for Map<ResourceKey<Level>, ChunkPos>
                     Codec.unboundedMap(
-                            Level.RESOURCE_KEY_CODEC,  // Key codec: ResourceKey<Level>
-                            ChunkPos.CODEC              // Value codec: ChunkPos
+                            Level.RESOURCE_KEY_CODEC,
+                            ChunkPos.CODEC
                     ).fieldOf("generationCenters").forGetter(data -> data.generationCenters),
                     Codec.INT.fieldOf("layer").forGetter(data -> data.layer)
             ).apply(instance, GenerationCenterData::new)
     );
-    // SavedDataType with codec (similar to MapItemSavedData)
+
     private static final SavedDataType<GenerationCenterData> TYPE = new SavedDataType<>(
             "generation_centers",
             GenerationCenterData::new,
             CODEC
     );
+
     // Map of dimension to its generation center
     private final Map<ResourceKey<Level>, ChunkPos> generationCenters;
     private int layer = 1;
 
     /**
-     * Default constructor (for new data)
+     * Default constructor for new data.
      */
     public GenerationCenterData() {
         this.generationCenters = new HashMap<>();
     }
 
     /**
-     * Constructor for loading from disk (called by codec)
+     * Constructor for loading from disk (called by codec).
      *
-     * @param generationCenters The list of generation centers loaded from disk
+     * @param generationCenters The generation centers loaded from disk
+     * @param layer             Current ring layer for placement
      */
     private GenerationCenterData(Map<ResourceKey<Level>, ChunkPos> generationCenters, int layer) {
         this.generationCenters = new HashMap<>(generationCenters);
@@ -65,35 +66,41 @@ public class GenerationCenterData extends SavedData {
      * @return The global generation center data
      */
     public static GenerationCenterData get(MinecraftServer server) {
-        // Always attach to Overworld for global data storage
         DimensionDataStorage storage = server.overworld().getDataStorage();
-
-        // Use computeIfAbsent with the SavedDataType
         return storage.computeIfAbsent(TYPE);
     }
 
     /**
-     * Gets the global list of all generation centers
+     * Gets the global list of all generation centers.
      *
-     * @return The list of generation centers
+     * @return Map of dimension keys to their generation centers
      */
     public Map<ResourceKey<Level>, ChunkPos> getGenerationCenters() {
         return generationCenters;
     }
 
+    /**
+     * Gets the current ring layer for generation.
+     *
+     * @return Current layer number
+     */
     public int getCurrentLayer() {
         return layer;
     }
 
+    /**
+     * Increments the ring layer for next generation.
+     */
     public void incrementLayer() {
         layer++;
         this.setDirty();
     }
 
     /**
-     * Adds a new generation center to the global list
+     * Adds a new generation center to the global list.
      *
-     * @param center The generation center to add
+     * @param level  The dimension key
+     * @param center The generation center position
      */
     public void addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {
         if (!generationCenters.containsKey(level)) {
@@ -103,7 +110,7 @@ public class GenerationCenterData extends SavedData {
     }
 
     /**
-     * Gets the number of generation centers
+     * Gets the number of generation centers.
      *
      * @return The count of generation centers
      */
