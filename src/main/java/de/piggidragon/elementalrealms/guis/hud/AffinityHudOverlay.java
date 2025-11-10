@@ -152,10 +152,6 @@ public class AffinityHudOverlay {
         }
 
         RenderSystem.disableBlend();
-
-        // Draw border based on completion
-        int borderColor = data.isCompleted() ? 0xFF00FF00 : 0xFF666666;
-        graphics.renderOutline(x - 1, y - 1, ICON_SIZE + 2, ICON_SIZE + 2, borderColor);
     }
 
     /**
@@ -169,13 +165,9 @@ public class AffinityHudOverlay {
         );
 
         List<Component> tooltipLines = new ArrayList<>();
-        tooltipLines.add(name);
+        tooltipLines.add(Component.literal(name.getString()).withStyle(style -> style.withColor(getAffinityColor(data.affinity))));
 
-        if (data.isCompleted()) {
-            tooltipLines.add(
-                    Component.literal("✓ COMPLETED").withStyle(style -> style.withColor(0x00FF00))
-            );
-        } else {
+        if (!data.isCompleted()) {
             int color = getProgressColor(data.completionPercent);
             tooltipLines.add(
                     Component.literal(data.completionPercent + "%")
@@ -195,6 +187,27 @@ public class AffinityHudOverlay {
                 ElementalRealms.MODID,
                 "textures/item/" + textureName + ".png"
         );
+    }
+
+    /**
+     * Gets the color for a specific affinity type
+     * Used for the affinity name display
+     */
+    private static int getAffinityColor(Affinity affinity) {
+        return switch (affinity) {
+            case VOID -> 0xFF000000;       // Black (void space)
+            case FIRE -> 0xFFFF4500;      // Orange-Red (fire flames)
+            case WATER -> 0xFF1E90FF;     // Dodger Blue (ocean water)
+            case EARTH -> 0xFF8B4513;     // Saddle Brown (soil/earth)
+            case WIND -> 0xFFE0FFFF;      // Light Cyan (sky/air)
+            case LIGHTNING -> 0xFFFFFF00; // Yellow (lightning bolt)
+            case ICE -> 0xFF87CEEB;       // Sky Blue (ice/frost)
+            case SOUND -> 0xFFDA70D6;     // Orchid (sound waves)
+            case GRAVITY -> 0xFF4B0082;   // Indigo (deep space/gravity)
+            case TIME -> 0xFFFFD700;      // Gold (clockwork/time)
+            case SPACE -> 0xFF191970;     // Midnight Blue (outer space)
+            case LIFE -> 0xFF32CD32;      // Lime Green (nature/plants)
+        };
     }
 
     /**
