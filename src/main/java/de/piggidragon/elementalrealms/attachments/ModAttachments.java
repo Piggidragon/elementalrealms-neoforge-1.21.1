@@ -48,8 +48,7 @@ public class ModAttachments {
             "affinities",
             () -> AttachmentType.<List<Affinity>>builder(() -> new ArrayList<>())
                     .serialize(
-                            Codec.list(Affinity.CODEC)
-                                    .fieldOf("affinities")
+                            Codec.list(Affinity.CODEC)  // Remove .fieldOf() - use Codec directly
                                     .xmap(ArrayList::new, list -> list)
                     )
                     .copyOnDeath()
@@ -67,7 +66,7 @@ public class ModAttachments {
     public static final Supplier<AttachmentType<ResourceKey<Level>>> PORTAL_TARGET_LEVEL = ATTACHMENT_TYPE.register(
             "portal_target_level",
             () -> AttachmentType.builder(() -> Level.OVERWORLD)
-                    .serialize(resourceKeyCodec.fieldOf("portal_target_level"))
+                    .serialize(resourceKeyCodec)
                     .build()
     );
 
@@ -95,7 +94,7 @@ public class ModAttachments {
     public static final Supplier<AttachmentType<Map<ResourceKey<Level>, Vec3>>> RETURN_LEVEL_POS = ATTACHMENT_TYPE.register(
             "return_level_pos",
             () -> AttachmentType.builder(() -> Map.of(Level.OVERWORLD, Vec3.ZERO))
-                    .serialize(VEC3_MAP_CODEC.fieldOf("return_level_pos"))
+                    .serialize(VEC3_MAP_CODEC.codec())
                     .build()
     );
 
