@@ -3,9 +3,6 @@ package de.piggidragon.elementalrealms.entities;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
@@ -36,10 +33,7 @@ public class ModEntities {
                     .fireImmune() // Cannot be destroyed by fire/lava
                     .clientTrackingRange(8) // How far away clients can see this entity
                     .canSpawnFarFromPlayer() // Allows spawning in unloaded areas
-                    .build(ResourceKey.create(
-                            Registries.ENTITY_TYPE,
-                            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_entity")
-                    ))
+                    .build("portal_entity") // Use String instead of ResourceKey
     );
 
     /**
