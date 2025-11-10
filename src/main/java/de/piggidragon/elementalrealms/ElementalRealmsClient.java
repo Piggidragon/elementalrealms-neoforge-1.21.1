@@ -1,9 +1,12 @@
 package de.piggidragon.elementalrealms;
 
+import de.piggidragon.elementalrealms.guis.menus.ModMenus;
+import de.piggidragon.elementalrealms.guis.screens.AffinityScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 /**
  * Client-side initialization for Elemental Realms.
@@ -13,6 +16,15 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 public final class ElementalRealmsClient {
 
     private ElementalRealmsClient() {
+    }
+
+    /**
+     * Registers menu screens for client-side rendering
+     */
+    @SubscribeEvent
+    static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenus.AFFINITY_MENU.get(), AffinityScreen::new);
+        ElementalRealms.LOGGER.info("Registered AffinityScreen");
     }
 
     /**
