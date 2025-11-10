@@ -16,6 +16,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -44,12 +45,15 @@ public class ModAttachments {
     /**
      * Player's magical affinities. Persists through death.
      */
-    public static final Supplier<AttachmentType<List<Affinity>>> AFFINITIES = ATTACHMENT_TYPE.register(
+    public static final Supplier<AttachmentType<Map<Affinity, Integer>>> AFFINITIES = ATTACHMENT_TYPE.register(
             "affinities",
-            () -> AttachmentType.<List<Affinity>>builder(() -> new ArrayList<>())
+            () -> AttachmentType.<Map<Affinity, Integer>>builder(() -> new HashMap<>())
                     .serialize(
-                            Codec.list(Affinity.CODEC)  // Remove .fieldOf() - use Codec directly
-                                    .xmap(ArrayList::new, list -> list)
+                            // Use unboundedMap for Map<Affinity, Integer>
+                            Codec.unboundedMap(
+                                    Affinity.CODEC,    // Key codec (your Affinity enum codec)
+                                    Codec.INT          // Value codec (completion percentage as int)
+                            )
                     )
                     .copyOnDeath()
                     .build()
