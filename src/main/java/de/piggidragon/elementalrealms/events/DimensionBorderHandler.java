@@ -52,8 +52,8 @@ public class DimensionBorderHandler {
 
         ElementalRealms.LOGGER.info("World border set for dimension {} - Center: [{}, {}], Size: {}x{} blocks",
                 level.dimension().location(),
-                generationCenter.getMiddleBlockX() * 16,
-                generationCenter.getMiddleBlockZ() * 16,
+                generationCenter.getMiddleBlockX(),
+                generationCenter.getMiddleBlockZ(),
                 BoundedChunkGenerator.getTotalSize(),
                 BoundedChunkGenerator.getTotalSize());
     }
