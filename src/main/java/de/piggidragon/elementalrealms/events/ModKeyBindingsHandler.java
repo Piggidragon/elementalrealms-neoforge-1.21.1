@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.events;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -11,7 +12,7 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Registers custom key bindings for the mod
  */
-@EventBusSubscriber(modid = "elementalrealms", value = Dist.CLIENT)
+@EventBusSubscriber(modid = ElementalRealms.MODID, value = Dist.CLIENT)
 public class ModKeyBindingsHandler {
 
     /**
