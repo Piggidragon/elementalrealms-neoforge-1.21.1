@@ -19,6 +19,13 @@ group = mod_group_id
 
 repositories {
     maven { url "https://maven.commoble.net/" }
+    maven {
+        name = 'Curios maven'
+        url = "https://maven.theillusivec4.top/"
+    }
+    maven {
+        url = 'https://maven.blamejared.com/'
+    }
 }
 
 base {
@@ -65,7 +72,7 @@ neoForge {
         }
 
         data {
-            clientData()
+            data()
 
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // gameDirectory = project.file('run-data')
@@ -134,8 +141,13 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-    // Infiniverse dependency
-    implementation "net.commoble.infiniverse:infiniverse:21.9.0"
+    implementation "net.commoble.infiniverse:infiniverse-1.21:${infiniverse_version}"
+    // Lodestone dependency for NeoForge 1.21.1
+    implementation "team.lodestar.lodestone:lodestone:1.21.1-${lodestone_version}"
+
+    // Curios API dependency (required by Lodestone)
+    compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}+1.21.1:api"
+    runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}+1.21.1"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
