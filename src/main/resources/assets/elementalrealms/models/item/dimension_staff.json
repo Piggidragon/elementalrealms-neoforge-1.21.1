@@ -3,10 +3,10 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "block/texture_crystal_small",
-		"1": "texture_crystal_big",
-		"2": "texture_handle",
-		"7": "texture_deco"
+		"0": "elementalrealms:item/dimension_staff/texture_crystal_small",
+		"1": "elementalrealms:item/dimension_staff/texture_crystal_big",
+		"2": "elementalrealms:item/dimension_staff/texture_handle",
+		"7": "elementalrealms:item/dimension_staff/texture_deco"
 	},
 	"elements": [
 		{
