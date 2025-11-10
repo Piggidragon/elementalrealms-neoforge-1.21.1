@@ -188,18 +188,6 @@ public class PortalEntity extends Entity {
     }
 
     /**
-     * Manages animation states for the portal.
-     */
-    public void setupAnimationStates() {
-        if (this.idleAnimationTimer <= 0) {
-            this.idleAnimationTimer = 160;
-            this.idleAnimationState.start(this.tickCount);
-        } else {
-            --this.idleAnimationTimer;
-        }
-    }
-
-    /**
      * Reads entity data from NBT.
      */
     @Override
