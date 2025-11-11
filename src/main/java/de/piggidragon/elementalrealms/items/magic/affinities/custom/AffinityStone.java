@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.items.magic.affinities.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import de.piggidragon.elementalrealms.packets.AffinitySuccessPacket;
@@ -46,6 +47,7 @@ public class AffinityStone extends Item {
      */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ElementalRealms.LOGGER.debug("Using AffinityStone of type: " + this.affinity.name());
         ItemStack itemStack = player.getItemInHand(hand);
 
         // Only execute on server side
@@ -60,6 +62,7 @@ public class AffinityStone extends Item {
         ItemStack originalItemStack = itemStack.copy();
         boolean success = false;
 
+        ElementalRealms.LOGGER.debug("Processing AffinityStone for player: " + serverPlayer.getName().getString());
         // Void stone clears all affinities
         if (this.affinity == Affinity.VOID) {
             try {

@@ -7,6 +7,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,29 +25,35 @@ public class ModAffinities {
      * @throws Exception If validation fails
      */
     public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
-        Map<Affinity, Integer> affinities = getAffinities(player);
+        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
         // Validate before adding
-        validateAffinityCanBeAdded(affinity, affinities);
+        validateAffinityCanBeAdded(affinity, affinitiesImmutable);
+
+        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
 
         // Add affinity with 100% completion
-        affinities.put(affinity, 100);
+        affinitiesMutable.put(affinity, 100);
 
         // Save changes
-        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
     }
 
     public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) throws IllegalStateException {
-        Map<Affinity, Integer> affinities = getAffinities(player);
+        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
-        // Validate before adding
-        validateAffinityCanBeAdded(affinity, affinities);
+        validateAffinityCanBeAdded(affinity, affinitiesImmutable);
+
+        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
+
+        int current = affinitiesMutable.getOrDefault(affinity, 0);
+        int newCompletion = Math.min(current + increment, 100);
 
         // Add affinity with 0% completion
-        affinities.put(affinity, increment);
+        affinitiesImmutable.put(affinity, newCompletion);
 
         // Save changes
-        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
     }
 
     /**
@@ -98,15 +105,17 @@ public class ModAffinities {
      * @throws Exception If player already has no affinities
      */
     public static void clearAffinities(ServerPlayer player) throws IllegalStateException {
-        Map<Affinity, Integer> affinities = getAffinities(player);
+        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
-        if (affinities.containsKey(Affinity.VOID)) {
+        if (affinitiesImmutable.containsKey(Affinity.VOID)) {
             throw new IllegalStateException("Player has no affinities to clear.");
         }
 
-        affinities.clear();
-        affinities.put(Affinity.VOID, null);
-        player.setData(ModAttachments.AFFINITIES.get(), affinities);
+        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
+
+        affinitiesMutable.clear();
+        affinitiesMutable.put(Affinity.VOID, 0);
+        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
     }
 
     /**
