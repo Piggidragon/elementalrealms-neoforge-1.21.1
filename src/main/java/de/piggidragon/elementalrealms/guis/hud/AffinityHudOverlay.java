@@ -64,6 +64,10 @@ public class AffinityHudOverlay {
 
         Map<Affinity, Integer> affinityMap = mc.player.getData(ModAttachments.AFFINITIES.get());
 
+        if (affinityMap.containsKey(Affinity.VOID)) {
+            return;
+        }
+
         // Convert map to list for rendering
         List<AffinityData> affinities = new ArrayList<>();
         for (Map.Entry<Affinity, Integer> entry : affinityMap.entrySet()) {

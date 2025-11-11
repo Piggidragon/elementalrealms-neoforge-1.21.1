@@ -32,6 +32,9 @@ public class ModAffinities {
 
         Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
 
+        if (affinitiesMutable.containsKey(Affinity.VOID)) {
+            affinitiesMutable.remove(Affinity.VOID);
+        }
         // Add affinity with 100% completion
         affinitiesMutable.put(affinity, 100);
 
@@ -49,6 +52,9 @@ public class ModAffinities {
         int current = affinitiesMutable.getOrDefault(affinity, 0);
         int newCompletion = Math.min(current + increment, 100);
 
+        if (affinitiesMutable.containsKey(Affinity.VOID)) {
+            affinitiesMutable.remove(Affinity.VOID);
+        }
         // Add affinity with 0% completion
         affinitiesImmutable.put(affinity, newCompletion);
 
