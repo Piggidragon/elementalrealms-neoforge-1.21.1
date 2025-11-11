@@ -27,14 +27,17 @@ public class ModAffinities {
     public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
+        // Prevent duplicate
+        if (affinitiesImmutable.containsKey(affinity)) {
+            throw new IllegalStateException("Player already has affinity: " + affinity);
+        }
+
         // Validate before adding
         validateAffinityCanBeAdded(affinity, affinitiesImmutable);
 
         Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
 
-        if (affinitiesMutable.containsKey(Affinity.VOID)) {
-            affinitiesMutable.remove(Affinity.VOID);
-        }
+        affinitiesMutable.remove(Affinity.VOID);
         // Add affinity with 100% completion
         affinitiesMutable.put(affinity, 100);
 
@@ -45,20 +48,32 @@ public class ModAffinities {
     public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) throws IllegalStateException {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
+        // Validate if affinity can be added (checks ETERNAL/DEVIANT rules)
         validateAffinityCanBeAdded(affinity, affinitiesImmutable);
 
+        // Create mutable copy
         Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
 
-        int current = affinitiesMutable.getOrDefault(affinity, 0);
-        int newCompletion = Math.min(current + increment, 100);
+        // Get current completion (0 if not present)
+        int currentCompletion = affinitiesMutable.getOrDefault(affinity, 0);
 
-        if (affinitiesMutable.containsKey(Affinity.VOID)) {
-            affinitiesMutable.remove(Affinity.VOID);
+        // Calculate new completion
+        int newCompletion = currentCompletion + increment;
+
+        // Check if would exceed 100%
+        if (newCompletion > 100) {
+            throw new IllegalStateException(
+                    "Already completed: " + affinity
+            );
         }
-        // Add affinity with 0% completion
-        affinitiesImmutable.put(affinity, newCompletion);
 
-        // Save changes
+        // Remove VOID affinity if present (any elemental affinity removes void)
+        affinitiesMutable.remove(Affinity.VOID);
+
+        // Set new completion value
+        affinitiesMutable.put(affinity, newCompletion);
+
+        // Save changes (triggers sync to client)
         player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
     }
 
@@ -70,11 +85,6 @@ public class ModAffinities {
             Affinity affinity,
             Map<Affinity, Integer> currentAffinities
     ) {
-        // Prevent duplicate
-        if (currentAffinities.containsKey(affinity)) {
-            throw new IllegalStateException("Player already has affinity: " + affinity);
-        }
-
         // Check ETERNAL limit
         if (affinity.getType() == AffinityType.ETERNAL && hasEternalAffinity(currentAffinities)) {
             throw new IllegalStateException("Player already has an eternal affinity");
@@ -97,11 +107,19 @@ public class ModAffinities {
     }
 
     /**
-     * Checks if player has the required base affinity for a deviant
+     * Checks if player has the required base affinity for a deviant at 100% completion
+     * A deviant affinity can only be started if its base elemental is fully mastered
+     *
+     * @param affinities The player's affinity map
+     * @param deviant The deviant affinity to check
+     * @return True if player has the base elemental affinity at 100% completion
      */
     private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
-        return affinities.keySet().stream()
-                .anyMatch(a -> a.getDeviant() == deviant);
+        return affinities.entrySet().stream()
+                .anyMatch(entry ->
+                        entry.getKey().getDeviant() == deviant &&  // Check if this affinity is the base
+                                entry.getValue() >= 100                     // Check if it's at 100% completion
+                );
     }
 
     /**
