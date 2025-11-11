@@ -212,7 +212,7 @@ public class ModCommands {
                             }
 
                             // Roll new random affinities
-                            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player)) {
+                            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
                                 if (affinity != Affinity.VOID) {
                                     try {
                                         ModAffinities.addAffinity(player, affinity);

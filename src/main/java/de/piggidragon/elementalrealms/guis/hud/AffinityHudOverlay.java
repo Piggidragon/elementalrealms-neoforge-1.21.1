@@ -4,8 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
