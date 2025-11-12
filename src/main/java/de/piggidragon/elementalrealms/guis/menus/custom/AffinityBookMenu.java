@@ -26,8 +26,7 @@ public class AffinityBookMenu extends AbstractContainerMenu {
      * Called automatically by Minecraft when the menu is opened on client side
      *
      * @param containerId The container ID
-     * @param playerInv The player's inventory
-     * @param extraData Additional data containing affinity list from server
+     * @param extraData   Additional data containing affinity list from server
      */
     public AffinityBookMenu(int containerId, FriendlyByteBuf extraData) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
@@ -48,8 +47,7 @@ public class AffinityBookMenu extends AbstractContainerMenu {
      * Called by SimpleMenuProvider on server side when creating the menu
      *
      * @param containerId The container ID
-     * @param playerInv The player's inventory
-     * @param affinities The list of affinity data to display
+     * @param affinities  The list of affinity data to display
      */
     public AffinityBookMenu(int containerId, List<AffinityData> affinities) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
@@ -59,11 +57,12 @@ public class AffinityBookMenu extends AbstractContainerMenu {
     }
 
     public AffinityBookMenu(int i, Inventory inventory, RegistryFriendlyByteBuf registryFriendlyByteBuf) {
-        this(i, (FriendlyByteBuf) registryFriendlyByteBuf);
+        this(i, registryFriendlyByteBuf);
     }
 
     /**
      * Gets the list of all affinities with their completion percentages
+     *
      * @return List of affinity data
      */
     public List<AffinityData> getAffinities() {
@@ -72,6 +71,7 @@ public class AffinityBookMenu extends AbstractContainerMenu {
 
     /**
      * Gets only completed affinities (100% completion)
+     *
      * @return List of completed affinities
      */
     public List<AffinityData> getCompletedAffinities() {
@@ -82,6 +82,7 @@ public class AffinityBookMenu extends AbstractContainerMenu {
 
     /**
      * Gets only incomplete affinities (< 100% completion)
+     *
      * @return List of incomplete affinities
      */
     public List<AffinityData> getIncompleteAffinities() {
@@ -105,43 +106,48 @@ public class AffinityBookMenu extends AbstractContainerMenu {
     /**
      * Data class to hold affinity information
      * Stores affinity type and completion percentage
+     *
+     * @param completionPercent 0-100
      */
-    public static class AffinityData {
-        private final Affinity affinity;
-        private final int completionPercent; // 0-100
+        public record AffinityData(Affinity affinity, int completionPercent) {
+            /**
+             * Creates a new affinity data entry
+             *
+             * @param affinity          The affinity type
+             * @param completionPercent The completion percentage (0-100)
+             */
+            public AffinityData(Affinity affinity, int completionPercent) {
+                this.affinity = affinity;
+                this.completionPercent = Math.clamp(completionPercent, 0, 100);
+            }
 
-        /**
-         * Creates a new affinity data entry
-         * @param affinity The affinity type
-         * @param completionPercent The completion percentage (0-100)
-         */
-        public AffinityData(Affinity affinity, int completionPercent) {
-            this.affinity = affinity;
-            this.completionPercent = Math.clamp(completionPercent, 0, 100);
-        }
+            /**
+             * Gets the affinity type
+             *
+             * @return The affinity type
+             */
+            @Override
+            public Affinity affinity() {
+                return affinity;
+            }
 
-        /**
-         * Gets the affinity type
-         * @return The affinity type
-         */
-        public Affinity getAffinity() {
-            return affinity;
-        }
+            /**
+             * Gets the completion percentage
+             *
+             * @return Completion percentage (0-100)
+             */
+            @Override
+            public int completionPercent() {
+                return completionPercent;
+            }
 
-        /**
-         * Gets the completion percentage
-         * @return Completion percentage (0-100)
-         */
-        public int getCompletionPercent() {
-            return completionPercent;
+            /**
+             * Checks if this affinity is completed
+             *
+             * @return True if completion is 100%
+             */
+            public boolean isCompleted() {
+                return completionPercent >= 100;
+            }
         }
-
-        /**
-         * Checks if this affinity is completed
-         * @return True if completion is 100%
-         */
-        public boolean isCompleted() {
-            return completionPercent >= 100;
-        }
-    }
 }

@@ -99,21 +99,19 @@ public class Platform extends Structure {
         BlockPos blockPos = new BlockPos(chunkPos.getMinBlockX(), startY, chunkPos.getMinBlockZ());
 
         // Assemble structure pieces using jigsaw algorithm
-        Optional<GenerationStub> structurePiecesGenerator =
-                JigsawPlacement.addPieces(
-                        context,
-                        this.startPool,
-                        this.startJigsawName,
-                        this.size,
-                        blockPos,
-                        false,
-                        this.projectStartToHeightmap,
-                        this.maxDistanceFromCenter,
-                        PoolAliasLookup.EMPTY,
-                        this.dimensionPadding,
-                        this.liquidSettings);
 
-        return structurePiecesGenerator;
+        return JigsawPlacement.addPieces(
+                context,
+                this.startPool,
+                this.startJigsawName,
+                this.size,
+                blockPos,
+                false,
+                this.projectStartToHeightmap,
+                this.maxDistanceFromCenter,
+                PoolAliasLookup.EMPTY,
+                this.dimensionPadding,
+                this.liquidSettings);
     }
 
     @Override

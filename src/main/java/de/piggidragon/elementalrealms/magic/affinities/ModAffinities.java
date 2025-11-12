@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.magic.affinities;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -60,6 +61,13 @@ public class ModAffinities {
         // Calculate new completion
         int newCompletion = currentCompletion + increment;
 
+        if (newCompletion <= 100) {
+            player.playSound(
+                    SoundEvents.END_PORTAL_SPAWN,
+                    0.5f,
+                    0.5f
+            );
+        }
         // Check if would exceed 100%
         if (newCompletion > 100) {
             throw new IllegalStateException(
@@ -111,7 +119,7 @@ public class ModAffinities {
      * A deviant affinity can only be started if its base elemental is fully mastered
      *
      * @param affinities The player's affinity map
-     * @param deviant The deviant affinity to check
+     * @param deviant    The deviant affinity to check
      * @return True if player has the base elemental affinity at 100% completion
      */
     private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {

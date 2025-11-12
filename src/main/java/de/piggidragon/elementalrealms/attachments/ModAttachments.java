@@ -27,6 +27,14 @@ import java.util.stream.Stream;
 public class ModAttachments {
 
     /**
+     * Provides dimension keys for map codec.
+     */
+    static final Supplier<Stream<String>> keys = () -> Stream.of(
+            "minecraft:overworld",
+            "minecraft:the_nether",
+            "minecraft:the_end"
+    );
+    /**
      * Codec for serializing Vec3 positions to NBT.
      */
     private static final Codec<Vec3> VEC3_CODEC = RecordCodecBuilder.create(instance ->
@@ -36,26 +44,10 @@ public class ModAttachments {
                     Codec.DOUBLE.fieldOf("z").forGetter(Vec3::z)
             ).apply(instance, Vec3::new)
     );
-
     /**
      * Codec for Level ResourceKeys.
      */
     private static final Codec<ResourceKey<Level>> RESOURCE_KEY_CODEC = ResourceKey.codec(Registries.DIMENSION);
-
-    private static final Codec<Map<Affinity, Integer>> AFFINITY_MAP_CODEC = Codec.unboundedMap(
-            Affinity.CODEC,
-            Codec.INT
-    );
-
-    /**
-     * Provides dimension keys for map codec.
-     */
-    static Supplier<Stream<String>> keys = () -> Stream.of(
-            "minecraft:overworld",
-            "minecraft:the_nether",
-            "minecraft:the_end"
-    );
-
     /**
      * SimpleMapCodec for storing positions per dimension.
      */
@@ -64,7 +56,10 @@ public class ModAttachments {
             VEC3_CODEC,
             Keyable.forStrings(keys)
     );
-
+    private static final Codec<Map<Affinity, Integer>> AFFINITY_MAP_CODEC = Codec.unboundedMap(
+            Affinity.CODEC,
+            Codec.INT
+    );
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPE = DeferredRegister.create(
             NeoForgeRegistries.ATTACHMENT_TYPES,
             ElementalRealms.MODID);

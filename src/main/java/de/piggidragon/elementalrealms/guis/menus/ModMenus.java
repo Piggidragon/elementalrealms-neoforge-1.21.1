@@ -14,12 +14,6 @@ public class ModMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, ElementalRealms.MODID);
 
-    public static final Supplier<MenuType<AffinityBookMenu>> AFFINITY_MENU =
-            MENUS.register("affinity_menu", () ->
-                    // IMenuTypeExtension allows FriendlyByteBuf parameter
-                    IMenuTypeExtension.create(AffinityBookMenu::new)
-            );
-
     /**
      * Registers all menu types with the mod event bus.
      *
@@ -27,5 +21,11 @@ public class ModMenus {
      */
     public static void register(IEventBus bus) {
         MENUS.register(bus);
-    }
+    }    public static final Supplier<MenuType<AffinityBookMenu>> AFFINITY_MENU =
+            MENUS.register("affinity_menu", () ->
+                    // IMenuTypeExtension allows FriendlyByteBuf parameter
+                    IMenuTypeExtension.create(AffinityBookMenu::new)
+            );
+
+
 }

@@ -1,10 +1,10 @@
 package de.piggidragon.elementalrealms.registries.items.magic.dimension.custom;
 
+import de.piggidragon.elementalrealms.particles.DimensionStaffParticles;
+import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
-import de.piggidragon.elementalrealms.particles.DimensionStaffParticles;
-import de.piggidragon.elementalrealms.particles.PortalParticles;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;

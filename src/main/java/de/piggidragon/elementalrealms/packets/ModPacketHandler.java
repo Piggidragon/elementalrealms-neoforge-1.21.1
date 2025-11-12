@@ -106,8 +106,8 @@ public class ModPacketHandler {
                     // Write affinity data to buffer for client
                     buf.writeInt(affinities.size());
                     for (AffinityBookMenu.AffinityData data : affinities) {
-                        buf.writeEnum(data.getAffinity());
-                        buf.writeInt(data.getCompletionPercent());
+                        buf.writeEnum(data.affinity());
+                        buf.writeInt(data.completionPercent());
                     }
                 });
             }

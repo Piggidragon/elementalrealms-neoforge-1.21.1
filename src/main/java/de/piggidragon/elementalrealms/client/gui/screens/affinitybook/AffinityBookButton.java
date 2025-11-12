@@ -22,8 +22,8 @@ public class AffinityBookButton extends ImageButton {
     /**
      * Create a new affinity book button.
      *
-     * @param x X position
-     * @param y Y position
+     * @param x       X position
+     * @param y       Y position
      * @param onPress Action to perform when clicked
      */
     public AffinityBookButton(int x, int y, OnPress onPress) {

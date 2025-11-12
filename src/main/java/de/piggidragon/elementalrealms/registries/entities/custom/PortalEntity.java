@@ -2,10 +2,10 @@ package de.piggidragon.elementalrealms.registries.entities.custom;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
-import de.piggidragon.elementalrealms.particles.PortalParticles;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;

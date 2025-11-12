@@ -2,7 +2,6 @@ package de.piggidragon.elementalrealms.packets.custom;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

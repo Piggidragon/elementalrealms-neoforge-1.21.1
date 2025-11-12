@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.datagen.advancements;
 
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.registries.items.magic.dimension.DimensionItems;
-import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;

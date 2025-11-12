@@ -1,9 +1,9 @@
 package de.piggidragon.elementalrealms.registries.items.magic.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.custom.AffinityShard;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.custom.AffinityStone;
-import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;

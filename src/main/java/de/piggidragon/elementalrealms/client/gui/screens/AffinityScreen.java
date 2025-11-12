@@ -22,9 +22,10 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityBookMenu> {
 
     /**
      * Creates a new affinity screen
-     * @param menu The affinity menu containing the data
+     *
+     * @param menu            The affinity menu containing the data
      * @param playerInventory Player's inventory (required by AbstractContainerScreen)
-     * @param title The screen title
+     * @param title           The screen title
      */
     public AffinityScreen(AffinityBookMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -114,6 +115,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityBookMenu> {
     /**
      * Renders all affinities with completion bars
      * Coordinates are relative to leftPos/topPos
+     *
      * @param graphics The graphics context
      */
     private void renderAffinities(GuiGraphics graphics) {
@@ -168,33 +170,34 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityBookMenu> {
     /**
      * Renders a single affinity entry with progress bar
      * Coordinates are relative to leftPos/topPos
+     *
      * @param graphics The graphics context
-     * @param data The affinity data to render
-     * @param x Relative X position
-     * @param y Relative Y position
+     * @param data     The affinity data to render
+     * @param x        Relative X position
+     * @param y        Relative Y position
      */
     private void renderAffinityEntry(
             GuiGraphics graphics,
             AffinityBookMenu.AffinityData data,
-            int x,
+            int barX,
             int y
     ) {
         // Get affinity-specific color for the name
-        int affinityColor = getAffinityColor(data.getAffinity());
+        int affinityColor = getAffinityColor(data.affinity());
         boolean isCompleted = data.isCompleted();
-        int completion = data.getCompletionPercent();
+        int completion = data.completionPercent();
 
         // Get color based on completion percentage (red → orange → green)
         int progressColor = getProgressColor(completion);
 
         // 1. Render affinity name with element color
         Component name = Component.translatable(
-                "affinity.elementalrealms." + data.getAffinity().name().toLowerCase()
+                "affinity.elementalrealms." + data.affinity().name().toLowerCase()
         );
         graphics.drawString(
                 this.font,
                 name,
-                x,
+                barX,
                 y,
                 affinityColor,
                 isCompleted
@@ -202,11 +205,10 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityBookMenu> {
 
         // 2. Render completion percentage text with dynamic color
         String percentText = completion + "%";
-        graphics.drawString(this.font, percentText, x + 120, y, progressColor, false);
+        graphics.drawString(this.font, percentText, barX + 120, y, progressColor, false);
 
         // 3. Render progress bar ONLY if not completed
         if (!isCompleted) {
-            int barX = x;
             int barY = y + 10;
             int barWidth = 150;
             int barHeight = 4;

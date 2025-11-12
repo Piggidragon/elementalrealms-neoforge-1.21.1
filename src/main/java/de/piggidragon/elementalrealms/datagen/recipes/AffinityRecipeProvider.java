@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.datagen.recipes;
 
-import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;

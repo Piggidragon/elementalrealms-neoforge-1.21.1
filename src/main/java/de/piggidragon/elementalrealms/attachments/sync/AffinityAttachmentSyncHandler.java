@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.attachments.sync;
 
-import com.mojang.serialization.Codec;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,11 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AffinityAttachmentSyncHandler implements AttachmentSyncHandler<Map<Affinity, Integer>> {
-
-    private static final Codec<Map<Affinity, Integer>> MAP_CODEC = Codec.unboundedMap(
-            Affinity.CODEC,
-            Codec.INT
-    );
 
     @Override
     public boolean sendToPlayer(IAttachmentHolder holder, ServerPlayer to) {

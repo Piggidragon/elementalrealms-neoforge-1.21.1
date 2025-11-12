@@ -3,7 +3,6 @@ package de.piggidragon.elementalrealms.magic.affinities;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

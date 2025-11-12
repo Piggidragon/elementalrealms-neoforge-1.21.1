@@ -1,9 +1,9 @@
 package de.piggidragon.elementalrealms.registries.creativetabs;
 
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.registries.items.magic.dimension.DimensionItems;
-import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;

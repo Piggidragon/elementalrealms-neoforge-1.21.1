@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,9 +24,9 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
     /**
      * Create a new affinity book screen.
      *
-     * @param menu The affinity book menu containing affinity data
+     * @param menu            The affinity book menu containing affinity data
      * @param playerInventory Player's inventory (required by AbstractContainerScreen)
-     * @param title The screen title
+     * @param title           The screen title
      */
     public AffinityBookScreen(AffinityBookMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -108,18 +107,18 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
      * Render a single affinity entry with completion percentage.
      *
      * @param graphics The graphics context
-     * @param data The affinity data
-     * @param x X position (relative to leftPos)
-     * @param y Y position (relative to topPos)
+     * @param data     The affinity data
+     * @param x        X position (relative to leftPos)
+     * @param y        Y position (relative to topPos)
      */
     private void renderAffinityEntry(
             GuiGraphics graphics,
             AffinityBookMenu.AffinityData data,
-            int x,
+            int barX,
             int y
     ) {
-        Affinity affinity = data.getAffinity();
-        int completion = data.getCompletionPercent();
+        Affinity affinity = data.affinity();
+        int completion = data.completionPercent();
         boolean isCompleted = data.isCompleted();
 
         // Get affinity color
@@ -135,7 +134,7 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
         graphics.drawString(
                 this.font,
                 name,
-                x,
+                barX,
                 y,
                 affinityColor,
                 false
@@ -146,7 +145,7 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
         graphics.drawString(
                 this.font,
                 percentText,
-                x + 100,
+                barX + 100,
                 y,
                 progressColor,
                 false
@@ -154,7 +153,6 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
 
         // Render progress bar ONLY if not completed
         if (!isCompleted) {
-            int barX = x;
             int barY = y + 10;
             int barWidth = 120;
             int barHeight = 3;
