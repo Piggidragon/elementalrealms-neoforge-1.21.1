@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.client.events;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.gui.screens.affinitybook.AffinityBookButton;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
@@ -90,7 +91,7 @@ public class AffinityBookButtonHandler {
                     }
 
                     // Send packet to server to open affinity book
-                    PacketDistributor.sendToServer(new AffinitySuccessPacket.OpenAffinityBookPacket());
+                    PacketDistributor.sendToServer(new OpenAffinityBookPacket());
                 }
         );
     }
