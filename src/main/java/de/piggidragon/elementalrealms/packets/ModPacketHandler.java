@@ -4,6 +4,7 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -45,8 +46,8 @@ public class ModPacketHandler {
 
         // Register OpenAffinityBookPacket (Client -> Server)
         registrar.playToServer(
-                AffinitySuccessPacket.OpenAffinityBookPacket.TYPE,
-                AffinitySuccessPacket.OpenAffinityBookPacket.STREAM_CODEC,
+                OpenAffinityBookPacket.TYPE,
+                OpenAffinityBookPacket.STREAM_CODEC,
                 ModPacketHandler::handleOpenAffinityBook
         );
     }
@@ -82,7 +83,7 @@ public class ModPacketHandler {
      * @param packet  Empty packet (no data needed)
      * @param context Network context for thread-safe execution
      */
-    private static void handleOpenAffinityBook(AffinitySuccessPacket.OpenAffinityBookPacket packet, IPayloadContext context) {
+    private static void handleOpenAffinityBook(OpenAffinityBookPacket packet, IPayloadContext context) {
         // Execute on main thread to prevent concurrent modification
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
