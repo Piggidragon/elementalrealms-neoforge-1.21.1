@@ -53,7 +53,7 @@ public class AffinityShard extends Item {
             return InteractionResultHolder.fail(itemStack);
         }
 
-        boolean success = false;
+        boolean success;
 
         // Regular stones add specific affinity
         try {

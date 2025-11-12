@@ -108,7 +108,6 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
      *
      * @param graphics The graphics context
      * @param data     The affinity data
-     * @param x        X position (relative to leftPos)
      * @param y        Y position (relative to topPos)
      */
     private void renderAffinityEntry(

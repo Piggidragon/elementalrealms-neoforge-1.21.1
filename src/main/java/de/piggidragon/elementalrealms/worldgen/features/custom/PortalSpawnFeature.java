@@ -36,7 +36,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
         WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
-        PortalConfiguration config = context.config();
         RandomSource randomSource = level.getRandom();
 
         MinecraftServer server = level.getServer();
@@ -48,7 +47,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             return false;
         }
 
-        if (!PortalUtils.isSuitableForPortalBase(level, pos.below(), level.getBlockState(pos.below()))) {
+        if (!PortalUtils.isSuitableForPortalBase(level.getBlockState(pos.below()))) {
             return false;
         }
 

@@ -59,7 +59,7 @@ public class AffinityStone extends Item {
         }
 
         ItemStack originalItemStack = itemStack.copy();
-        boolean success = false;
+        boolean success;
 
         ElementalRealms.LOGGER.debug("Processing AffinityStone for player: " + serverPlayer.getName().getString());
         // Void stone clears all affinities

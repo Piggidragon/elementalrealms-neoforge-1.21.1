@@ -23,7 +23,7 @@ public class ModAffinities {
      *
      * @param player   Target player
      * @param affinity Affinity to add
-     * @throws Exception If validation fails
+     * @throws IllegalArgumentException If validation fails
      */
     public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
@@ -134,7 +134,7 @@ public class ModAffinities {
      * Clears all affinities and sets to VOID.
      *
      * @param player Target player
-     * @throws Exception If player already has no affinities
+     * @throws IllegalArgumentException If player already has no affinities
      */
     public static void clearAffinities(ServerPlayer player) throws IllegalStateException {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);

@@ -53,7 +53,7 @@ public class ModAffinitiesRoll {
      * Each roll has 25% chance to also grant deviant variant.
      *
      * @param player Target player
-     * @return List of affinities to add
+     * @return Map of affinities to add
      */
     public static Map<Affinity, Integer> rollAffinities(ServerPlayer player) {
         RandomSource random = player.getRandom();
