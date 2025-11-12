@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
@@ -21,6 +22,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Registers and handles custom network packets.
@@ -87,20 +89,13 @@ public class ModPacketHandler {
         // Execute on main thread to prevent concurrent modification
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
-                // TODO: Get actual affinity data from player capability
-                // For now, create dummy data for testing
+
+                Map<Affinity, Integer> affinityCompletionMap = serverPlayer.getData(ModAttachments.AFFINITIES.get());
                 List<AffinityBookMenu.AffinityData> affinities = new ArrayList<>();
 
-                // Example data - replace with actual player capability data
-                // Example: var capability = serverPlayer.getData(ModAttachments.AFFINITY_DATA);
-                // Then: affinities = capability.getAllAffinities();
-
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.FIRE, 75));
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.WATER, 50));
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.WIND, 100));
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.EARTH, 25));
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.LIGHTNING, 60));
-                affinities.add(new AffinityBookMenu.AffinityData(Affinity.ICE, 40));
+                for (Map.Entry<Affinity, Integer> entry : affinityCompletionMap.entrySet()) {
+                    affinities.add(new AffinityBookMenu.AffinityData(entry.getKey(), entry.getValue()));
+                }
 
                 // Open the menu
                 serverPlayer.openMenu(new SimpleMenuProvider(
