@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms;
 
 import de.piggidragon.elementalrealms.guis.menus.ModMenus;
-import de.piggidragon.elementalrealms.guis.screens.AffinityScreen;
+import de.piggidragon.elementalrealms.client.gui.screens.AffinityScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

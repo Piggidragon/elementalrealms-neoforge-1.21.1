@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.worldgen.chunkgen.custom;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
+import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;

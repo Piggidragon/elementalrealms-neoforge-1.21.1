@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.level.ModLevel;
+import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import de.piggidragon.elementalrealms.worldgen.ModBiomeTags;
 import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;

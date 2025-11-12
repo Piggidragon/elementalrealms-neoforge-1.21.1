@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.items.magic.affinities.AffinityItems;
+import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;

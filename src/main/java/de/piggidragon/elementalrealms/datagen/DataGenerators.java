@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.advancements.AdvancementGenerator;
+import de.piggidragon.elementalrealms.datagen.advancements.AdvancementGenerator;
 import de.piggidragon.elementalrealms.datagen.recipes.AffinityRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;

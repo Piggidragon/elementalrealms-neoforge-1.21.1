@@ -1,9 +1,9 @@
 package de.piggidragon.elementalrealms.events;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.entities.ModEntities;
-import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.level.ModLevel;
+import de.piggidragon.elementalrealms.registries.entities.ModEntities;
+import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

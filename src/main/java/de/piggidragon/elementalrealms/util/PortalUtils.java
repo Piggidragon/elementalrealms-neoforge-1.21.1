@@ -1,6 +1,6 @@
 package de.piggidragon.elementalrealms.util;
 
-import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
