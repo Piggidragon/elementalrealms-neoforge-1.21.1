@@ -12,6 +12,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Adds the affinity book button next to the recipe book button
@@ -59,7 +60,15 @@ public class AffinityBookButtonHandler {
         }
 
         currentScreen = containerScreen;
-        RecipeBookComponent finalRecipeBook = recipeBook;
+        AffinityBookButton affinityButton = getAffinityBookButton(containerScreen, recipeBook);
+
+        currentAffinityButton = affinityButton;
+
+        // Add button to screen
+        event.addListener(affinityButton);
+    }
+
+    private static @NotNull AffinityBookButton getAffinityBookButton(AbstractContainerScreen<?> containerScreen, RecipeBookComponent recipeBook) {
 
         // Calculate initial button position
         int leftPos = containerScreen.getGuiLeft();
@@ -67,28 +76,23 @@ public class AffinityBookButtonHandler {
 
         // Position: 24 pixels to the right of recipe book button
         // Recipe book button is at (leftPos + 104, topPos + 61)
-        int buttonX = leftPos + 104 + 24;
+        int buttonX = leftPos + 104 + 32;
         int buttonY = topPos + 61;
 
         // Create the affinity book button
-        AffinityBookButton affinityButton = new AffinityBookButton(
+        return new AffinityBookButton(
                 buttonX,
                 buttonY,
                 (button) -> {
                     // Close recipe book if it's open
-                    if (finalRecipeBook.isVisible()) {
-                        finalRecipeBook.toggleVisibility();
+                    if (recipeBook.isVisible()) {
+                        recipeBook.toggleVisibility();
                     }
 
                     // Send packet to server to open affinity book
                     PacketDistributor.sendToServer(new AffinitySuccessPacket.OpenAffinityBookPacket());
                 }
         );
-
-        currentAffinityButton = affinityButton;
-
-        // Add button to screen
-        event.addListener(affinityButton);
     }
 
     /**
@@ -114,7 +118,7 @@ public class AffinityBookButtonHandler {
         int leftPos = currentScreen.getGuiLeft();
         int topPos = currentScreen.getGuiTop();
 
-        int newButtonX = leftPos + 104 + 24;  // 24 pixels right of recipe book button
+        int newButtonX = leftPos + 104 + 32;  // 24 pixels right of recipe book button
         int newButtonY = topPos + 61;
 
         // Update button position
