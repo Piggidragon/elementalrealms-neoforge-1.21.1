@@ -3,7 +3,7 @@ package de.piggidragon.elementalrealms.registries.items.magic.affinities.custom;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import de.piggidragon.elementalrealms.packets.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
 import de.piggidragon.elementalrealms.particles.AffinityParticles;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;

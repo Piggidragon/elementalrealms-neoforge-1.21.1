@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.guis.menus;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityMenu;
+import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.bus.api.IEventBus;
@@ -14,10 +14,10 @@ public class ModMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, ElementalRealms.MODID);
 
-    public static final Supplier<MenuType<AffinityMenu>> AFFINITY_MENU =
+    public static final Supplier<MenuType<AffinityBookMenu>> AFFINITY_MENU =
             MENUS.register("affinity_menu", () ->
                     // IMenuTypeExtension allows FriendlyByteBuf parameter
-                    IMenuTypeExtension.create(AffinityMenu::new)
+                    IMenuTypeExtension.create(AffinityBookMenu::new)
             );
 
     /**

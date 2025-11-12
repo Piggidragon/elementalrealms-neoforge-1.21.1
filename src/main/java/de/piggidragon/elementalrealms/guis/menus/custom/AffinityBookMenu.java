@@ -3,6 +3,7 @@ package de.piggidragon.elementalrealms.guis.menus.custom;
 import de.piggidragon.elementalrealms.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -15,7 +16,7 @@ import java.util.List;
  * Menu for displaying player affinities with completion percentages
  * Has two constructors: one for server (with data), one for client (with buffer)
  */
-public class AffinityMenu extends AbstractContainerMenu {
+public class AffinityBookMenu extends AbstractContainerMenu {
 
     // List to store all affinity data with completion percentages
     private final List<AffinityData> affinities;
@@ -28,7 +29,7 @@ public class AffinityMenu extends AbstractContainerMenu {
      * @param playerInv The player's inventory
      * @param extraData Additional data containing affinity list from server
      */
-    public AffinityMenu(int containerId, Inventory playerInv, FriendlyByteBuf extraData) {
+    public AffinityBookMenu(int containerId, FriendlyByteBuf extraData) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
 
         // Read all affinities with their completion percentages from buffer
@@ -50,11 +51,15 @@ public class AffinityMenu extends AbstractContainerMenu {
      * @param playerInv The player's inventory
      * @param affinities The list of affinity data to display
      */
-    public AffinityMenu(int containerId, Inventory playerInv, List<AffinityData> affinities) {
+    public AffinityBookMenu(int containerId, List<AffinityData> affinities) {
         super(ModMenus.AFFINITY_MENU.get(), containerId);
 
         // Store the affinity data directly (no need to read from buffer)
         this.affinities = new ArrayList<>(affinities);
+    }
+
+    public AffinityBookMenu(int i, Inventory inventory, RegistryFriendlyByteBuf registryFriendlyByteBuf) {
+        this(i, (FriendlyByteBuf) registryFriendlyByteBuf);
     }
 
     /**

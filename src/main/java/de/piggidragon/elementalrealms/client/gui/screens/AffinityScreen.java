@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.client.gui.screens;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityMenu;
+import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Inventory;
  * Screen for displaying player affinities
  * Shows all affinities with completion bars
  */
-public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
+public class AffinityScreen extends AbstractContainerScreen<AffinityBookMenu> {
 
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
             ElementalRealms.MODID,
@@ -26,7 +26,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
      * @param playerInventory Player's inventory (required by AbstractContainerScreen)
      * @param title The screen title
      */
-    public AffinityScreen(AffinityMenu menu, Inventory playerInventory, Component title) {
+    public AffinityScreen(AffinityBookMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
 
         // Set GUI dimensions (background texture size)
@@ -137,7 +137,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
             startY += 12;
 
             // Render each completed affinity
-            for (AffinityMenu.AffinityData data : completed) {
+            for (AffinityBookMenu.AffinityData data : completed) {
                 renderAffinityEntry(graphics, data, xOffset, startY);
                 startY += 18;  // Move down for next entry
             }
@@ -158,7 +158,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
             startY += 12;
 
             // Render each incomplete affinity
-            for (AffinityMenu.AffinityData data : incomplete) {
+            for (AffinityBookMenu.AffinityData data : incomplete) {
                 renderAffinityEntry(graphics, data, xOffset, startY);
                 startY += 18;
             }
@@ -175,7 +175,7 @@ public class AffinityScreen extends AbstractContainerScreen<AffinityMenu> {
      */
     private void renderAffinityEntry(
             GuiGraphics graphics,
-            AffinityMenu.AffinityData data,
+            AffinityBookMenu.AffinityData data,
             int x,
             int y
     ) {

@@ -18,13 +18,13 @@ import java.util.List;
  */
 public class AffinityMenuProvider implements MenuProvider {
 
-    private final List<AffinityMenu.AffinityData> affinities;
+    private final List<AffinityBookMenu.AffinityData> affinities;
 
     /**
      * Creates a new menu provider with affinity data
      * @param affinities List of all affinities with completion percentages
      */
-    public AffinityMenuProvider(List<AffinityMenu.AffinityData> affinities) {
+    public AffinityMenuProvider(List<AffinityBookMenu.AffinityData> affinities) {
         this.affinities = affinities;
     }
 
@@ -46,12 +46,12 @@ public class AffinityMenuProvider implements MenuProvider {
     public static void openForPlayer(ServerPlayer player) {
         // TODO: Get actual affinity data from player capability/attachment
         // Example data:
-        List<AffinityMenu.AffinityData> affinities = List.of(
-                new AffinityMenu.AffinityData(Affinity.FIRE, 100),
-                new AffinityMenu.AffinityData(Affinity.WATER, 75),
-                new AffinityMenu.AffinityData(Affinity.EARTH, 50),
-                new AffinityMenu.AffinityData(Affinity.WIND, 25),
-                new AffinityMenu.AffinityData(Affinity.LIGHTNING, 10)
+        List<AffinityBookMenu.AffinityData> affinities = List.of(
+                new AffinityBookMenu.AffinityData(Affinity.FIRE, 100),
+                new AffinityBookMenu.AffinityData(Affinity.WATER, 75),
+                new AffinityBookMenu.AffinityData(Affinity.EARTH, 50),
+                new AffinityBookMenu.AffinityData(Affinity.WIND, 25),
+                new AffinityBookMenu.AffinityData(Affinity.LIGHTNING, 10)
         );
 
         AffinityMenuProvider provider = new AffinityMenuProvider(affinities);
@@ -61,7 +61,7 @@ public class AffinityMenuProvider implements MenuProvider {
                         // This lambda creates the server-side menu
                         (containerId, playerInventory, p) -> {
                             // Create server menu with actual data
-                            return new AffinityMenu(containerId, playerInventory, affinities);
+                            return new AffinityBookMenu(containerId, playerInventory, affinities);
                         },
                         // Menu title
                         Component.translatable("gui.elementalrealms.affinity.title")
@@ -80,13 +80,13 @@ public class AffinityMenuProvider implements MenuProvider {
      */
     private static void writeAffinityData(
             FriendlyByteBuf buf,
-            List<AffinityMenu.AffinityData> affinities
+            List<AffinityBookMenu.AffinityData> affinities
     ) {
         // Write affinity count
         buf.writeInt(affinities.size());
 
         // Write each affinity
-        for (AffinityMenu.AffinityData affinity : affinities) {
+        for (AffinityBookMenu.AffinityData affinity : affinities) {
             buf.writeEnum(affinity.getAffinity());
             buf.writeInt(affinity.getCompletionPercent());
         }

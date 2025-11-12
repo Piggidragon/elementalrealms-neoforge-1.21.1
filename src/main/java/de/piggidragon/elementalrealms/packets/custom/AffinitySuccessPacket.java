@@ -1,7 +1,8 @@
-package de.piggidragon.elementalrealms.packets;
+package de.piggidragon.elementalrealms.packets.custom;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -51,5 +52,30 @@ public record AffinitySuccessPacket(
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
+    }
+
+    /**
+     * Packet sent from client to server to request opening the affinity book menu.
+     * This is a simple empty packet since no data needs to be sent.
+     */
+    public record OpenAffinityBookPacket() implements CustomPacketPayload {
+
+        /**
+         * Unique identifier for this packet type.
+         */
+        public static final Type<OpenAffinityBookPacket> TYPE =
+                new Type<>(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "open_affinity_book"));
+
+        /**
+         * Codec for serializing/deserializing this packet.
+         * Since the packet has no data, we use StreamCodec.unit().
+         */
+        public static final StreamCodec<ByteBuf, OpenAffinityBookPacket> STREAM_CODEC =
+                StreamCodec.unit(new OpenAffinityBookPacket());
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
     }
 }

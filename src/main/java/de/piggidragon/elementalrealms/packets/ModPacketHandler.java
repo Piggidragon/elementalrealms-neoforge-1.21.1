@@ -1,11 +1,14 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityMenuProvider;
+import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -14,6 +17,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Registers and handles custom network packets.
@@ -37,11 +43,11 @@ public class ModPacketHandler {
                 ModPacketHandler::handleAffinitySuccess
         );
 
-        // Register OpenAffinityGuiPacket (Client -> Server)
+        // Register OpenAffinityBookPacket (Client -> Server)
         registrar.playToServer(
-                OpenAffinityGuiPacket.TYPE,
-                OpenAffinityGuiPacket.CODEC,
-                ModPacketHandler::handleOpenAffinityGui
+                AffinitySuccessPacket.OpenAffinityBookPacket.TYPE,
+                AffinitySuccessPacket.OpenAffinityBookPacket.STREAM_CODEC,
+                ModPacketHandler::handleOpenAffinityBook
         );
     }
 
@@ -70,20 +76,44 @@ public class ModPacketHandler {
     }
 
     /**
-     * Handles open affinity GUI packet on server side.
-     * Opens the affinity menu for the player who sent the packet.
+     * Handles opening the affinity book on server side.
+     * Retrieves player affinity data and opens the menu.
      *
-     * @param packet  Received packet (empty, no data)
+     * @param packet  Empty packet (no data needed)
      * @param context Network context for thread-safe execution
      */
-    private static void handleOpenAffinityGui(OpenAffinityGuiPacket packet, IPayloadContext context) {
+    private static void handleOpenAffinityBook(AffinitySuccessPacket.OpenAffinityBookPacket packet, IPayloadContext context) {
         // Execute on main thread to prevent concurrent modification
         context.enqueueWork(() -> {
-            // Get the player who sent the packet
             if (context.player() instanceof ServerPlayer serverPlayer) {
-                // Open the affinity menu for this player
-                ElementalRealms.LOGGER.info("Opening Affinity GUI");
-                AffinityMenuProvider.openForPlayer(serverPlayer);
+                // TODO: Get actual affinity data from player capability
+                // For now, create dummy data for testing
+                List<AffinityBookMenu.AffinityData> affinities = new ArrayList<>();
+
+                // Example data - replace with actual player capability data
+                // Example: var capability = serverPlayer.getData(ModAttachments.AFFINITY_DATA);
+                // Then: affinities = capability.getAllAffinities();
+
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.FIRE, 75));
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.WATER, 50));
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.WIND, 100));
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.EARTH, 25));
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.LIGHTNING, 60));
+                affinities.add(new AffinityBookMenu.AffinityData(Affinity.ICE, 40));
+
+                // Open the menu
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, playerInventory, player) ->
+                                new AffinityBookMenu(containerId, affinities),
+                        Component.translatable("gui.elementalrealms.affinity_book.title")
+                ), buf -> {
+                    // Write affinity data to buffer for client
+                    buf.writeInt(affinities.size());
+                    for (AffinityBookMenu.AffinityData data : affinities) {
+                        buf.writeEnum(data.getAffinity());
+                        buf.writeInt(data.getCompletionPercent());
+                    }
+                });
             }
         });
     }
