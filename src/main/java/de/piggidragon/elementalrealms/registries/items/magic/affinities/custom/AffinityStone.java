@@ -1,6 +1,5 @@
 package de.piggidragon.elementalrealms.registries.items.magic.affinities.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
@@ -46,7 +45,6 @@ public class AffinityStone extends Item {
      */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ElementalRealms.LOGGER.debug("Using AffinityStone of type: " + this.affinity.name());
         ItemStack itemStack = player.getItemInHand(hand);
 
         // Only execute on server side
@@ -61,7 +59,6 @@ public class AffinityStone extends Item {
         ItemStack originalItemStack = itemStack.copy();
         boolean success;
 
-        ElementalRealms.LOGGER.debug("Processing AffinityStone for player: " + serverPlayer.getName().getString());
         // Void stone clears all affinities
         if (this.affinity == Affinity.VOID) {
             try {
@@ -91,21 +88,27 @@ public class AffinityStone extends Item {
         }
 
         if (success) {
-            ServerLevel serverLevel = (ServerLevel) level;
+            ServerLevel serverLevel = serverPlayer.serverLevel();
 
             // Spawn colored particles
             AffinityParticles.createCustomAffinityParticles(serverLevel, serverPlayer, this.affinity);
 
-            // Play sound with pitch varying by affinity
-            float pitch = 0.25F + (this.affinity.ordinal() * 0.1F);
-            serverLevel.playSound(
-                    null,
-                    serverPlayer.blockPosition(),
-                    SoundEvents.TOTEM_USE,
-                    SoundSource.PLAYERS,
-                    0.8F,
-                    pitch
-            );
+            if (affinity == Affinity.VOID) {
+                player.playNotifySound(
+                        SoundEvents.AMETHYST_CLUSTER_BREAK,
+                        SoundSource.PLAYERS,
+                        0.5F,
+                        0.8F
+                );
+            } else {
+                float pitch = 0.25F + (this.affinity.ordinal() * 0.1F);
+                player.playNotifySound(
+                        SoundEvents.TOTEM_USE,
+                        SoundSource.PLAYERS,
+                        0.25F,
+                        pitch
+                );
+            }
 
             // Send packet to client for additional effects
             PacketDistributor.sendToPlayer(
@@ -115,7 +118,6 @@ public class AffinityStone extends Item {
 
             return InteractionResultHolder.success(itemStack);
         }
-
         return InteractionResultHolder.fail(itemStack);
     }
 

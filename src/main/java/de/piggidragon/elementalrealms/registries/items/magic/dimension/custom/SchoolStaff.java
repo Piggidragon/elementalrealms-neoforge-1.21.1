@@ -125,9 +125,12 @@ public class SchoolStaff extends Item {
             // Remove existing portals before creating new one
             removeOldPortals(level, player);
 
-            serverLevel.playSound(null, player.blockPosition(),
-                    SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS,
-                    0.7F, 1.5F);
+            player.playNotifySound(
+                    SoundEvents.BEACON_ACTIVATE,
+                    SoundSource.PLAYERS,
+                    0.7F,
+                    1.5F
+            );
 
             DimensionStaffParticles.addDurabilityEffects(serverLevel, player, player.getMainHandItem());
 

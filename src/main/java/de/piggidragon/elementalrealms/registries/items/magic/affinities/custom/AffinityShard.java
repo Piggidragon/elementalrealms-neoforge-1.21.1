@@ -58,8 +58,8 @@ public class AffinityShard extends Item {
         // Regular stones add specific affinity
         try {
             ModAffinities.addIncrementAffinity(serverPlayer, this.affinity, 5);
-            success = true;
             itemStack.shrink(1);
+            return InteractionResultHolder.success(itemStack);
         } catch (IllegalStateException e) {
             serverPlayer.displayClientMessage(
                     Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
@@ -67,24 +67,6 @@ public class AffinityShard extends Item {
             );
             return InteractionResultHolder.fail(itemStack);
         }
-
-
-        if (success) {
-            ServerLevel serverLevel = (ServerLevel) level;
-
-            serverLevel.playSound(
-                    null,
-                    serverPlayer.blockPosition(),
-                    SoundEvents.BEACON_ACTIVATE,
-                    SoundSource.PLAYERS,
-                    0.8F,
-                    1.5F
-            );
-
-            return InteractionResultHolder.success(itemStack);
-        }
-
-        return InteractionResultHolder.fail(itemStack);
     }
 
     @Override
