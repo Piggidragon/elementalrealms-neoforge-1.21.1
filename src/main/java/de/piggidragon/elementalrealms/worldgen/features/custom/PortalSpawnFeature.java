@@ -20,6 +20,10 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
  */
 public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
+    // Portal placement constants
+    private static final double PORTAL_CENTER_OFFSET = 0.5; // Centers portal in block
+    private static final int UNDERGROUND_THRESHOLD = 41; // Y-level below which portals are primed for explosion
+
     /**
      * Creates portal spawn feature with configuration codec.
      *
@@ -58,11 +62,13 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
         portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal, ModLevel.getRandomLevel()));
 
-        portal.setPos(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        portal.setPos(pos.getX() + PORTAL_CENTER_OFFSET, pos.getY() + PORTAL_CENTER_OFFSET, pos.getZ() + PORTAL_CENTER_OFFSET);
         portal.setYRot(randomSource.nextFloat() * 360.0F);
 
         // Prime underground portals for explosion
-        if (pos.getY() < 41) portal.prime();
+        if (pos.getY() < UNDERGROUND_THRESHOLD) {
+            portal.prime();
+        }
 
         level.addFreshEntity(portal);
         return true;

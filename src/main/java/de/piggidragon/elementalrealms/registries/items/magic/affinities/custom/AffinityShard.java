@@ -18,10 +18,13 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Consumable item that grants or removes player affinities.
- * Regular stones add specific affinities, void stone clears all.
+ * Consumable item that incrementally increases player affinity progress.
+ * Each use adds 5% completion to the specified affinity.
  */
 public class AffinityShard extends Item {
+
+    private static final int AFFINITY_INCREMENT = 5; // Percentage added per use
+    private static final int ERROR_MESSAGE_COLOR = 0xFF0000; // Red color for error messages
 
     private final Affinity affinity;
 
@@ -53,22 +56,21 @@ public class AffinityShard extends Item {
             return InteractionResultHolder.fail(itemStack);
         }
 
-        boolean success;
-
-        // Regular stones add specific affinity
+        // Regular shards add incremental affinity progress
         try {
-            ModAffinities.addIncrementAffinity(serverPlayer, this.affinity, 5);
+            ModAffinities.addIncrementAffinity(serverPlayer, this.affinity, AFFINITY_INCREMENT);
             itemStack.shrink(1);
             return InteractionResultHolder.success(itemStack);
         } catch (IllegalStateException e) {
             serverPlayer.displayClientMessage(
-                    Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
+                    Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
                     true
             );
             return InteractionResultHolder.fail(itemStack);
         }
     }
 
+    // Adds tooltip showing affinity type and description
     @Override
     public void appendHoverText(
             ItemStack stack,

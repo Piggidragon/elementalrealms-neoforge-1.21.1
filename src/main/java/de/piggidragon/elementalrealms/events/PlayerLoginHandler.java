@@ -9,7 +9,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-
+/**
+ * Handles player login events to initialize magical affinities for new players.
+ */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
 public class PlayerLoginHandler {
     /**

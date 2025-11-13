@@ -17,10 +17,22 @@ import java.util.concurrent.CompletableFuture;
  */
 public class AffinityRecipeProvider extends RecipeProvider {
 
+    /**
+     * Creates the recipe provider.
+     *
+     * @param output     Pack output handler
+     * @param registries Registry lookup provider
+     */
     public AffinityRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         super(output, registries);
     }
 
+    /**
+     * Builds all crafting recipes for affinity items.
+     * Currently only defines void stone recipe (clears all affinities).
+     *
+     * @param recipeOutput Output handler for saving recipes
+     */
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
         // Void Stone

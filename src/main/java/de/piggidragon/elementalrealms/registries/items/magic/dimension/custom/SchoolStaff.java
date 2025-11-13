@@ -20,18 +20,25 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Staff that creates temporary portals to School dimension via beam animation.
  */
 public class SchoolStaff extends Item {
 
-    // Active animations tracked by player UUID
-    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new HashMap<>();
+    // Active animations tracked by player UUID - thread-safe for server tick access
+    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new ConcurrentHashMap<>();
+    
+    // Portal configuration constants
+    private static final int PORTAL_DESPAWN_TICKS = 200; // Ticks until portal auto-despawns (10 seconds)
+    private static final double PORTAL_SPAWN_DISTANCE = 2.0; // Blocks in front of player
+    private static final double PORTAL_HEIGHT = 0.5; // Height offset from player feet
+    private static final double STAFF_TIP_DISTANCE = 0.8; // Distance in front of player for beam start
+    private static final int PORTAL_SEARCH_RADIUS = 1000; // Max radius to search for old portals
 
     /**
      * Creates the school staff item.
@@ -61,7 +68,7 @@ public class SchoolStaff extends Item {
                 ModEntities.PORTAL_ENTITY.get(),
                 level,
                 true,
-                200,
+                PORTAL_DESPAWN_TICKS,
                 ModLevel.SCHOOL_DIMENSION,
                 player.getUUID()
         );
@@ -80,7 +87,7 @@ public class SchoolStaff extends Item {
     private static void removeOldPortals(Level level, Player player) {
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
-                player.getBoundingBox().inflate(1000),
+                player.getBoundingBox().inflate(PORTAL_SEARCH_RADIUS),
                 portal -> portal.getOwnerUUID() != null && portal.getOwnerUUID().equals(player.getUUID())
         );
 
@@ -110,16 +117,15 @@ public class SchoolStaff extends Item {
 
             // Calculate beam start at staff tip (in front of player eyes)
             Vec3 staffTip = player.getEyePosition().add(
-                    player.getLookAngle().scale(0.8)
+                    player.getLookAngle().scale(STAFF_TIP_DISTANCE)
             );
 
             // Calculate target position 2 blocks ahead at torso height
             Vec3 lookVec = player.getLookAngle();
-            double distance = 2.0;
             Vec3 targetPos = new Vec3(
-                    player.getX() + lookVec.x * distance,
-                    player.getY() + 0.5,
-                    player.getZ() + lookVec.z * distance
+                    player.getX() + lookVec.x * PORTAL_SPAWN_DISTANCE,
+                    player.getY() + PORTAL_HEIGHT,
+                    player.getZ() + lookVec.z * PORTAL_SPAWN_DISTANCE
             );
 
             // Remove existing portals before creating new one
@@ -147,6 +153,7 @@ public class SchoolStaff extends Item {
         return InteractionResultHolder.pass(itemStack);
     }
 
+    // Shows detailed tooltip on Shift press, otherwise shows Shift hint
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         // Show detailed tooltip when Shift is held, otherwise show hint

@@ -77,10 +77,20 @@ public enum Affinity {
                 .toList();
     }
 
+    /**
+     * Gets the type classification of this affinity.
+     *
+     * @return The affinity type (NONE, ELEMENTAL, DEVIANT, or ETERNAL)
+     */
     public AffinityType getType() {
         return type;
     }
 
+    /**
+     * Gets the lowercase name of this affinity for translation keys.
+     *
+     * @return Lowercase string representation of the affinity
+     */
     public String getName() {
         return this.toString().toLowerCase();
     }
@@ -96,6 +106,8 @@ public enum Affinity {
      *   <li>WIND → SOUND</li>
      *   <li>EARTH → GRAVITY</li>
      * </ul>
+     *
+     * @return The deviant affinity, or VOID if not applicable
      */
     public Affinity getDeviant() {
         if (getType() == AffinityType.ELEMENTAL) {
@@ -122,6 +134,8 @@ public enum Affinity {
      *   <li>SOUND → WIND</li>
      *   <li>GRAVITY → EARTH</li>
      * </ul>
+     *
+     * @return The required elemental affinity, or VOID if not applicable
      */
     public Affinity getElemental() {
         if (getType() == AffinityType.DEVIANT) {

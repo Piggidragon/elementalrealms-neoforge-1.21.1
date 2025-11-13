@@ -25,6 +25,7 @@ public record OpenAffinityBookPacket() implements CustomPacketPayload {
     public static final StreamCodec<ByteBuf, OpenAffinityBookPacket> STREAM_CODEC =
             StreamCodec.unit(new OpenAffinityBookPacket());
 
+    // Returns packet type for network routing
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
