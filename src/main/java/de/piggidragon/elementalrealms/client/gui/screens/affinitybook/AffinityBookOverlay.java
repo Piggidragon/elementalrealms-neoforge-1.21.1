@@ -105,16 +105,16 @@ public class AffinityBookOverlay {
             return;
         }
 
-        // Render background texture with correct size parameters
+        // Render background texture
         graphics.blit(
                 BACKGROUND,
-                x - 2, y,                         // Screen position
-                1, 1,                         // Texture UV offset
-                WIDTH, HEIGHT,                // Size to render on screen
-                256, 256                      // Full texture size (standard PNG size)
+                x - 2, y,           // Screen position
+                1, 1,               // Texture UV offset
+                WIDTH, HEIGHT,      // Size to render on screen
+                256, 256            // Full texture size
         );
 
-        // Render affinities
+        // Render player affinities
         this.renderAffinities(graphics, x, y, this.player);
     }
 
@@ -124,14 +124,17 @@ public class AffinityBookOverlay {
      * @param graphics Graphics context
      * @param baseX    Base X position of the overlay
      * @param baseY    Base Y position of the overlay
+     * @param player   The player whose affinities to render
      */
     private void renderAffinities(GuiGraphics graphics, int baseX, int baseY, Player player) {
-        int startY = baseY + 12;  // Start 18px von oben
-        int xOffset = baseX + 10; // 10px von Links
+        // Start position for first entry
+        int startY = baseY + 12;
+        int xOffset = baseX + 10;
 
         Map<Affinity, Integer> affinityCompletionMap = player.getData(ModAttachments.AFFINITIES.get());
 
-        int rowHeight = 12; // Vanilla: Viel Abstand braucht es nicht
+        // Vertical spacing between entries
+        int rowHeight = 12;
 
         // Render each affinity with its completion percentage
         for (Affinity affinity : affinityCompletionMap.keySet()) {
@@ -161,34 +164,34 @@ public class AffinityBookOverlay {
             int x,
             int y
     ) {
-        // Vanilla-like spacing and colors
+        // Get display colors
         int affinityColor = getAffinityColor(affinity);
         int progressColor = getProgressColor(completion);
 
-        // Name
+        // Render affinity name
         Component name = Component.translatable("affinity.elementalrealms." + affinity.getName());
         graphics.drawString(this.font, name, x, y, affinityColor, false);
 
-        // Percentage - rechtsbündig
-        String percentText = completion + "%";
-        int percentX = x + 87; // Passt für Einträge bis 100%
-
-        graphics.drawString(this.font, percentText, percentX, y, progressColor, false);
-
-        // Progressbar nur, wenn nicht completed
+        // Only render progress bar for incomplete affinities
         if (!isCompleted) {
+            // Progress bar dimensions
             int barY = y + 9;
             int barWidth = 70;
             int barHeight = 2;
 
-            // Background (dunkelgrau)
+            // Render completion percentage (right-aligned)
+            String percentText = completion + "%";
+            int percentX = x + 87;
+            graphics.drawString(this.font, percentText, percentX, y, progressColor, false);
+
+            // Render progress bar background
             graphics.fill(x, barY, x + barWidth, barY + barHeight, 0xFF3C3C3C);
 
-            // Progress fill
+            // Render progress fill
             int progressWidth = (int) (barWidth * (completion / 100.0f));
             graphics.fill(x, barY, x + progressWidth, barY + barHeight, progressColor);
 
-            // Border
+            // Render progress bar border
             graphics.renderOutline(x, barY, barWidth, barHeight, 0xFF8B8B8B);
         }
     }
