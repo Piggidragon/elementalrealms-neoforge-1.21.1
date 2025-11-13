@@ -2,8 +2,11 @@ package de.piggidragon.elementalrealms.magic.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -14,7 +17,6 @@ import java.util.Map;
 /**
  * Manages player affinity data with validation rules.
  */
-@EventBusSubscriber(modid = ElementalRealms.MODID)
 public class ModAffinities {
 
     /**
@@ -37,6 +39,13 @@ public class ModAffinities {
         validateAffinityCanBeAdded(affinity, affinitiesImmutable);
 
         Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
+
+        player.playNotifySound(
+                playAffinitySound(player, affinity),
+                SoundSource.PLAYERS,
+                0.5f,
+                0.5f
+        );
 
         affinitiesMutable.remove(Affinity.VOID);
         // Add affinity with 100% completion
@@ -62,8 +71,17 @@ public class ModAffinities {
         int newCompletion = currentCompletion + increment;
 
         if (newCompletion <= 100) {
-            player.playSound(
-                    SoundEvents.END_PORTAL_SPAWN,
+            player.playNotifySound(
+                    SoundEvents.PLAYER_LEVELUP,
+                    SoundSource.PLAYERS,
+                    0.5f,
+                    0.5f
+            );
+        }
+        else {
+            player.playNotifySound(
+                    playAffinitySound(player, affinity),
+                    SoundSource.PLAYERS,
                     0.5f,
                     0.5f
             );
@@ -173,25 +191,22 @@ public class ModAffinities {
     }
 
     /**
-     * Assigns random affinities to new players on first login.
+     * Play appropriate sound based on affinity type
      */
-    @SubscribeEvent
-    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            // Skip if player already has affinities
-            if (!ModAffinities.getAffinities(player).isEmpty()) {
-                return;
-            }
-
-            // Roll and assign random affinities
-            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
-                if (affinity != Affinity.VOID) {
-                    try {
-                        addAffinity(player, affinity);
-                    } catch (IllegalStateException ignored) {
-                    }
-                }
-            }
-        }
+    public static SoundEvent playAffinitySound(ServerPlayer player, Affinity affinity) {
+        return switch (affinity) {
+            case FIRE -> SoundEvents.FIRE_AMBIENT;
+            case WATER -> SoundEvents.BUCKET_FILL;
+            case ICE -> SoundEvents.GLASS_BREAK;
+            case LIGHTNING -> SoundEvents.LIGHTNING_BOLT_THUNDER;
+            case WIND -> SoundEvents.ELYTRA_FLYING;
+            case EARTH -> SoundEvents.GRAVEL_STEP;
+            case SOUND -> SoundEvents.ENCHANTMENT_TABLE_USE;
+            case GRAVITY -> SoundEvents.ANVIL_LAND;
+            case TIME -> SoundEvents.ITEM_PICKUP;
+            case SPACE -> SoundEvents.ENDERMAN_TELEPORT;
+            case LIFE -> SoundEvents.PLAYER_BREATH;
+            default -> SoundEvents.EXPERIENCE_ORB_PICKUP;
+        };
     }
 }
