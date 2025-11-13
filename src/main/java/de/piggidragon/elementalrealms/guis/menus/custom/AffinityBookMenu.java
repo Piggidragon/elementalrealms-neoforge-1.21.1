@@ -91,12 +91,14 @@ public class AffinityBookMenu extends AbstractContainerMenu {
                 .toList();
     }
 
+    // No slot transfers needed for this display-only GUI
     @Override
     public ItemStack quickMoveStack(Player player, int slotIndex) {
         // No slots in this menu, so shift-clicking does nothing
         return ItemStack.EMPTY;
     }
 
+    // Always valid as this is a display-only GUI
     @Override
     public boolean stillValid(Player player) {
         // Always valid since this is a player-specific display GUI

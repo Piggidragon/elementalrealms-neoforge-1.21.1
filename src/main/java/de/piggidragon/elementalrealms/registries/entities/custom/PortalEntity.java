@@ -39,6 +39,23 @@ import java.util.*;
  */
 public class PortalEntity extends Entity {
 
+    // Particle effect constants
+    private static final int PARTICLE_SPAWN_INTERVAL = 5; // Ticks between particle spawns
+    private static final int PARTICLE_COUNT = 3; // Number of particles per spawn
+    private static final double PARTICLE_RADIUS = 0.8; // Spiral radius for particles
+    private static final double PARTICLE_Y_OFFSET = 0.5; // Vertical offset for particles
+    
+    // Portal positioning constants
+    public static final double PORTAL_HEIGHT_OFFSET = 5.0; // Blocks above spawn position
+    public static final double PORTAL_Z_OFFSET = 2.0; // Blocks offset from spawn
+    
+    // Explosion constants
+    private static final float PORTAL_EXPLOSION_POWER = 25.0f; // Explosion radius when spawning
+    private static final double PORTAL_EXPLOSION_Y_OFFSET = 1.0; // Vertical offset for explosion
+    
+    // Search radius for existing portals
+    public static final double PORTAL_SEARCH_RADIUS = 128.0; // Blocks to search for existing portals
+
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
@@ -260,16 +277,16 @@ public class PortalEntity extends Entity {
                 }
             }
 
-            // Spawn swirling portal particles every 5 ticks
-            if (tickCount % 5 == 0) {
+            // Spawn swirling portal particles every N ticks
+            if (tickCount % PARTICLE_SPAWN_INTERVAL == 0) {
                 ServerLevel serverLevel = (ServerLevel) level();
 
-                for (int i = 0; i < 3; i++) {
-                    double angle = (tickCount * 0.1 + i * Math.PI * 2 / 3);
-                    double radius = 0.8;
+                for (int i = 0; i < PARTICLE_COUNT; i++) {
+                    double angle = (tickCount * 0.1 + i * Math.PI * 2 / PARTICLE_COUNT);
+                    double radius = PARTICLE_RADIUS;
 
                     double x = getX() + Math.cos(angle) * radius;
-                    double y = getY() + 0.5;
+                    double y = getY() + PARTICLE_Y_OFFSET;
                     double z = getZ() + Math.sin(angle) * radius;
 
                     serverLevel.sendParticles(ParticleTypes.PORTAL,
@@ -281,7 +298,7 @@ public class PortalEntity extends Entity {
             List<ServerPlayer> players = this.level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox());
 
             for (ServerPlayer player : players) {
-                if (player != null && !player.isSpectator()) {
+                if (!player.isSpectator()) {
                     teleportPlayer(player.level(), player);
                 }
             }
@@ -371,7 +388,7 @@ public class PortalEntity extends Entity {
                 }
 
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
-                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), 128);
+                PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), PORTAL_SEARCH_RADIUS);
 
                 // Create return portal if none exists nearby
                 if (existingPortal == null) {
@@ -380,7 +397,7 @@ public class PortalEntity extends Entity {
                             destinationLevel,
                             returnLevel
                     );
-                    portal.setPos(player.position().x, player.position().y + 5, player.position().z);
+                    portal.setPos(player.position().x, player.position().y + PORTAL_HEIGHT_OFFSET, player.position().z);
                     destinationLevel.addFreshEntity(portal);
                 }
 
@@ -415,9 +432,9 @@ public class PortalEntity extends Entity {
         serverLevel.explode(
                 this,
                 centerPos.x,
-                centerPos.y + 1,
+                centerPos.y + PORTAL_EXPLOSION_Y_OFFSET,
                 centerPos.z,
-                25.0f,
+                PORTAL_EXPLOSION_POWER,
                 Level.ExplosionInteraction.BLOCK
         );
     }

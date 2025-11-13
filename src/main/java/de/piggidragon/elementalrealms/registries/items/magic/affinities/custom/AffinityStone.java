@@ -121,6 +121,7 @@ public class AffinityStone extends Item {
         return InteractionResultHolder.fail(itemStack);
     }
 
+    // Adds tooltip showing affinity type and description
     @Override
     public void appendHoverText(
             ItemStack stack,

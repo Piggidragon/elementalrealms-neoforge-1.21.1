@@ -53,9 +53,7 @@ public class AffinityShard extends Item {
             return InteractionResultHolder.fail(itemStack);
         }
 
-        boolean success;
-
-        // Regular stones add specific affinity
+        // Regular shards add incremental affinity progress
         try {
             ModAffinities.addIncrementAffinity(serverPlayer, this.affinity, 5);
             itemStack.shrink(1);
@@ -69,6 +67,7 @@ public class AffinityShard extends Item {
         }
     }
 
+    // Adds tooltip showing affinity type and description
     @Override
     public void appendHoverText(
             ItemStack stack,

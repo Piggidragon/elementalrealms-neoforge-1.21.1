@@ -20,18 +20,18 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Staff that creates temporary portals to School dimension via beam animation.
  */
 public class SchoolStaff extends Item {
 
-    // Active animations tracked by player UUID
-    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new HashMap<>();
+    // Active animations tracked by player UUID - thread-safe for server tick access
+    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new ConcurrentHashMap<>();
 
     /**
      * Creates the school staff item.
@@ -147,6 +147,7 @@ public class SchoolStaff extends Item {
         return InteractionResultHolder.pass(itemStack);
     }
 
+    // Shows detailed tooltip on Shift press, otherwise shows Shift hint
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         // Show detailed tooltip when Shift is held, otherwise show hint

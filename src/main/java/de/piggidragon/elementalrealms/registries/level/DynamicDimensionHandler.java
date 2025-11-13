@@ -167,7 +167,7 @@ public class DynamicDimensionHandler {
      *
      * @param server The server instance
      * @return The newly created generation center position
-     * @throws IllegalStateException if unable to create a new center
+     * @throws IllegalStateException if unable to create a new center after maximum attempts
      */
     public static ChunkPos getOrCreateGenerationCenter(MinecraftServer server) throws IllegalStateException {
 
@@ -188,8 +188,9 @@ public class DynamicDimensionHandler {
         int maxAttempts = 10000;
         int attempts = 0;
         int currentLayer = generationCenters.getCurrentLayer();
+        int maxLayers = 100; // Prevent infinite layer growth
 
-        while (attempts < maxAttempts) {
+        while (attempts < maxAttempts && currentLayer < maxLayers) {
             // Top and bottom sides (x varies, z fixed)
             for (int x = -currentLayer; x <= currentLayer; x++) {
                 for (int z : new int[]{-currentLayer, currentLayer}) {
@@ -202,6 +203,12 @@ public class DynamicDimensionHandler {
                     if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
                         return generationCenter;
                     }
+                    if (attempts >= maxAttempts) {
+                        break;
+                    }
+                }
+                if (attempts >= maxAttempts) {
+                    break;
                 }
             }
             // Left and right sides (z varies, x fixed), skip corners to avoid duplicates
@@ -215,11 +222,18 @@ public class DynamicDimensionHandler {
                     if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
                         return generationCenter;
                     }
+                    if (attempts >= maxAttempts) {
+                        break;
+                    }
+                }
+                if (attempts >= maxAttempts) {
+                    break;
                 }
             }
             generationCenters.incrementLayer();
+            currentLayer = generationCenters.getCurrentLayer();
         }
 
-        throw new IllegalStateException("Failed to create new generation center");
+        throw new IllegalStateException("Failed to create new generation center after " + attempts + " attempts");
     }
 }

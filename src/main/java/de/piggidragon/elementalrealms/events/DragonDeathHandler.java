@@ -29,7 +29,7 @@ public class DragonDeathHandler {
     private static final ResourceLocation DRAGON_ADVANCEMENT_ID =
             ResourceLocation.fromNamespaceAndPath("elementalrealms", "root");
 
-    private static boolean advancementCompleted = false;
+    private static volatile boolean advancementCompleted = false;
 
     /**
      * Event handler triggered when any player earns an advancement.
@@ -60,12 +60,19 @@ public class DragonDeathHandler {
         DragonDeathHandler.spawnPortalOrigin(server);
     }
 
+    /**
+     * Checks if the dragon defeat advancement has been completed.
+     *
+     * @return true if advancement is completed
+     */
     public static boolean isAdvancementCompleted() {
         return advancementCompleted;
     }
 
     /**
      * Spawns permanent portal at world spawn leading to School dimension.
+     *
+     * @param server The Minecraft server instance
      */
     public static void spawnPortalOrigin(MinecraftServer server) {
 
@@ -82,17 +89,15 @@ public class DragonDeathHandler {
         BlockPos worldSpawn = overworld.getSharedSpawnPos();
         BlockPos safePos = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, worldSpawn);
 
-        portal.setPos(safePos.getX(), safePos.getY() + 5, safePos.getZ() + 2);
+        portal.setPos(safePos.getX(), safePos.getY() + PortalEntity.PORTAL_HEIGHT_OFFSET, safePos.getZ() + PortalEntity.PORTAL_Z_OFFSET);
 
         // Notify all online players about the portal's appearance
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         for (ServerPlayer player : players) {
-            if (player != null) {
-                player.displayClientMessage(
-                        Component.literal("You can feel the dimension barrier cracking..."),
-                        true // Display as action bar message
-                );
-            }
+            player.displayClientMessage(
+                    Component.literal("You can feel the dimension barrier cracking..."),
+                    true // Display as action bar message
+            );
         }
 
         overworld.addFreshEntity(portal);

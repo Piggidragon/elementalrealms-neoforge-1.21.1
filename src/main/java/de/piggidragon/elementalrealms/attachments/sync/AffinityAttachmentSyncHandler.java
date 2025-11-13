@@ -10,13 +10,25 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Handles synchronization of player affinity data between server and client.
+ * Serializes the affinity map to network packets for client-side display.
+ */
 public class AffinityAttachmentSyncHandler implements AttachmentSyncHandler<Map<Affinity, Integer>> {
 
+    // Always sync affinity data to the target player
     @Override
     public boolean sendToPlayer(IAttachmentHolder holder, ServerPlayer to) {
         return true;
     }
 
+    /**
+     * Serializes affinity data to the network buffer.
+     *
+     * @param registryFriendlyByteBuf Network buffer for writing data
+     * @param affinityIntegerMap      Player's affinity completion map
+     * @param b                       Sync flag (unused)
+     */
     @Override
     public void write(RegistryFriendlyByteBuf registryFriendlyByteBuf, Map<Affinity, Integer> affinityIntegerMap, boolean b) {
         // Write map size
@@ -29,6 +41,14 @@ public class AffinityAttachmentSyncHandler implements AttachmentSyncHandler<Map<
         }
     }
 
+    /**
+     * Deserializes affinity data from the network buffer.
+     *
+     * @param iAttachmentHolder       Entity or object holding the attachment
+     * @param registryFriendlyByteBuf Network buffer for reading data
+     * @param affinityIntegerMap      Existing affinity map (unused)
+     * @return Reconstructed affinity map from network data
+     */
     @Override
     public @Nullable Map<Affinity, Integer> read(IAttachmentHolder iAttachmentHolder, RegistryFriendlyByteBuf registryFriendlyByteBuf, @Nullable Map<Affinity, Integer> affinityIntegerMap) {
         // Read map size

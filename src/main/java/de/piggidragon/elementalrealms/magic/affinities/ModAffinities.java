@@ -55,6 +55,15 @@ public class ModAffinities {
         player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
     }
 
+    /**
+     * Incrementally increases affinity completion percentage and plays appropriate sound effects.
+     * Validation is performed to ensure affinity rules are followed (ETERNAL/DEVIANT constraints).
+     *
+     * @param player    Target player
+     * @param affinity  Affinity to increment
+     * @param increment Amount to add to completion percentage
+     * @throws IllegalStateException If affinity would exceed 100% or validation fails
+     */
     public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) throws IllegalStateException {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
@@ -70,28 +79,14 @@ public class ModAffinities {
         // Calculate new completion
         int newCompletion = currentCompletion + increment;
 
-        if (newCompletion <= 100) {
-            player.playNotifySound(
-                    SoundEvents.PLAYER_LEVELUP,
-                    SoundSource.PLAYERS,
-                    0.5f,
-                    0.5f
-            );
-        }
-        else {
-            player.playNotifySound(
-                    playAffinitySound(player, affinity),
-                    SoundSource.PLAYERS,
-                    0.5f,
-                    0.5f
-            );
-        }
         // Check if would exceed 100%
         if (newCompletion > 100) {
-            throw new IllegalStateException(
-                    "Already completed: " + affinity
-            );
+            throw new IllegalStateException("Already completed: " + affinity);
         }
+
+        // Play appropriate sound based on completion status
+        SoundEvent sound = (newCompletion < 100) ? SoundEvents.PLAYER_LEVELUP : playAffinitySound(player, affinity);
+        player.playNotifySound(sound, SoundSource.PLAYERS, 0.5f, 0.5f);
 
         // Remove VOID affinity if present (any elemental affinity removes void)
         affinitiesMutable.remove(Affinity.VOID);
@@ -104,8 +99,12 @@ public class ModAffinities {
     }
 
     /**
-     * Validates if an affinity can be added to the player
-     * Throws exception if validation fails
+     * Validates if an affinity can be added to the player.
+     * Enforces ETERNAL limit (only one allowed) and DEVIANT prerequisites (requires base elemental at 100%).
+     *
+     * @param affinity          The affinity to validate
+     * @param currentAffinities Player's current affinities
+     * @throws IllegalStateException If validation fails
      */
     private static void validateAffinityCanBeAdded(
             Affinity affinity,
@@ -125,7 +124,10 @@ public class ModAffinities {
     }
 
     /**
-     * Checks if player has an eternal affinity
+     * Checks if player has an eternal affinity.
+     *
+     * @param affinities Player's affinity map
+     * @return true if player has any ETERNAL type affinity
      */
     private static boolean hasEternalAffinity(Map<Affinity, Integer> affinities) {
         return affinities.keySet().stream()
@@ -191,7 +193,11 @@ public class ModAffinities {
     }
 
     /**
-     * Play appropriate sound based on affinity type
+     * Play appropriate sound based on affinity type.
+     *
+     * @param player   The player to receive the sound
+     * @param affinity The affinity that determines which sound to play
+     * @return The sound event corresponding to the affinity
      */
     public static SoundEvent playAffinitySound(ServerPlayer player, Affinity affinity) {
         return switch (affinity) {
