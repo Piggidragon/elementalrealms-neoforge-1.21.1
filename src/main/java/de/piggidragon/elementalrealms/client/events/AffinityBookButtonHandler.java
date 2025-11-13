@@ -3,11 +3,12 @@ package de.piggidragon.elementalrealms.client.events;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.gui.screens.affinitybook.AffinityBookButton;
 import de.piggidragon.elementalrealms.client.gui.screens.affinitybook.AffinityBookOverlay;
+import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -37,6 +38,11 @@ public class AffinityBookButtonHandler {
     private static final Map<AbstractContainerScreen<?>, AffinityBookOverlay> affinityOverlays = new HashMap<>();
 
     /**
+     * Recipe book button references per screen.
+     */
+    private static final Map<AbstractContainerScreen<?>, ImageButton> recipeBookButtons = new HashMap<>();
+
+    /**
      * Tracks whether the affinity book should be open.
      * This persists across inventory screen opens/closes.
      */
@@ -54,11 +60,6 @@ public class AffinityBookButtonHandler {
      */
     @SubscribeEvent
     public static void onScreenInit(ScreenEvent.Init.Post event) {
-        // Only add button to screens with recipe books
-        if (!(event.getScreen() instanceof RecipeUpdateListener)) {
-            return;
-        }
-
         // Only handle container screens
         if (!(event.getScreen() instanceof AbstractContainerScreen<?> containerScreen)) {
             return;
@@ -71,12 +72,13 @@ public class AffinityBookButtonHandler {
         if (event.getScreen() instanceof InventoryScreen inventoryScreen) {
             recipeBook = inventoryScreen.getRecipeBookComponent();
         }
-        // For other screens with recipe books (crafting table, furnace, etc.)
-        // Add more checks here if needed
 
         if (recipeBook == null) {
             return;
         }
+
+        // Find and store the recipe book button
+        findAndStoreRecipeBookButton(containerScreen);
 
         // Create affinity book overlay
         AffinityBookOverlay overlay = new AffinityBookOverlay(
@@ -101,6 +103,28 @@ public class AffinityBookButtonHandler {
         AffinityBookButton affinityButton = getAffinityBookButton(containerScreen, recipeBook, overlay);
         affinityButtons.put(containerScreen, affinityButton);
         event.addListener(affinityButton);
+    }
+
+    /**
+     * Find and store the recipe book button for later position updates.
+     *
+     * @param containerScreen The container screen
+     */
+    private static void findAndStoreRecipeBookButton(AbstractContainerScreen<?> containerScreen) {
+        // Search through all renderables to find the recipe book button
+        for (Renderable renderable : containerScreen.renderables) {
+            if (renderable instanceof ImageButton imgButton) {
+                // The recipe book button uses specific sprites
+                // We identify it by checking if it's an ImageButton (simple heuristic)
+                // Store the first ImageButton we find (usually the recipe book button)
+                if (!recipeBookButtons.containsValue(imgButton)) {
+                    recipeBookButtons.put(containerScreen, imgButton);
+                    ElementalRealms.LOGGER.debug("Found recipe book button at ({}, {})",
+                            imgButton.getX(), imgButton.getY());
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -179,7 +203,7 @@ public class AffinityBookButtonHandler {
     }
 
     /**
-     * Update button position every frame to follow the container.
+     * Update button positions every frame to follow the container.
      *
      * @param event The render event
      */
@@ -189,14 +213,23 @@ public class AffinityBookButtonHandler {
             return;
         }
 
-        // Update button position
-        AffinityBookButton button = affinityButtons.get(containerScreen);
-        if (button != null) {
-            int leftPos = containerScreen.getGuiLeft();
-            int topPos = containerScreen.getGuiTop();
+        int leftPos = containerScreen.getGuiLeft();
+        int topPos = containerScreen.getGuiTop();
+
+        // Update affinity book button position
+        AffinityBookButton affinityButton = affinityButtons.get(containerScreen);
+        if (affinityButton != null) {
             int newButtonX = leftPos + 104 + 24;
             int newButtonY = topPos + 61;
-            button.setPosition(newButtonX, newButtonY);
+            affinityButton.setPosition(newButtonX, newButtonY);
+        }
+
+        // Update recipe book button position
+        ImageButton recipeButton = recipeBookButtons.get(containerScreen);
+        if (recipeButton != null) {
+            int newRecipeButtonX = leftPos + 104;
+            int newRecipeButtonY = topPos + 61;
+            recipeButton.setPosition(newRecipeButtonX, newRecipeButtonY);
         }
 
         // Check if recipe book opened while affinity book is open
@@ -205,10 +238,9 @@ public class AffinityBookButtonHandler {
             RecipeBookComponent recipeBook = inventoryScreen.getRecipeBookComponent();
 
             // If both are visible, close affinity book
-            if (overlay != null && overlay.isVisible() && recipeBook.isVisible()) {
+            if (overlay != null && recipeBook != null && overlay.isVisible() && recipeBook.isVisible()) {
                 overlay.setVisible(false);
                 shouldAffinityBookBeOpen = false;
-                shiftInventoryForAffinityBook(containerScreen, false);
             }
         }
     }
@@ -236,13 +268,12 @@ public class AffinityBookButtonHandler {
 
         // Position affinity book to the left of the inventory
         int overlayX = leftPos - overlay.getWidth();
-        int overlayY = topPos;
 
         // Render overlay
         overlay.render(
                 event.getGuiGraphics(),
                 overlayX,
-                overlayY,
+                topPos,
                 event.getMouseX(),
                 event.getMouseY(),
                 event.getPartialTick()
@@ -263,6 +294,7 @@ public class AffinityBookButtonHandler {
         // Clean up references
         affinityButtons.remove(containerScreen);
         affinityOverlays.remove(containerScreen);
+        recipeBookButtons.remove(containerScreen);
     }
 
     /**

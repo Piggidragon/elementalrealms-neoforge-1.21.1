@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.resources.ResourceLocation;
@@ -15,8 +16,8 @@ public class AffinityBookButton extends ImageButton {
      * Using recipe book button sprites as base.
      */
     private static final WidgetSprites SPRITES = new WidgetSprites(
-            ResourceLocation.withDefaultNamespace("recipe_book/button"),
-            ResourceLocation.withDefaultNamespace("recipe_book/button_highlighted")
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "affinity_book/blank_button"),
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "affinity_book/blank_button_highlighted")
     );
 
     /**

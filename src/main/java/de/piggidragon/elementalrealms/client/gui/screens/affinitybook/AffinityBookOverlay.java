@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -8,6 +9,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+
+import java.util.Map;
 
 /**
  * Overlay component that renders the affinity book inside the inventory screen.
@@ -105,27 +108,14 @@ public class AffinityBookOverlay {
         // Render background texture with correct size parameters
         graphics.blit(
                 BACKGROUND,
-                x, y,                         // Screen position
-                0, 0,                         // Texture UV offset
+                x - 2, y,                         // Screen position
+                1, 1,                         // Texture UV offset
                 WIDTH, HEIGHT,                // Size to render on screen
                 256, 256                      // Full texture size (standard PNG size)
         );
 
-        // Render title
-        Component title = Component.translatable("gui.elementalrealms.affinity_book");
-        int titleX = x + (WIDTH - this.font.width(title)) / 2;
-        int titleY = y + 6;
-        graphics.drawString(
-                this.font,
-                title,
-                titleX,
-                titleY,
-                0x404040,  // Dark gray (same as vanilla labels)
-                false
-        );
-
         // Render affinities
-        this.renderAffinities(graphics, x, y);
+        this.renderAffinities(graphics, x, y, this.player);
     }
 
     /**
@@ -135,41 +125,22 @@ public class AffinityBookOverlay {
      * @param baseX    Base X position of the overlay
      * @param baseY    Base Y position of the overlay
      */
-    private void renderAffinities(GuiGraphics graphics, int baseX, int baseY) {
-        int startY = baseY + 20;  // Start 20 pixels from top (adjusted for better spacing)
-        int xOffset = baseX + 8;  // 8 pixels from left edge (adjusted)
+    private void renderAffinities(GuiGraphics graphics, int baseX, int baseY, Player player) {
+        int startY = baseY + 12;  // Start 18px von oben
+        int xOffset = baseX + 10; // 10px von Links
 
-        // Get all affinities
-        Affinity[] affinities = Affinity.values();
+        Map<Affinity, Integer> affinityCompletionMap = player.getData(ModAttachments.AFFINITIES.get());
+
+        int rowHeight = 12; // Vanilla: Viel Abstand braucht es nicht
 
         // Render each affinity with its completion percentage
-        for (Affinity affinity : affinities) {
-            // TODO: Get actual completion percentage from player capability/data
-            int completion = getAffinityCompletion(affinity);
+        for (Affinity affinity : affinityCompletionMap.keySet()) {
+            int completion = affinityCompletionMap.get(affinity);
             boolean isCompleted = completion >= 100;
 
             renderAffinityEntry(graphics, affinity, completion, isCompleted, xOffset, startY);
-            startY += (isCompleted ? 11 : 20);  // Adjusted spacing
+            startY += rowHeight;
         }
-    }
-
-    /**
-     * Get affinity completion percentage for the player.
-     * TODO: Replace with actual capability/data lookup
-     *
-     * @param affinity The affinity to check
-     * @return Completion percentage (0-100)
-     */
-    private int getAffinityCompletion(Affinity affinity) {
-        // TODO: Get from player capability
-        // For now, return placeholder data
-        return switch (affinity) {
-            case FIRE -> 75;
-            case WATER -> 50;
-            case EARTH -> 100;
-            case WIND -> 25;
-            default -> 0;
-        };
     }
 
     /**
@@ -190,51 +161,27 @@ public class AffinityBookOverlay {
             int x,
             int y
     ) {
-        // Get affinity color
+        // Vanilla-like spacing and colors
         int affinityColor = getAffinityColor(affinity);
-
-        // Get progress color (red → orange → green)
         int progressColor = getProgressColor(completion);
 
-        // Render affinity name (smaller font by using scale)
-        Component name = Component.translatable(
-                "affinity.elementalrealms." + affinity.getName()
-        );
+        // Name
+        Component name = Component.translatable("affinity.elementalrealms." + affinity.getName());
+        graphics.drawString(this.font, name, x, y, affinityColor, false);
 
-        // Scale down text to fit better (0.8 = 80% size)
-        graphics.pose().pushPose();
-        graphics.pose().scale(0.8f, 0.8f, 1.0f);
-        graphics.drawString(
-                this.font,
-                name,
-                (int)(x / 0.8f),
-                (int)(y / 0.8f),
-                affinityColor,
-                false
-        );
-        graphics.pose().popPose();
-
-        // Render completion percentage
+        // Percentage - rechtsbündig
         String percentText = completion + "%";
-        graphics.pose().pushPose();
-        graphics.pose().scale(0.8f, 0.8f, 1.0f);
-        graphics.drawString(
-                this.font,
-                percentText,
-                (int)((x + 90) / 0.8f),  // Adjusted position
-                (int)(y / 0.8f),
-                progressColor,
-                false
-        );
-        graphics.pose().popPose();
+        int percentX = x + 87; // Passt für Einträge bis 100%
 
-        // Render progress bar ONLY if not completed
+        graphics.drawString(this.font, percentText, percentX, y, progressColor, false);
+
+        // Progressbar nur, wenn nicht completed
         if (!isCompleted) {
-            int barY = y + 8;  // Adjusted spacing
-            int barWidth = 110;  // Adjusted width
-            int barHeight = 2;   // Slightly smaller height
+            int barY = y + 9;
+            int barWidth = 70;
+            int barHeight = 2;
 
-            // Background (dark gray)
+            // Background (dunkelgrau)
             graphics.fill(x, barY, x + barWidth, barY + barHeight, 0xFF3C3C3C);
 
             // Progress fill
