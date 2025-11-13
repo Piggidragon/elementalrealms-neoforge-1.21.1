@@ -75,5 +75,6 @@
   "affinity.elementalrealms.gravity": "Gravity",
   "affinity.elementalrealms.time": "Time",
   "affinity.elementalrealms.space": "Space",
-  "affinity.elementalrealms.life": "Life"
+  "affinity.elementalrealms.life": "Life",
+  "affinity_book.elementalrealms.title": "Affinities"
 }

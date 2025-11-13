@@ -10,6 +10,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -114,12 +117,19 @@ public class AffinityBookOverlay {
                 256, 256            // Full texture size
         );
 
+        // Render title (white, centered)
+        Component title = Component.translatable("affinity_book.elementalrealms.title");
+        int titleX = x + (WIDTH - this.font.width(title)) / 2 - 2;
+        int titleY = y + 10;
+        graphics.drawString(this.font, title, titleX, titleY, 0xFFFFFF, false);
+
         // Render player affinities
         this.renderAffinities(graphics, x, y, this.player);
     }
 
     /**
      * Render all affinities with their completion percentages.
+     * Groups affinities by type (Elemental, Deviant, Eternal) with spacing between groups.
      *
      * @param graphics Graphics context
      * @param baseX    Base X position of the overlay
@@ -127,23 +137,65 @@ public class AffinityBookOverlay {
      * @param player   The player whose affinities to render
      */
     private void renderAffinities(GuiGraphics graphics, int baseX, int baseY, Player player) {
-        // Start position for first entry
-        int startY = baseY + 12;
+        int startY = baseY + 30;
         int xOffset = baseX + 10;
+        int rowHeight = 12;
 
         Map<Affinity, Integer> affinityCompletionMap = player.getData(ModAttachments.AFFINITIES.get());
 
-        // Vertical spacing between entries
-        int rowHeight = 12;
+        // Group affinities by type
+        List<Affinity> elemental = new ArrayList<>();
+        List<Affinity> deviant = new ArrayList<>();
+        List<Affinity> eternal = new ArrayList<>();
 
-        // Render each affinity with its completion percentage
         for (Affinity affinity : affinityCompletionMap.keySet()) {
-            int completion = affinityCompletionMap.get(affinity);
+            if (affinity == Affinity.VOID) continue;
+            switch (affinity.getType()) {
+                case ELEMENTAL -> elemental.add(affinity);
+                case DEVIANT -> deviant.add(affinity);
+                case ETERNAL -> eternal.add(affinity);
+            }
+        }
+
+        // Sort **by completion percent descending** within each category
+        elemental.sort(Comparator.comparingInt(affinityCompletionMap::get).reversed());
+        deviant.sort(Comparator.comparingInt(affinityCompletionMap::get).reversed());
+        eternal.sort(Comparator.comparingInt(affinityCompletionMap::get).reversed());
+
+        startY = renderAffinityGroup(graphics, xOffset, startY, elemental, affinityCompletionMap, rowHeight);
+        startY += 6;
+        startY = renderAffinityGroup(graphics, xOffset, startY, deviant, affinityCompletionMap, rowHeight);
+        startY += 6;
+        renderAffinityGroup(graphics, xOffset, startY, eternal, affinityCompletionMap, rowHeight);
+    }
+
+    /**
+     * Render a group of affinities.
+     *
+     * @param graphics Graphics context
+     * @param x        X position
+     * @param y        Starting Y position
+     * @param group    List of affinities to render
+     * @param map      Map of affinity completion percentages
+     * @param rowHeight Height of each row
+     * @return Y position after rendering all entries
+     */
+    private int renderAffinityGroup(
+            GuiGraphics graphics,
+            int x,
+            int y,
+            List<Affinity> group,
+            Map<Affinity, Integer> map,
+            int rowHeight
+    ) {
+        for (Affinity affinity : group) {
+            int completion = map.getOrDefault(affinity, 0);
             boolean isCompleted = completion >= 100;
 
-            renderAffinityEntry(graphics, affinity, completion, isCompleted, xOffset, startY);
-            startY += rowHeight;
+            renderAffinityEntry(graphics, affinity, completion, isCompleted, x, y);
+            y += rowHeight;
         }
+        return y;
     }
 
     /**
@@ -168,32 +220,14 @@ public class AffinityBookOverlay {
         int affinityColor = getAffinityColor(affinity);
         int progressColor = getProgressColor(completion);
 
-        // Render affinity name
+        // Render affinity name (with shadow if completed for emphasis)
         Component name = Component.translatable("affinity.elementalrealms." + affinity.getName());
-        graphics.drawString(this.font, name, x, y, affinityColor, false);
+        graphics.drawString(this.font, name, x, y, affinityColor, isCompleted);
 
-        // Only render progress bar for incomplete affinities
-        if (!isCompleted) {
-            // Progress bar dimensions
-            int barY = y + 9;
-            int barWidth = 70;
-            int barHeight = 2;
-
-            // Render completion percentage (right-aligned)
-            String percentText = completion + "%";
-            int percentX = x + 87;
-            graphics.drawString(this.font, percentText, percentX, y, progressColor, false);
-
-            // Render progress bar background
-            graphics.fill(x, barY, x + barWidth, barY + barHeight, 0xFF3C3C3C);
-
-            // Render progress fill
-            int progressWidth = (int) (barWidth * (completion / 100.0f));
-            graphics.fill(x, barY, x + progressWidth, barY + barHeight, progressColor);
-
-            // Render progress bar border
-            graphics.renderOutline(x, barY, barWidth, barHeight, 0xFF8B8B8B);
-        }
+        // Render completion percentage (right-aligned)
+        String percentText = completion + "%";
+        int percentX = x + 87;
+        graphics.drawString(this.font, percentText, percentX, y, progressColor, false);
     }
 
     /**
