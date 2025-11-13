@@ -31,7 +31,7 @@ public class ModAffinities {
         Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
 
         // Prevent duplicate
-        if (affinitiesImmutable.containsKey(affinity)) {
+        if (affinitiesImmutable.containsKey(affinity) && affinitiesImmutable.get(affinity) >= 100) {
             throw new IllegalStateException("Player already has affinity: " + affinity);
         }
 
