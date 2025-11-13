@@ -18,6 +18,10 @@ import java.util.List;
  */
 public class PortalUtils {
 
+    // Dimension spawn validation constants
+    private static final int NETHER_MAX_Y = 128; // Maximum Y for Nether portal spawns (avoid ceiling)
+    private static final int END_MIN_Y = 50; // Minimum Y for End portal spawns (avoid void)
+
     /**
      * Checks if a block position is suitable for portal base placement.
      * Rejects air blocks and fluid blocks (water, lava).
@@ -93,9 +97,9 @@ public class PortalUtils {
         if (level.getLevel().dimension() == Level.OVERWORLD) {
             return true;
         } else if (level.getLevel().dimension() == Level.NETHER) {
-            return pos.getY() < 128; // Avoid ceiling spawning
+            return pos.getY() < NETHER_MAX_Y; // Avoid ceiling spawning
         } else if (level.getLevel().dimension() == Level.END) {
-            return pos.getY() > 50; // Avoid void spawning
+            return pos.getY() > END_MIN_Y; // Avoid void spawning
         }
         return false;
     }

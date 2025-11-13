@@ -26,6 +26,14 @@ import java.util.List;
  */
 public class AffinityStone extends Item {
 
+    // Sound effect constants
+    private static final float SOUND_VOLUME = 0.5F;
+    private static final float VOID_SOUND_PITCH = 0.8F;
+    private static final float BASE_STONE_VOLUME = 0.25F;
+    private static final float BASE_STONE_PITCH = 0.25F;
+    private static final float PITCH_INCREMENT = 0.1F; // Pitch increase per affinity ordinal
+    private static final int ERROR_MESSAGE_COLOR = 0xFF0000; // Red color for error messages
+
     private final Affinity affinity;
 
     /**
@@ -67,7 +75,7 @@ public class AffinityStone extends Item {
                 itemStack.shrink(1);
             } catch (IllegalStateException e) {
                 serverPlayer.displayClientMessage(
-                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
+                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
                         true
                 );
                 return InteractionResultHolder.fail(itemStack);
@@ -80,7 +88,7 @@ public class AffinityStone extends Item {
                 itemStack.shrink(1);
             } catch (IllegalStateException e) {
                 serverPlayer.displayClientMessage(
-                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(0xFF0000)),
+                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
                         true
                 );
                 return InteractionResultHolder.fail(itemStack);
@@ -97,15 +105,15 @@ public class AffinityStone extends Item {
                 player.playNotifySound(
                         SoundEvents.AMETHYST_CLUSTER_BREAK,
                         SoundSource.PLAYERS,
-                        0.5F,
-                        0.8F
+                        SOUND_VOLUME,
+                        VOID_SOUND_PITCH
                 );
             } else {
-                float pitch = 0.25F + (this.affinity.ordinal() * 0.1F);
+                float pitch = BASE_STONE_PITCH + (this.affinity.ordinal() * PITCH_INCREMENT);
                 player.playNotifySound(
                         SoundEvents.TOTEM_USE,
                         SoundSource.PLAYERS,
-                        0.25F,
+                        BASE_STONE_VOLUME,
                         pitch
                 );
             }
