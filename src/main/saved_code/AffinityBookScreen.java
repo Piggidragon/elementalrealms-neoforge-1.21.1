@@ -1,5 +1,7 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.client.events.AffinityBookButtonHandler;
 import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,10 +18,9 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
 
     /**
      * Background texture for the affinity book.
-     * Using recipe book texture temporarily (replace with your own later).
      */
     private static final ResourceLocation BACKGROUND =
-            ResourceLocation.withDefaultNamespace("textures/gui/recipe_book.png");
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "textures/gui/affinity_book.png");
 
     /**
      * Create a new affinity book screen.
@@ -63,8 +64,9 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
         graphics.blit(
                 BACKGROUND,
                 this.leftPos, this.topPos,  // Position
-                1, 1,                        // Texture UV offset
-                this.imageWidth, this.imageHeight  // Size
+                0, 0,                        // Texture UV offset
+                this.imageWidth, this.imageHeight,  // Size
+                this.imageWidth, this.imageHeight   // Texture dimensions
         );
     }
 
@@ -99,7 +101,7 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
         // Render each affinity with its completion percentage
         for (AffinityBookMenu.AffinityData data : affinities) {
             renderAffinityEntry(graphics, data, xOffset, startY);
-            startY += 14;  // 14 pixels between each entry
+            startY += (data.isCompleted() ? 14 : 24);  // Less space if completed (no progress bar)
         }
     }
 
@@ -108,6 +110,7 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
      *
      * @param graphics The graphics context
      * @param data     The affinity data
+     * @param barX     X position (relative to leftPos)
      * @param y        Y position (relative to topPos)
      */
     private void renderAffinityEntry(
@@ -220,5 +223,21 @@ public class AffinityBookScreen extends AbstractContainerScreen<AffinityBookMenu
     public boolean isPauseScreen() {
         // Don't pause the game when this screen is open
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+
+        // Mark that affinity book was closed by the player
+        AffinityBookButtonHandler.setShouldAffinityBookBeOpen(false);
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+
+        // When switching to inventory, keep the book open
+        // Only onClose() sets it to false (when player presses ESC)
     }
 }
