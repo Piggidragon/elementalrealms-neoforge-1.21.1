@@ -183,7 +183,7 @@ public class ModCommands {
                                         ctx.getSource().sendSuccess(() -> Component.literal("Set affinity: " + affinity), false);
                                     } catch (IllegalArgumentException e) {
                                         ctx.getSource().sendFailure(Component.literal("Invalid affinity: " + affinityName));
-                                    } catch (Exception e) {
+                                    } catch (IllegalStateException e) {
                                         ctx.getSource().sendFailure(Component.literal(e.getMessage()));
                                     }
                                     return 1;
@@ -195,7 +195,7 @@ public class ModCommands {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                             try {
                                 ModAffinities.clearAffinities(player);
-                            } catch (Exception e) {
+                            } catch (IllegalStateException e) {
                                 ctx.getSource().sendFailure(Component.literal("No affinities to clear!"));
                                 return 0;
                             }
@@ -208,7 +208,8 @@ public class ModCommands {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                             try {
                                 ModAffinities.clearAffinities(player);
-                            } catch (Exception ignored) {
+                            } catch (IllegalStateException ignored) {
+                                // Player has no affinities to clear - this is fine for reroll
                             }
 
                             // Roll new random affinities
@@ -216,7 +217,7 @@ public class ModCommands {
                                 if (affinity != Affinity.VOID) {
                                     try {
                                         ModAffinities.addAffinity(player, affinity);
-                                    } catch (Exception e) {
+                                    } catch (IllegalStateException e) {
                                         ElementalRealms.LOGGER.error("Error re-rolling affinities for player " + player.getName().getString() + ": " + e.getMessage());
                                     }
                                 }
