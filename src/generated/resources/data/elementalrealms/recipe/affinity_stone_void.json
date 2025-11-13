@@ -2,26 +2,20 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
-      "item": "minecraft:coal"
+    "N": {
+      "item": "minecraft:netherite_ingot"
     },
-    "D": {
-      "item": "minecraft:diamond"
-    },
-    "E": {
-      "item": "minecraft:ender_eye"
+    "P": {
+      "item": "minecraft:ender_pearl"
     },
     "S": {
       "item": "minecraft:nether_star"
-    },
-    "W": {
-      "item": "minecraft:echo_shard"
     }
   },
   "pattern": [
-    "CDC",
-    "ESE",
-    " W "
+    "PNP",
+    "NSN",
+    "PNP"
   ],
   "result": {
     "count": 1,

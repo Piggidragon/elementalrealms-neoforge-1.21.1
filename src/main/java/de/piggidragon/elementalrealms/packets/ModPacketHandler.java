@@ -1,9 +1,16 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -12,6 +19,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Registers and handles custom network packets.
@@ -25,12 +36,22 @@ public class ModPacketHandler {
      */
     @SubscribeEvent
     public static void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event) {
-        event.registrar("elementalrealms")
-                .playToClient(
-                        AffinitySuccessPacket.TYPE,
-                        AffinitySuccessPacket.CODEC,
-                        ModPacketHandler::handleAffinitySuccess
-                );
+        // Get the registrar for this mod
+        var registrar = event.registrar(ElementalRealms.MODID);
+
+        // Register AffinitySuccessPacket (Server -> Client)
+        registrar.playToClient(
+                AffinitySuccessPacket.TYPE,
+                AffinitySuccessPacket.CODEC,
+                ModPacketHandler::handleAffinitySuccess
+        );
+
+        // Register OpenAffinityBookPacket (Client -> Server)
+        registrar.playToServer(
+                OpenAffinityBookPacket.TYPE,
+                OpenAffinityBookPacket.STREAM_CODEC,
+                ModPacketHandler::handleOpenAffinityBook
+        );
     }
 
     /**
@@ -53,6 +74,42 @@ public class ModPacketHandler {
                     // Spawn additional particles for visual feedback
                     showClientParticles(minecraft.level, minecraft.player, packet.affinity());
                 }
+            }
+        });
+    }
+
+    /**
+     * Handles opening the affinity book on server side.
+     * Retrieves player affinity data and opens the menu.
+     *
+     * @param packet  Empty packet (no data needed)
+     * @param context Network context for thread-safe execution
+     */
+    private static void handleOpenAffinityBook(OpenAffinityBookPacket packet, IPayloadContext context) {
+        // Execute on main thread to prevent concurrent modification
+        context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer serverPlayer) {
+
+                Map<Affinity, Integer> affinityCompletionMap = serverPlayer.getData(ModAttachments.AFFINITIES.get());
+                List<AffinityBookMenu.AffinityData> affinities = new ArrayList<>();
+
+                for (Map.Entry<Affinity, Integer> entry : affinityCompletionMap.entrySet()) {
+                    affinities.add(new AffinityBookMenu.AffinityData(entry.getKey(), entry.getValue()));
+                }
+
+                // Open the menu
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, playerInventory, player) ->
+                                new AffinityBookMenu(containerId, affinities),
+                        Component.translatable("gui.elementalrealms.affinity_book.title")
+                ), buf -> {
+                    // Write affinity data to buffer for client
+                    buf.writeInt(affinities.size());
+                    for (AffinityBookMenu.AffinityData data : affinities) {
+                        buf.writeEnum(data.affinity());
+                        buf.writeInt(data.completionPercent());
+                    }
+                });
             }
         });
     }

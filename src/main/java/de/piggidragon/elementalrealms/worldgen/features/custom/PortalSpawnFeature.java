@@ -1,10 +1,10 @@
 package de.piggidragon.elementalrealms.worldgen.features.custom;
 
 import com.mojang.serialization.Codec;
-import de.piggidragon.elementalrealms.entities.ModEntities;
-import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
-import de.piggidragon.elementalrealms.level.DynamicDimensionHandler;
-import de.piggidragon.elementalrealms.level.ModLevel;
+import de.piggidragon.elementalrealms.registries.entities.ModEntities;
+import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
+import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import de.piggidragon.elementalrealms.util.PortalUtils;
 import de.piggidragon.elementalrealms.worldgen.features.config.PortalConfiguration;
 import net.minecraft.core.BlockPos;
@@ -36,7 +36,6 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
         WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
-        PortalConfiguration config = context.config();
         RandomSource randomSource = level.getRandom();
 
         MinecraftServer server = level.getServer();
@@ -48,7 +47,7 @@ public class PortalSpawnFeature extends Feature<PortalConfiguration> {
             return false;
         }
 
-        if (!PortalUtils.isSuitableForPortalBase(level, pos.below(), level.getBlockState(pos.below()))) {
+        if (!PortalUtils.isSuitableForPortalBase(level.getBlockState(pos.below()))) {
             return false;
         }
 

@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.items.magic.affinities.AffinityItems;
+import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -37,11 +37,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         // Generate flat 2D models for all affinity shards
         AffinityItems.AFFINITY_SHARDS.values().forEach(item ->
-                basicItem(item.get())
-        );
-
-        // Generate flat 2D models for all essences
-        AffinityItems.ESSENCES.values().forEach(item ->
                 basicItem(item.get())
         );
     }

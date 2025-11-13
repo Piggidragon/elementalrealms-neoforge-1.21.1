@@ -150,10 +150,9 @@ public class AffinityParticles {
                         double angle = i * Math.PI * 2 / 20;
 
                         double x = player.getX() + Math.cos(angle) * ringRadius;
-                        double y = ringHeight;
                         double z = player.getZ() + Math.sin(angle) * ringRadius;
 
-                        level.sendParticles(ParticleTypes.ENCHANT, x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
+                        level.sendParticles(ParticleTypes.ENCHANT, x, ringHeight, z, 1, 0.0, 0.0, 0.0, 0.0);
                     }
                 }
 

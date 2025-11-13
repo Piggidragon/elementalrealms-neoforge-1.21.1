@@ -1,6 +1,6 @@
 package de.piggidragon.elementalrealms.util;
 
-import de.piggidragon.elementalrealms.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -22,12 +22,10 @@ public class PortalUtils {
      * Checks if a block position is suitable for portal base placement.
      * Rejects air blocks and fluid blocks (water, lava).
      *
-     * @param level WorldGen level for block access
-     * @param pos   Position to check
      * @param state Block state at position
      * @return true if solid non-fluid block
      */
-    public static boolean isSuitableForPortalBase(WorldGenLevel level, BlockPos pos, BlockState state) {
+    public static boolean isSuitableForPortalBase(BlockState state) {
         // Skip air blocks
         if (state.isAir()) return false;
 
