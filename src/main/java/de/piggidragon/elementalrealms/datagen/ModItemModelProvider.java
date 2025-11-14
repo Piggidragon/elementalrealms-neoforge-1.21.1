@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 /**
@@ -39,6 +40,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         AffinityItems.AFFINITY_SHARDS.values().forEach(item ->
                 basicItem(item.get())
         );
+
+        getBuilder("laser_staff")
+                .parent(new ModelFile.UncheckedModelFile("minecraft:item/blaze_rod"));
     }
 
     /**
