@@ -1,10 +1,8 @@
 package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderTask;
 import de.piggidragon.elementalrealms.client.particles.lodestone.custom.TestParticle;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.custom.LaserStaff;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -19,8 +17,7 @@ public class LaserBeamTask implements RenderTask {
     private final Player player;
     private final Level level;
     private final float beamRange;
-    private Entity hitEntity;
-    private static final float damageAmount = 2.0f;
+    private static final float damageAmount = 10.0f;
 
     public LaserBeamTask(Player player, Level level, float beamRange) {
         this.player = player;
@@ -41,11 +38,13 @@ public class LaserBeamTask implements RenderTask {
                 endPos
         );
 
-        hitEntity = raycastEntityHit(level, player, starPos, endPos);
+        Entity hitEntity = raycastEntityHit(level, player, starPos, endPos);
 
-        PacketDistributor.sendToServer(
-                new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
-        );
+        if (hitEntity != null) {
+            PacketDistributor.sendToServer(
+                    new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
+            );
+        }
     }
 
     private static Entity raycastEntityHit(Level level, Player player, Vec3 start, Vec3 end) {

@@ -82,7 +82,12 @@ public class ModPacketHandler {
 
                     DamageSource damageSource = new DamageSource(damageTypeHolder, null, serverPlayer);
 
-                    targetEntity.hurt(damageSource, particleHitEntityPacket.damageAmount());
+                    float newHealth = targetEntity.getHealth() - particleHitEntityPacket.damageAmount();
+                    targetEntity.setHealth(Math.max(0, newHealth));
+                    if (targetEntity.getHealth() <= 0) {
+                        targetEntity.die(damageSource);
+                    }
+
                 }
             }
         });
