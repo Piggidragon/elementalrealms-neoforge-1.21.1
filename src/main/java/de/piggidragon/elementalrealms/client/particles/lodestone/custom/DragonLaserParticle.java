@@ -11,7 +11,7 @@ import team.lodestar.lodestone.systems.particle.data.spin.SpinParticleData;
 
 import java.awt.*;
 
-public class TestParticle {
+public class DragonLaserParticle {
 
     /**
      * Spawns example particles at the given position
@@ -19,7 +19,7 @@ public class TestParticle {
      * @param level The world level
      * @param pos   The position to spawn particles
      */
-    public static void spawnExampleParticles(Level level, Vec3 pos) {
+    public static void spawnDragonLaserParticle(Level level, Vec3 pos) {
         Color startingColor = new Color(100, 0, 100);
         Color endingColor = new Color(0, 100, 200);
         WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
@@ -32,63 +32,6 @@ public class TestParticle {
                 .enableNoClip()
                 .spawn(level, pos.x, pos.y, pos.z);
     }
-
-    /**
-     * Spawns particles along a line from start to end position
-     *
-     * @param level         The world level
-     * @param start         The starting position (e.g., wandTip)
-     * @param end           The ending position (e.g., endVec)
-     * @param particleCount The number of particles to spawn along the line
-     */
-    public static void spawnParticlesAlongLine(Level level, Vec3 start, Vec3 end, int particleCount) {
-        if (!level.isClientSide) return;
-
-        // Calculate the direction vector from start to end
-        Vec3 direction = end.subtract(start);
-
-        // Spawn particles at regular intervals along the line
-        for (int i = 0; i < particleCount; i++) {
-            // Calculate the interpolation factor (0.0 to 1.0)
-            double t = (double) i / (particleCount - 1);
-
-            // Calculate the position along the line using linear interpolation
-            Vec3 particlePos = start.add(direction.scale(t));
-
-            // Spawn the particle at this position
-            spawnExampleParticles(level, particlePos);
-        }
-    }
-
-    /**
-     * Spawns particles along a line with specified distance between each particle
-     *
-     * @param level           The world level
-     * @param start           The starting position
-     * @param end             The ending position
-     * @param distanceBetween The distance between each particle (in blocks)
-     */
-    public static void spawnParticlesAlongLineWithDistance(Level level, Vec3 start, Vec3 end, double distanceBetween) {
-        if (!level.isClientSide) return;
-
-        Vec3 direction = end.subtract(start);
-        double totalDistance = direction.length();
-
-        // Calculate how many particles we need
-        int particleCount = (int) Math.ceil(totalDistance / distanceBetween);
-
-        // Normalize the direction vector
-        Vec3 normalizedDirection = direction.normalize();
-
-        // Spawn particles at fixed distances
-        for (int i = 0; i <= particleCount; i++) {
-            double distance = Math.min(i * distanceBetween, totalDistance);
-            Vec3 particlePos = start.add(normalizedDirection.scale(distance));
-
-            spawnExampleParticles(level, particlePos);
-        }
-    }
-
 
     /**
      * Spawns a beam effect with multiple particles along the line
@@ -118,7 +61,7 @@ public class TestParticle {
 
             particlePos = particlePos.add(offsetX, offsetY, offsetZ);
 
-            spawnExampleParticles(level, particlePos);
+            spawnDragonLaserParticle(level, particlePos);
         }
     }
 

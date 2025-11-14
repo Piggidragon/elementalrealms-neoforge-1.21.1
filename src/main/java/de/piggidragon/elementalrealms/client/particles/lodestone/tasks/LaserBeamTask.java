@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
 
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderTask;
-import de.piggidragon.elementalrealms.client.particles.lodestone.custom.TestParticle;
+import de.piggidragon.elementalrealms.client.particles.lodestone.custom.DragonLaserParticle;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -32,7 +32,7 @@ public class LaserBeamTask implements RenderTask {
         Vec3 starPos = eyePos.add(lookVec.scale(1.2));
         Vec3 endPos = eyePos.add(lookVec.scale(beamRange));
 
-        TestParticle.spawnBeamEffect(
+        DragonLaserParticle.spawnBeamEffect(
                 level,
                 starPos,
                 endPos
