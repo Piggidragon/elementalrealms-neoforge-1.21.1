@@ -52,7 +52,5 @@ public class DataGenerators {
                 ModDatapackProvider.createBuilder(),
                 Set.of(ElementalRealms.MODID)
         ));
-
-        generator.addProvider(event.includeServer(), new ModDamageTypTagsProvider(packOutput, lookupProvider));
     }
 }

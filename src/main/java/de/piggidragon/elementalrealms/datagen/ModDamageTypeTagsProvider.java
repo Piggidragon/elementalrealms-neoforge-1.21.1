@@ -8,9 +8,9 @@ import net.minecraft.tags.DamageTypeTags;
 
 import java.util.concurrent.CompletableFuture;
 
-public class ModDamageTypTagsProvider extends DamageTypeTagsProvider {
+public class ModDamageTypeTagsProvider extends DamageTypeTagsProvider {
 
-    public ModDamageTypTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+    public ModDamageTypeTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
         super(output, lookupProvider);
     }
 
@@ -25,5 +25,6 @@ public class ModDamageTypTagsProvider extends DamageTypeTagsProvider {
                 .add(ModDatapackProvider.LASER);
         this.tag(DamageTypeTags.BYPASSES_SHIELD)
                 .add(ModDatapackProvider.LASER);
+        super.addTags(provider);
     }
 }
