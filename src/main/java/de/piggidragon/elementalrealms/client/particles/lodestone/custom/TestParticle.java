@@ -23,11 +23,11 @@ public class TestParticle {
         Color startingColor = new Color(100, 0, 100);
         Color endingColor = new Color(0, 100, 200);
         WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
-                .setScaleData(GenericParticleData.create(0.5f, 0).build())
+                .setScaleData(GenericParticleData.create(0.1f, 0).build())
                 .setTransparencyData(GenericParticleData.create(0.75f, 0.25f).build())
                 .setColorData(ColorParticleData.create(startingColor, endingColor).setCoefficient(1.4f).setEasing(Easing.BOUNCE_IN_OUT).build())
                 .setSpinData(SpinParticleData.create(0.2f, 0.4f).setSpinOffset((level.getGameTime() * 0.2f) % 6.28f).setEasing(Easing.QUARTIC_IN).build())
-                .setLifetime(40)
+                .setLifetime(10)
                 .addMotion(0, 0.01f, 0)
                 .enableNoClip()
                 .spawn(level, pos.x, pos.y, pos.z);

@@ -1,5 +1,6 @@
 package de.piggidragon.elementalrealms.registries.items.magic.misc.custom;
 
+import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.particles.lodestone.LodestoneParticleManager;
 import de.piggidragon.elementalrealms.client.particles.lodestone.custom.TestParticle;
 import de.piggidragon.elementalrealms.client.particles.lodestone.tasks.LaserBeamTask;
@@ -28,9 +29,13 @@ public class LaserStaff extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         if (level.isClientSide) {
-            LodestoneParticleManager.addTask(
-                    laserBeamTask = new LaserBeamTask(player, level, reach)
-            );
+            laserBeamTask = new LaserBeamTask(player, level, reach);
+            if (!LodestoneParticleManager.hasTask(laserBeamTask)){
+                LodestoneParticleManager.addTask(laserBeamTask);
+                ElementalRealms.LOGGER.info("Add " + laserBeamTask.toString());
+
+            }
+            player.startUsingItem(usedHand);
             return InteractionResultHolder.consume(player.getItemInHand(usedHand));
         }
         return InteractionResultHolder.pass(player.getItemInHand(usedHand));
@@ -40,6 +45,7 @@ public class LaserStaff extends Item {
     public void releaseUsing(ItemStack stack, Level level, LivingEntity livingEntity, int timeCharged) {
         if (level.isClientSide) {
             LodestoneParticleManager.removeTask(laserBeamTask);
+            ElementalRealms.LOGGER.info("Remove " + laserBeamTask.toString());
         }
     }
 

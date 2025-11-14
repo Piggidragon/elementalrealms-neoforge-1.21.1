@@ -25,4 +25,10 @@ public class LodestoneParticleManager {
             tasks.remove(task);
         }
     }
+
+    public static boolean hasTask(RenderTask task) {
+        synchronized (tasks) {
+            return tasks.contains(task);
+        }
+    }
 }
