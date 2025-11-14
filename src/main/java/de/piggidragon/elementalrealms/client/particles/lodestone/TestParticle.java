@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.client.particles.lodestone;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.client.*;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.player.*;
 import net.minecraft.world.level.*;
 import net.minecraft.world.phys.*;
