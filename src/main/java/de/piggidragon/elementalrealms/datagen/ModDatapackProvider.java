@@ -9,27 +9,29 @@ import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.*;
-import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import net.neoforged.neoforge.common.world.BiomeModifiers;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Provides configured and placed features for portal worldgen.
  */
-public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
+public class ModDatapackProvider {
+
+    public static final ResourceKey<DamageType> LASER =
+            ResourceKey.create(Registries.DAMAGE_TYPE,
+                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "laser"));
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> PORTAL_CONFIGURED =
             ResourceKey.create(Registries.CONFIGURED_FEATURE,
@@ -44,33 +46,33 @@ public class ModFeaturesProvider extends DatapackBuiltinEntriesProvider {
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_placed_under"));
 
     /**
-     * Creates the features provider.
-     *
-     * @param output     Pack output handler
-     * @param registries Registry lookup provider
-     */
-    public ModFeaturesProvider(PackOutput output, CompletableFuture<RegistrySetBuilder.PatchedRegistries> registries) {
-        super(output, registries, Set.of(ElementalRealms.MODID));
-    }
-
-    /**
      * Creates registry entries for portal features and biome modifiers.
      *
      * @return Registry builder with all feature configurations
      */
     public static RegistrySetBuilder createBuilder() {
         return new RegistrySetBuilder()
+
+                // Damage Types
+                .add(Registries.DAMAGE_TYPE, bootstrap -> {
+                    bootstrap.register(LASER,
+                            new DamageType(
+                                    "laser",
+                                    0.0f
+                            ));
+                })
+
+                // Features
                 .add(Registries.CONFIGURED_FEATURE, bootstrap -> {
                     // Configure basic portal feature
                     bootstrap.register(PORTAL_CONFIGURED,
                             new ConfiguredFeature<>(
                                     ModFeatures.PORTAL_FEATURE.get(),
-                                    new PortalConfiguration(
-                                            ModLevel.getRandomLevel()
-                                    )
+                                    new PortalConfiguration(Level.OVERWORLD)
                             )
                     );
                 })
+
                 .add(Registries.PLACED_FEATURE, bootstrap -> {
                     HolderGetter<ConfiguredFeature<?, ?>> configured =
                             bootstrap.lookup(Registries.CONFIGURED_FEATURE);

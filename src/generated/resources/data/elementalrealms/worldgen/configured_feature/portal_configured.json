@@ -1,6 +1,6 @@
 {
   "type": "elementalrealms:portal_feature",
   "config": {
-    "target_dimension": "elementalrealms:test2"
+    "target_dimension": "minecraft:overworld"
   }
 }
