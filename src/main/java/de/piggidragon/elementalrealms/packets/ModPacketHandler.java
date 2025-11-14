@@ -1,22 +1,31 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
 import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -42,7 +51,7 @@ public class ModPacketHandler {
         // Register AffinitySuccessPacket (Server -> Client)
         registrar.playToClient(
                 AffinitySuccessPacket.TYPE,
-                AffinitySuccessPacket.CODEC,
+                AffinitySuccessPacket.STREAM_CODEC,
                 ModPacketHandler::handleAffinitySuccess
         );
 
@@ -52,6 +61,31 @@ public class ModPacketHandler {
                 OpenAffinityBookPacket.STREAM_CODEC,
                 ModPacketHandler::handleOpenAffinityBook
         );
+
+        registrar.playToServer(
+                ParticleHitEntityPacket.TYPE,
+                ParticleHitEntityPacket.STREAM_CODEC,
+                ModPacketHandler::handleParticleHitEntity
+        );
+    }
+
+    private static void handleParticleHitEntity(ParticleHitEntityPacket particleHitEntityPacket, IPayloadContext iPayloadContext) {
+        iPayloadContext.enqueueWork(() -> {
+            if (iPayloadContext.player() instanceof ServerPlayer serverPlayer) {
+                Level level = serverPlayer.level();
+                Entity hitEntity = level.getEntity(particleHitEntityPacket.hitEntityID());
+                if (hitEntity instanceof LivingEntity targetEntity) {
+
+                    Holder<DamageType> damageTypeHolder = serverPlayer.level().registryAccess()
+                            .registryOrThrow(Registries.DAMAGE_TYPE)
+                            .getHolderOrThrow(DamageTypes.DRAGON_BREATH);
+
+                    DamageSource damageSource = new DamageSource(damageTypeHolder, null, serverPlayer);
+
+                    targetEntity.hurt(damageSource, particleHitEntityPacket.damageAmount());
+                }
+            }
+        });
     }
 
     /**

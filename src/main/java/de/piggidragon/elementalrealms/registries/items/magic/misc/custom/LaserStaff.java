@@ -4,14 +4,24 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.particles.lodestone.LodestoneParticleManager;
 import de.piggidragon.elementalrealms.client.particles.lodestone.custom.TestParticle;
 import de.piggidragon.elementalrealms.client.particles.lodestone.tasks.LaserBeamTask;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Optional;
 
 /**
  * LaserStaff item that spawns a smooth particle beam using Lodestone
@@ -33,7 +43,6 @@ public class LaserStaff extends Item {
             if (!LodestoneParticleManager.hasTask(laserBeamTask)){
                 LodestoneParticleManager.addTask(laserBeamTask);
                 ElementalRealms.LOGGER.info("Add " + laserBeamTask.toString());
-
             }
             player.startUsingItem(usedHand);
             return InteractionResultHolder.consume(player.getItemInHand(usedHand));
@@ -45,7 +54,6 @@ public class LaserStaff extends Item {
     public void releaseUsing(ItemStack stack, Level level, LivingEntity livingEntity, int timeCharged) {
         if (level.isClientSide) {
             LodestoneParticleManager.removeTask(laserBeamTask);
-            ElementalRealms.LOGGER.info("Remove " + laserBeamTask.toString());
         }
     }
 

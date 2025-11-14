@@ -105,7 +105,7 @@ public class TestParticle {
         double distance = direction.length();
 
         // Spawn particles every 0.1 blocks for a dense beam
-        int particleCount = (int) (distance / 0.1);
+        int particleCount = (int) (distance / 0.05);
 
         for (int i = 0; i < particleCount; i++) {
             double t = (double) i / particleCount;
