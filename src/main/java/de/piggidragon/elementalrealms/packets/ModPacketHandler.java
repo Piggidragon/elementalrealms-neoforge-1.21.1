@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
@@ -78,16 +79,11 @@ public class ModPacketHandler {
 
                     Holder<DamageType> damageTypeHolder = serverPlayer.level().registryAccess()
                             .registryOrThrow(Registries.DAMAGE_TYPE)
-                            .getHolderOrThrow(DamageTypes.DRAGON_BREATH);
+                            .getHolderOrThrow(ModDatapackProvider.LASER);
 
                     DamageSource damageSource = new DamageSource(damageTypeHolder, null, serverPlayer);
 
-                    float newHealth = targetEntity.getHealth() - particleHitEntityPacket.damageAmount();
-                    targetEntity.setHealth(Math.max(0, newHealth));
-                    if (targetEntity.getHealth() <= 0) {
-                        targetEntity.die(damageSource);
-                    }
-
+                    targetEntity.hurt(damageSource, particleHitEntityPacket.damageAmount());
                 }
             }
         });
