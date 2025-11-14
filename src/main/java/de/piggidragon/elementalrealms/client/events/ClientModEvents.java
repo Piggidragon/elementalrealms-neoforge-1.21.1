@@ -4,12 +4,9 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.particles.lodestone.LodestoneParticleManager;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.entities.client.EmptyPortalRenderer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
@@ -31,9 +28,9 @@ public class ClientModEvents {
     }
 
     @SubscribeEvent
-    public static void renderEvent(RenderLevelStageEvent event){
+    public static void renderEvent(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES) return;
 
-       LodestoneParticleManager.executeAll(event.getPartialTick().getGameTimeDeltaTicks());
+        LodestoneParticleManager.executeAll(event.getPartialTick().getGameTimeDeltaTicks());
     }
 }

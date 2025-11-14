@@ -17,7 +17,12 @@ public class LodestoneParticleManager {
             for (RenderTask task : tasks) {
                 task.render(partialTicks);
             }
-            tasks.clear();
+        }
+    }
+
+    public static void removeTask(RenderTask task) {
+        synchronized (tasks) {
+            tasks.remove(task);
         }
     }
 }
