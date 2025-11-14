@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
 import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;

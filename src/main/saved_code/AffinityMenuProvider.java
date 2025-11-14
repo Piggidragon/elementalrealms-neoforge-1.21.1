@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.guis.menus.custom;
+package de.piggidragon.elementalrealms.registries.guis.menus.custom;
 
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.FriendlyByteBuf;

@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.client.gui.screens;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
+import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

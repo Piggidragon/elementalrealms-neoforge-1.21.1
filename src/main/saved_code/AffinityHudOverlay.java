@@ -1,8 +1,8 @@
-package de.piggidragon.elementalrealms.guis.hud;
+package de.piggidragon.elementalrealms.registries.guis.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.AffinityType;
 import net.minecraft.client.Minecraft;

@@ -2,8 +2,8 @@ package de.piggidragon.elementalrealms.events;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.hud.AffinityHotbarManager;
-import de.piggidragon.elementalrealms.guis.hud.AffinityHudOverlay;
+import de.piggidragon.elementalrealms.registries.guis.hud.AffinityHotbarManager;
+import de.piggidragon.elementalrealms.registries.guis.hud.AffinityHudOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;

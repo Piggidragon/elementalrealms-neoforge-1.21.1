@@ -1,17 +1,17 @@
 package de.piggidragon.elementalrealms;
 
 import com.mojang.logging.LogUtils;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.guis.menus.ModMenus;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.registries.creativetabs.ModCreativeTabs;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
-import de.piggidragon.elementalrealms.registries.items.magic.dimension.DimensionItems;
-import de.piggidragon.elementalrealms.worldgen.chunkgen.ModChunkgen;
-import de.piggidragon.elementalrealms.worldgen.features.ModFeatures;
-import de.piggidragon.elementalrealms.worldgen.structures.ModStructurePlacements;
-import de.piggidragon.elementalrealms.worldgen.structures.ModStructures;
+import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.ModChunkgen;
+import de.piggidragon.elementalrealms.registries.worldgen.features.ModFeatures;
+import de.piggidragon.elementalrealms.registries.worldgen.structures.ModStructurePlacements;
+import de.piggidragon.elementalrealms.registries.worldgen.structures.ModStructures;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -41,7 +41,7 @@ public class ElementalRealms {
         // Register all mod content
         ModAttachments.register(modEventBus);
         AffinityItems.register(modEventBus);
-        DimensionItems.register(modEventBus);
+        MiscItems.register(modEventBus);
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModCreativeTabs.register(modEventBus);

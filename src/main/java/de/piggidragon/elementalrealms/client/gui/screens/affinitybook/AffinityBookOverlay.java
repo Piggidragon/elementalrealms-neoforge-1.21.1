@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

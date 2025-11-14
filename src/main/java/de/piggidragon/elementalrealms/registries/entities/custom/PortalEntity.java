@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.registries.entities.custom;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.particles.PortalParticles;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.client.particles.vanilla.PortalParticles;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;

@@ -1,15 +1,10 @@
 package de.piggidragon.elementalrealms.magic.affinities;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import net.minecraft.core.Holder;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
 import java.util.Map;

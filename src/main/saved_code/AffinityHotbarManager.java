@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.guis.hud;
+package de.piggidragon.elementalrealms.registries.guis.hud;
 
 /**
  * Manages the state and animation of the Affinity Hotbar.
