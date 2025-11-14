@@ -4,6 +4,7 @@ import de.piggidragon.elementalrealms.client.particles.lodestone.RenderTask;
 import de.piggidragon.elementalrealms.client.particles.lodestone.custom.TestParticle;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class LaserBeamTask implements RenderTask {
 
@@ -19,9 +20,12 @@ public class LaserBeamTask implements RenderTask {
 
     @Override
     public void render(float partialTicks) {
+        Vec3 lookVec = player.getLookAngle();
+        Vec3 eyePos = player.getEyePosition(partialTicks);
+
         TestParticle.spawnBeamEffect(level,
-                player.getEyePosition(partialTicks),
-                player.getEyePosition(partialTicks).add(player.getLookAngle().scale(beamRange))
+                eyePos.add(lookVec.scale(1.2)),
+                eyePos.add(player.getLookAngle().scale(beamRange))
         );
     }
 }
