@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
  */
 public class LaserStaff extends Item {
 
-    private static final int reach = 20;
+    private static final int reach = 5;
     private LaserBeamTask laserBeamTask;
 
     public LaserStaff(Properties properties) {

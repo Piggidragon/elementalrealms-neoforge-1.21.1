@@ -13,6 +13,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import team.lodestar.lodestone.handlers.RenderHandler;
 
 /**
  * Client-side event handlers for entity renderers.
@@ -37,7 +38,7 @@ public class ClientModEvents {
      */
     @SubscribeEvent
     public static void renderEvent(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES) return;
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
 
         Minecraft mc = Minecraft.getInstance();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
@@ -46,7 +47,6 @@ public class ClientModEvents {
 
         // Render all tasks with interpolation
         RenderManager.executeAll(partialTick, poseStack, bufferSource);
-        bufferSource.endBatch();
     }
 
     /**
