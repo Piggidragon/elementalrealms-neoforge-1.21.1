@@ -114,8 +114,14 @@ public class PortalEntity extends Entity {
         return this.ownerUUID;
     }
 
+    /**
+     * Retrieves the server level for a given dimension key.
+     *
+     * @param targetLevel the dimension key
+     * @return the corresponding server level, or null if not found
+     */
     @Nullable
-    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
+    private ServerLevel getLevelFromKey(ResourceKey<Level> targetLevel) {
         MinecraftServer server = this.getServer();
         if (server == null) {
             return null;
@@ -159,8 +165,7 @@ public class PortalEntity extends Entity {
      * Handles entity collision pushing.
      */
     @Override
-    public void push(Entity entity) {
-    }
+    public void push(Entity entity) {}
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
@@ -247,8 +252,7 @@ public class PortalEntity extends Entity {
      * Defines synchronized data for client-server communication.
      */
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-    }
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
 
     /**
      * Updates the portal every tick.
@@ -352,7 +356,7 @@ public class PortalEntity extends Entity {
                         player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
                 );
 
-                ServerLevel destinationLevel = getLevelfromKey(targetLevel);
+                ServerLevel destinationLevel = getLevelFromKey(targetLevel);
 
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
@@ -407,7 +411,7 @@ public class PortalEntity extends Entity {
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch);
+                player.teleportTo(getLevelFromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 

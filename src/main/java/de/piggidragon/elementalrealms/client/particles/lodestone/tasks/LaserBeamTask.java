@@ -50,6 +50,25 @@ public class LaserBeamTask implements RenderTask {
         this.endPos = eyePos.add(lookVec.scale(beamRange));
     }
 
+    @Override
+    public void render(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {}
+
+    @Override
+    public void tick() {
+        if (!spawnBeam(level, startPos, endPos, DENSITY_PER_BLOCK, beamTravelTicks, beamLifeTicks, currentTick)) {
+            RenderManager.requestRemoveTask(this);
+            return;
+        }
+
+        Entity hitEntity = raycastEntityHit(level, player, startPos, endPos);
+        if (hitEntity != null) {
+            PacketDistributor.sendToServer(
+                    new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
+            );
+        }
+        currentTick++;
+    }
+
     public static boolean spawnBeam(Level level, Vec3 start, Vec3 end, int densityPerBlock, int travelTicks, int beamLifeTicks, int elapsedTicks) {
         if (!level.isClientSide) return false;
 
@@ -89,25 +108,5 @@ public class LaserBeamTask implements RenderTask {
             }
         }
         return hitEntity;
-    }
-
-    @Override
-    public void render(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {
-    }
-
-    @Override
-    public void tick() {
-        if (!spawnBeam(level, startPos, endPos, DENSITY_PER_BLOCK, beamTravelTicks, beamLifeTicks, currentTick)) {
-            RenderManager.requestRemoveTask(this);
-            return;
-        }
-
-        Entity hitEntity = raycastEntityHit(level, player, startPos, endPos);
-        if (hitEntity != null) {
-            PacketDistributor.sendToServer(
-                    new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
-            );
-        }
-        currentTick++;
     }
 }
