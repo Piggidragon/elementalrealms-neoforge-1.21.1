@@ -7,27 +7,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RenderManager {
-    public static final List<RenderTask> tasks = new ArrayList<>();
+    public static final List<RenderTask> TASKS = new ArrayList<>();
+    public static final List<RenderTask> TASKS_TO_REMOVE = new ArrayList<>();
 
     /**
      * Adds a new render task to the manager
+     *
      * @param task The task to add
      */
     public static void addTask(RenderTask task) {
-        synchronized (tasks) {
-            tasks.add(task);
+        synchronized (TASKS) {
+            TASKS.add(task);
         }
     }
 
     /**
      * Executes all render tasks (called every frame)
-     * @param partialTicks Interpolation value between 0.0 and 1.0
-     * @param poseStack The pose stack for rendering
+     *
+     * @param partialTicks      Interpolation value between 0.0 and 1.0
+     * @param poseStack         The pose stack for rendering
      * @param multiBufferSource The buffer source for rendering
      */
     public static void executeAll(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {
-        synchronized (tasks) {
-            for (RenderTask task : tasks) {
+        synchronized (TASKS) {
+            if (TASKS.isEmpty()) return;
+            for (RenderTask task : TASKS) {
                 task.render(partialTicks, poseStack, multiBufferSource);
             }
         }
@@ -38,8 +42,8 @@ public class RenderManager {
      * This is where logic updates happen, separate from rendering
      */
     public static void tickAll() {
-        synchronized (tasks) {
-            for (RenderTask task : tasks) {
+        synchronized (TASKS) {
+            for (RenderTask task : TASKS) {
                 task.tick();
             }
         }
@@ -47,22 +51,32 @@ public class RenderManager {
 
     /**
      * Removes a render task from the manager
+     *
      * @param task The task to remove
      */
-    public static void removeTask(RenderTask task) {
-        synchronized (tasks) {
-            tasks.remove(task);
+    public static void requestRemoveTask(RenderTask task) {
+        synchronized (TASKS) {
+            TASKS_TO_REMOVE.add(task);
+        }
+    }
+
+    public static void removeRequestedTasks() {
+        synchronized (TASKS) {
+            if (TASKS_TO_REMOVE.isEmpty()) return;
+            TASKS.removeAll(TASKS_TO_REMOVE);
+            TASKS_TO_REMOVE.clear();
         }
     }
 
     /**
      * Checks if a task is currently registered
+     *
      * @param task The task to check
      * @return true if the task is registered
      */
     public static boolean hasTask(RenderTask task) {
-        synchronized (tasks) {
-            return tasks.contains(task);
+        synchronized (TASKS) {
+            return TASKS.contains(task);
         }
     }
 }

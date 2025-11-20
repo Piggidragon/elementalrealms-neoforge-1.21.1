@@ -1,11 +1,9 @@
 package de.piggidragon.elementalrealms.registries.items.magic.misc.custom;
 
-import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderManager;
 import de.piggidragon.elementalrealms.client.particles.lodestone.tasks.LaserBeamTask;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -17,8 +15,7 @@ import net.minecraft.world.level.Level;
  */
 public class LaserStaff extends Item {
 
-    private static final int reach = 5;
-    private LaserBeamTask laserBeamTask;
+    private static final int reach = 20;
 
     public LaserStaff(Properties properties) {
         super(properties);
@@ -27,26 +24,12 @@ public class LaserStaff extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         if (level.isClientSide) {
-            laserBeamTask = new LaserBeamTask(player, level, reach);
-            if (!RenderManager.hasTask(laserBeamTask)){
+            LaserBeamTask laserBeamTask = new LaserBeamTask(player, level, reach, 10f, 100, 5);
+            if (!RenderManager.hasTask(laserBeamTask)) {
                 RenderManager.addTask(laserBeamTask);
-                ElementalRealms.LOGGER.info("Add " + laserBeamTask.toString());
             }
-            player.startUsingItem(usedHand);
-            return InteractionResultHolder.consume(player.getItemInHand(usedHand));
+            return InteractionResultHolder.success(player.getItemInHand(usedHand));
         }
         return InteractionResultHolder.pass(player.getItemInHand(usedHand));
-    }
-
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity livingEntity, int timeCharged) {
-        if (level.isClientSide) {
-            RenderManager.removeTask(laserBeamTask);
-        }
-    }
-
-    @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
-        return 72000;
     }
 }

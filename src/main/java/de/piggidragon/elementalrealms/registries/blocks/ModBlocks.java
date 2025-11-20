@@ -10,12 +10,16 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  */
 public final class ModBlocks {
 
-    /** Deferred register for block registrations */
+    /**
+     * Deferred register for block registrations
+     */
     // Block-Registry
     public static final DeferredRegister.Blocks BLOCKS =
             DeferredRegister.createBlocks(ElementalRealms.MODID);
 
-    /** Deferred register for block items */
+    /**
+     * Deferred register for block items
+     */
     // Item-Registry
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(ElementalRealms.MODID);

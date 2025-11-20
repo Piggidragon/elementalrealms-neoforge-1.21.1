@@ -27,6 +27,7 @@ public class ModKeyBindingsHandler {
 
     /**
      * Registers all key mappings
+     *
      * @param event The registration event
      */
     @SubscribeEvent

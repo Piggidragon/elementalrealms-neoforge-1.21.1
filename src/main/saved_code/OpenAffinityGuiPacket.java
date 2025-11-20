@@ -22,5 +22,7 @@ public record OpenAffinityGuiPacket() implements CustomPacketPayload {
             StreamCodec.unit(new OpenAffinityGuiPacket());
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {return TYPE;}
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 }

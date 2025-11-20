@@ -2,10 +2,10 @@ package de.piggidragon.elementalrealms;
 
 import com.mojang.logging.LogUtils;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.registries.creativetabs.ModCreativeTabs;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
+import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
 import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.ModChunkgen;

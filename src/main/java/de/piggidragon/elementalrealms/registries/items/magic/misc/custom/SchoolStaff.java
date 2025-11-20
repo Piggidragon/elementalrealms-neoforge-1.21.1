@@ -32,7 +32,7 @@ public class SchoolStaff extends Item {
 
     // Active animations tracked by player UUID - thread-safe for server tick access
     private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new ConcurrentHashMap<>();
-    
+
     // Portal configuration constants
     private static final int PORTAL_DESPAWN_TICKS = 200; // Ticks until portal auto-despawns (10 seconds)
     private static final double PORTAL_SPAWN_DISTANCE = 2.0; // Blocks in front of player

@@ -21,6 +21,13 @@ public class ModMenus {
             DeferredRegister.create(Registries.MENU, ElementalRealms.MODID);
 
     /**
+     * Registers all menu types with the mod event bus.
+     *
+     * @param bus The mod's event bus for registration
+     */
+    public static void register(IEventBus bus) {
+        MENUS.register(bus);
+    }    /**
      * Menu type for the affinity book screen.
      * Displays player affinities and their completion progress.
      */
@@ -29,12 +36,5 @@ public class ModMenus {
                     IMenuTypeExtension.create(AffinityBookMenu::new)
             );
 
-    /**
-     * Registers all menu types with the mod event bus.
-     *
-     * @param bus The mod's event bus for registration
-     */
-    public static void register(IEventBus bus) {
-        MENUS.register(bus);
-    }
+
 }

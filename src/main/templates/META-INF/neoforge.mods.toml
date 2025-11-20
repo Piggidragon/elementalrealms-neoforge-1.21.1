@@ -15,7 +15,7 @@ loaderVersion = "${loader_version_range}" #mandatory
 license = "${mod_license}"
 
 # A URL to refer people to when problems occur with this mod
-issueTrackerURL="https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/issues"
+issueTrackerURL = "https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/issues"
 
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory

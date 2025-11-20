@@ -13,7 +13,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import team.lodestar.lodestone.handlers.RenderHandler;
 
 /**
  * Client-side event handlers for entity renderers.
@@ -34,11 +33,14 @@ public class ClientModEvents {
 
     /**
      * Handles rendering of particles every frame (60+ FPS)
+     *
      * @param event The render level stage event
      */
     @SubscribeEvent
     public static void renderEvent(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+
+        RenderManager.removeRequestedTasks();
 
         Minecraft mc = Minecraft.getInstance();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
@@ -51,6 +53,7 @@ public class ClientModEvents {
 
     /**
      * Handles tick logic for particles (20 TPS)
+     *
      * @param event The level tick event
      */
     @SubscribeEvent

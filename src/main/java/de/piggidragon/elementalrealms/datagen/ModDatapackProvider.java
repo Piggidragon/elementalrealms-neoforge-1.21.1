@@ -1,7 +1,6 @@
 package de.piggidragon.elementalrealms.datagen;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import de.piggidragon.elementalrealms.registries.worldgen.ModBiomeTags;
 import de.piggidragon.elementalrealms.registries.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.registries.worldgen.features.config.PortalConfiguration;
@@ -54,13 +53,11 @@ public class ModDatapackProvider {
         return new RegistrySetBuilder()
 
                 // Damage Types
-                .add(Registries.DAMAGE_TYPE, bootstrap -> {
-                    bootstrap.register(LASER,
-                            new DamageType(
-                                    "laser",
-                                    0.0f
-                            ));
-                })
+                .add(Registries.DAMAGE_TYPE, bootstrap -> bootstrap.register(LASER,
+                        new DamageType(
+                                "laser",
+                                0.0f
+                        )))
 
                 // Features
                 .add(Registries.CONFIGURED_FEATURE, bootstrap -> {

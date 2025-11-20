@@ -20,7 +20,9 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID, value = Dist.CLIENT)
 public class HotbarRenderHandler {
-    /** Texture for the custom hotbar */
+    /**
+     * Texture for the custom hotbar
+     */
     private static final ResourceLocation CUSTOM_HOTBAR_TEXTURE = ResourceLocation.fromNamespaceAndPath(
             ElementalRealms.MODID, "hud/hotbar"
     );

@@ -33,7 +33,7 @@ public class AffinityHudOverlay {
      * Called every frame.
      *
      * @param graphics GuiGraphics for rendering
-     * @param mc Minecraft instance
+     * @param mc       Minecraft instance
      */
     public static void render(GuiGraphics graphics, Minecraft mc) {
         // Get affinity data from player
@@ -77,11 +77,11 @@ public class AffinityHudOverlay {
     /**
      * Renders Affinity icons with zoom animation from center.
      *
-     * @param graphics GuiGraphics for rendering
+     * @param graphics   GuiGraphics for rendering
      * @param affinities List of affinities to display
-     * @param hotbarX X position of hotbar
-     * @param hotbarY Y position of hotbar
-     * @param scale Animation scale factor (0.0 - 1.0)
+     * @param hotbarX    X position of hotbar
+     * @param hotbarY    Y position of hotbar
+     * @param scale      Animation scale factor (0.0 - 1.0)
      */
     public static void renderAffinityIcons(
             GuiGraphics graphics,
@@ -108,10 +108,10 @@ public class AffinityHudOverlay {
      * Shows progress through partial grayscale rendering.
      *
      * @param graphics GuiGraphics for rendering
-     * @param data Affinity data (type & progress)
-     * @param centerX X coordinate of icon center
-     * @param centerY Y coordinate of icon center
-     * @param scale Zoom factor (0.0 - 1.0)
+     * @param data     Affinity data (type & progress)
+     * @param centerX  X coordinate of icon center
+     * @param centerY  Y coordinate of icon center
+     * @param scale    Zoom factor (0.0 - 1.0)
      */
     private static void renderZoomingIcon(
             GuiGraphics graphics,
@@ -175,10 +175,10 @@ public class AffinityHudOverlay {
     /**
      * Renders tooltip when hovering over an Affinity icon.
      *
-     * @param graphics GuiGraphics for rendering
+     * @param graphics   GuiGraphics for rendering
      * @param affinities List of affinities
-     * @param hotbarX X position of hotbar
-     * @param hotbarY Y position of hotbar
+     * @param hotbarX    X position of hotbar
+     * @param hotbarY    Y position of hotbar
      */
     public static void renderHoverTooltip(
             GuiGraphics graphics,
@@ -302,12 +302,12 @@ public class AffinityHudOverlay {
         if (percent < 50) {
             // 0-50%: Red → Orange
             float ratio = percent / 50.0f;
-            return 0xFF000000 | (255 << 16) | ((int)(0x88 * ratio) << 8);
+            return 0xFF000000 | (255 << 16) | ((int) (0x88 * ratio) << 8);
         } else {
             // 50-100%: Orange → Green
             float ratio = (percent - 50) / 50.0f;
-            int red = (int)(255 * (1 - ratio));
-            int green = (int)(0x88 + (255 - 0x88) * ratio);
+            int red = (int) (255 * (1 - ratio));
+            int green = (int) (0x88 + (255 - 0x88) * ratio);
             return 0xFF000000 | (red << 16) | (green << 8);
         }
     }

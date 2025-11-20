@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,26 +36,22 @@ public class AffinityBookOverlay {
      * Height of the affinity book panel.
      */
     private static final int HEIGHT = 166;
-
-    /**
-     * Whether the overlay is currently visible.
-     */
-    private boolean visible = false;
-
     /**
      * The player whose affinities are displayed.
      */
     private final Player player;
-
     /**
      * Minecraft instance.
      */
     private final Minecraft minecraft;
-
     /**
      * Font renderer.
      */
     private final Font font;
+    /**
+     * Whether the overlay is currently visible.
+     */
+    private boolean visible = false;
 
     /**
      * Create a new affinity book overlay.
@@ -76,21 +72,21 @@ public class AffinityBookOverlay {
     }
 
     /**
-     * Set the visibility state.
-     *
-     * @param visible Whether the overlay should be visible
-     */
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
-
-    /**
      * Check if the overlay is currently visible.
      *
      * @return true if visible
      */
     public boolean isVisible() {
         return this.visible;
+    }
+
+    /**
+     * Set the visibility state.
+     *
+     * @param visible Whether the overlay should be visible
+     */
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     /**
@@ -172,11 +168,11 @@ public class AffinityBookOverlay {
     /**
      * Render a group of affinities.
      *
-     * @param graphics Graphics context
-     * @param x        X position
-     * @param y        Starting Y position
-     * @param group    List of affinities to render
-     * @param map      Map of affinity completion percentages
+     * @param graphics  Graphics context
+     * @param x         X position
+     * @param y         Starting Y position
+     * @param group     List of affinities to render
+     * @param map       Map of affinity completion percentages
      * @param rowHeight Height of each row
      * @return Y position after rendering all entries
      */

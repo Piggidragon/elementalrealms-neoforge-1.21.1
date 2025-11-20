@@ -1,13 +1,13 @@
 package de.piggidragon.elementalrealms.util;
 
-import net.minecraft.core.*;
-import net.minecraft.world.level.*;
-import net.minecraft.world.level.block.state.*;
-import net.minecraft.world.phys.*;
-import net.minecraft.world.phys.shapes.*;
-import team.lodestar.lodestone.helpers.*;
-import team.lodestar.lodestone.systems.particle.builder.*;
-import java.util.Random;
+import de.piggidragon.elementalrealms.ElementalRealms;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import team.lodestar.lodestone.helpers.BlockHelper;
+import team.lodestar.lodestone.systems.particle.builder.WorldParticleBuilder;
 
 /**
  * Utility class for enhanced particle effects with Lodestone
@@ -16,10 +16,11 @@ public class ParticleUtil {
 
     /**
      * Creates a block outline with custom particle density and returns the builder for chaining
-     * @param builder The WorldParticleBuilder to use
-     * @param level The level/world to spawn particles in
-     * @param pos The block position
-     * @param state The block state for shape calculation
+     *
+     * @param builder          The WorldParticleBuilder to use
+     * @param level            The level/world to spawn particles in
+     * @param pos              The block position
+     * @param state            The block state for shape calculation
      * @param particlesPerEdge Number of particles to spawn per edge (higher = denser outline)
      * @return The same builder instance for method chaining
      */
@@ -51,28 +52,48 @@ public class ParticleUtil {
                     spawnLineWithDensity(builder, level, e, v.add(x2, y1, z2), particlesPerEdge);
                 }
         );
-        return builder; // Builder zurückgeben für Chaining
+        return builder;
+    }
+
+    public static boolean spawnLineWithAnimation(WorldParticleBuilder builder, Level level, Vec3 start, Vec3 end,
+                                                 double densityPerBlock, int beamLifeTicks, int travelTicks,
+                                                 int elapsedTicks) {
+        if (elapsedTicks > beamLifeTicks) {
+            return false;
+        }
+
+        Vec3 beamEnd;
+
+        if (elapsedTicks < travelTicks) {
+            ElementalRealms.LOGGER.debug("Traveling beam particles at tick " + elapsedTicks);
+            double t = Math.min(1.0, (double) elapsedTicks / travelTicks);
+            beamEnd = start.lerp(end, t);
+        } else {
+            beamEnd = end;
+        }
+
+        double currentDistance = start.distanceTo(beamEnd);
+        int particlesToSpawn = Math.max(1, (int) Math.ceil(currentDistance * densityPerBlock));
+
+        for (int i = 0; i < particlesToSpawn; i++) {
+            double t = particlesToSpawn > 1 ? (double) i / (particlesToSpawn - 1) : 0.5;
+            Vec3 pos = start.lerp(beamEnd, t);
+            builder.spawn(level, pos.x, pos.y, pos.z);
+        }
+        return true;
     }
 
     /**
-     * Spawns particles along a line with uniform spacing
-     * @param builder The WorldParticleBuilder to use
-     * @param level The level/world to spawn particles in
-     * @param start Start position of the line
-     * @param end End position of the line
-     * @param particleCount Number of particles to spawn along the line
+     * Spawns particles along a line with specified density per block (instant spawn).
+     *
+     * @param builder         The particle builder to use for spawning
+     * @param level           The level/world to spawn particles in
+     * @param start           Start position of the line
+     * @param end             End position of the line
+     * @param densityPerBlock Number of particles to spawn per block distance
      */
-
-    public static void spawnLineWithDensity(WorldParticleBuilder builder, Level level, Vec3 start, Vec3 end, int particleCount) {
-        for (int i = 0; i < particleCount; i++) {
-            // Calculate uniform position along the line (t ranges from 0.0 to 1.0)
-            double t = particleCount > 1 ? (double) i / (particleCount - 1) : 0.5;
-
-            // Linear interpolation for uniform distribution
-            Vec3 pos = start.lerp(end, t);
-
-            // Spawn the particle at the calculated position
-            builder.spawn(level, pos.x, pos.y, pos.z);
-        }
+    public static void spawnLineWithDensity(WorldParticleBuilder builder, Level level, Vec3 start, Vec3 end,
+                                            double densityPerBlock) {
+        spawnLineWithAnimation(builder, level, start, end, densityPerBlock, 0, 0, 0);
     }
 }

@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.registries.guis.menus.custom;
 
-import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -111,45 +111,45 @@ public class AffinityBookMenu extends AbstractContainerMenu {
      *
      * @param completionPercent 0-100
      */
-        public record AffinityData(Affinity affinity, int completionPercent) {
-            /**
-             * Creates a new affinity data entry
-             *
-             * @param affinity          The affinity type
-             * @param completionPercent The completion percentage (0-100)
-             */
-            public AffinityData(Affinity affinity, int completionPercent) {
-                this.affinity = affinity;
-                this.completionPercent = Math.clamp(completionPercent, 0, 100);
-            }
-
-            /**
-             * Gets the affinity type
-             *
-             * @return The affinity type
-             */
-            @Override
-            public Affinity affinity() {
-                return affinity;
-            }
-
-            /**
-             * Gets the completion percentage
-             *
-             * @return Completion percentage (0-100)
-             */
-            @Override
-            public int completionPercent() {
-                return completionPercent;
-            }
-
-            /**
-             * Checks if this affinity is completed
-             *
-             * @return True if completion is 100%
-             */
-            public boolean isCompleted() {
-                return completionPercent >= 100;
-            }
+    public record AffinityData(Affinity affinity, int completionPercent) {
+        /**
+         * Creates a new affinity data entry
+         *
+         * @param affinity          The affinity type
+         * @param completionPercent The completion percentage (0-100)
+         */
+        public AffinityData(Affinity affinity, int completionPercent) {
+            this.affinity = affinity;
+            this.completionPercent = Math.clamp(completionPercent, 0, 100);
         }
+
+        /**
+         * Gets the affinity type
+         *
+         * @return The affinity type
+         */
+        @Override
+        public Affinity affinity() {
+            return affinity;
+        }
+
+        /**
+         * Gets the completion percentage
+         *
+         * @return Completion percentage (0-100)
+         */
+        @Override
+        public int completionPercent() {
+            return completionPercent;
+        }
+
+        /**
+         * Checks if this affinity is completed
+         *
+         * @return True if completion is 100%
+         */
+        public boolean isCompleted() {
+            return completionPercent >= 100;
+        }
+    }
 }
