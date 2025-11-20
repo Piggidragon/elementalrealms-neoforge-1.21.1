@@ -7,15 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RenderManager {
-    public static final List<RenderTask> TASKS = new ArrayList<>();
-    public static final List<RenderTask> TASKS_TO_REMOVE = new ArrayList<>();
+    public static final List<RenderOrTickTask> TASKS = new ArrayList<>();
+    public static final List<RenderOrTickTask> TASKS_TO_REMOVE = new ArrayList<>();
 
     /**
      * Adds a new render task to the manager
      *
      * @param task The task to add
      */
-    public static void addTask(RenderTask task) {
+    public static void addTask(RenderOrTickTask task) {
         synchronized (TASKS) {
             TASKS.add(task);
         }
@@ -31,7 +31,7 @@ public class RenderManager {
     public static void executeAll(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {
         synchronized (TASKS) {
             if (TASKS.isEmpty()) return;
-            for (RenderTask task : TASKS) {
+            for (RenderOrTickTask task : TASKS) {
                 task.render(partialTicks, poseStack, multiBufferSource);
             }
         }
@@ -43,7 +43,7 @@ public class RenderManager {
      */
     public static void tickAll() {
         synchronized (TASKS) {
-            for (RenderTask task : TASKS) {
+            for (RenderOrTickTask task : TASKS) {
                 task.tick();
             }
         }
@@ -54,7 +54,7 @@ public class RenderManager {
      *
      * @param task The task to remove
      */
-    public static void requestRemoveTask(RenderTask task) {
+    public static void requestRemoveTask(RenderOrTickTask task) {
         synchronized (TASKS) {
             TASKS_TO_REMOVE.add(task);
         }
@@ -74,7 +74,7 @@ public class RenderManager {
      * @param task The task to check
      * @return true if the task is registered
      */
-    public static boolean hasTask(RenderTask task) {
+    public static boolean hasTask(RenderOrTickTask task) {
         synchronized (TASKS) {
             return TASKS.contains(task);
         }

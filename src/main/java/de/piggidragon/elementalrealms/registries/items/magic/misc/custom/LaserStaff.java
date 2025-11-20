@@ -24,7 +24,7 @@ public class LaserStaff extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         if (level.isClientSide) {
-            LaserBeamTask laserBeamTask = new LaserBeamTask(player, level, reach, 10f, 100, 5);
+            LaserBeamTask laserBeamTask = new LaserBeamTask(player, level, reach, 50, 10f, 100, 10);
             if (!RenderManager.hasTask(laserBeamTask)) {
                 RenderManager.addTask(laserBeamTask);
             }

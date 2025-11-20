@@ -1,17 +1,15 @@
 package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderManager;
-import de.piggidragon.elementalrealms.client.particles.lodestone.RenderTask;
+import de.piggidragon.elementalrealms.client.particles.lodestone.RenderOrTickTask;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
-import de.piggidragon.elementalrealms.util.ParticleUtil;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
 import team.lodestar.lodestone.registry.common.particle.LodestoneParticleTypes;
 import team.lodestar.lodestone.systems.easing.Easing;
 import team.lodestar.lodestone.systems.particle.builder.WorldParticleBuilder;
@@ -24,41 +22,47 @@ import java.util.Optional;
 /**
  * Laser beam task with frame-based particle spawning for smooth rendering
  */
-public class LaserBeamTask implements RenderTask {
+public class LaserBeamTask implements RenderOrTickTask {
 
     private final Player player;
     private final Level level;
+
     private final float damageAmount;
-    private final int DENSITY_PER_BLOCK = 50;
-    private final int beamTravelTicks;
-    private final int beamLifeTicks;
+
+    private final int densityPerBlock;
     private final Vec3 startPos;
-    private final Vec3 endPos;
+    private final Vec3 directionVec;
+    private Vec3 endPos;
+
+    private final float beamRange;
+    private final int travelTime;
+    private final int lifeTicks;
+
     private int currentTick = 0;
 
-
-    public LaserBeamTask(Player player, Level level, float beamRange, float damageAmount, int beamLifeTicks, int beamTravelTicks) {
+    public LaserBeamTask(Player player, Level level, float beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
         this.player = player;
         this.level = level;
         this.damageAmount = damageAmount;
-        this.beamLifeTicks = beamLifeTicks;
-        this.beamTravelTicks = beamTravelTicks;
+        this.directionVec = player.getLookAngle();
+        this.travelTime = travelTime;
+        this.lifeTicks = lifeTicks;
+        this.densityPerBlock = densityPerBlock;
+        this.beamRange = beamRange;
 
-        Vec3 lookVec = player.getLookAngle();
-        Vec3 eyePos = player.getEyePosition(1.0f);
-        this.startPos = eyePos.add(lookVec.scale(1.2));
-        this.endPos = eyePos.add(lookVec.scale(beamRange));
+        Vec3 directionVec = player.getLookAngle();
+        Vec3 eyePos = player.getEyePosition();
+        this.startPos = eyePos.add(directionVec.scale(1.2f));
     }
 
     @Override
-    public void render(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {}
-
-    @Override
     public void tick() {
-        if (!spawnBeam(level, startPos, endPos, DENSITY_PER_BLOCK, beamTravelTicks, beamLifeTicks, currentTick)) {
+        if (currentTick > lifeTicks) {
             RenderManager.requestRemoveTask(this);
-            return;
         }
+        update();
+        spawnOuterBeam(level, startPos, endPos, densityPerBlock);
+        spawnInnerBeam(level, startPos, endPos, densityPerBlock);
 
         Entity hitEntity = raycastEntityHit(level, player, startPos, endPos);
         if (hitEntity != null) {
@@ -66,30 +70,81 @@ public class LaserBeamTask implements RenderTask {
                     new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
             );
         }
+
         currentTick++;
     }
 
-    public static boolean spawnBeam(Level level, Vec3 start, Vec3 end, int densityPerBlock, int travelTicks, int beamLifeTicks, int elapsedTicks) {
-        if (!level.isClientSide) return false;
+    public void update() {
+        if (currentTick > travelTime) {
+            return;
+        }
 
-        return ParticleUtil.spawnLineWithAnimation(
+        double progress = (double) currentTick / travelTime;
+        double currentLength = beamRange * progress;
+
+        endPos = startPos.add(directionVec.scale(currentLength));
+    }
+
+    private void spawnOuterBeam(Level level, Vec3 start, Vec3 end, int densityPerBlock) {
+        if (!level.isClientSide) return;
+
+        spawnLine(
                 WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
-                        .setScaleData(GenericParticleData.create(0.2f, 0.2f).setEasing(Easing.ELASTIC_IN).build())
-                        .setTransparencyData(GenericParticleData.create(1f, 0f).setEasing(Easing.ELASTIC_IN).build())
-                        .setColorData(ColorParticleData.create(new Color(50, 0, 50), Color.BLACK).setEasing(Easing.ELASTIC_IN).build())
-                        .setLifetime(10)
+                        .setScaleData(GenericParticleData.create(0.3f).setEasing(Easing.ELASTIC_IN).build())
+                        .setTransparencyData(GenericParticleData.create(0.2f).setEasing(Easing.ELASTIC_IN).build())
+                        .setColorData(ColorParticleData.create(50,0,50).setEasing(Easing.ELASTIC_IN).build())
+                        .setLifetime(1)
                         .setMotion(0, 0, 0)
-                        .setRandomOffset(0.3f)
                         .enableNoClip(),
                 level,
                 start,
                 end,
                 densityPerBlock,
-                beamLifeTicks,
-                travelTicks,
-                elapsedTicks
+                0.05
         );
     }
+
+    private void spawnInnerBeam(Level level, Vec3 start, Vec3 end, int densityPerBlock) {
+        if (!level.isClientSide) return;
+
+        spawnLine(
+                WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
+                        .setScaleData(GenericParticleData.create(0.15f).setEasing(Easing.ELASTIC_IN).build())
+                        .setTransparencyData(GenericParticleData.create(1f).setEasing(Easing.ELASTIC_IN).build())
+                        .setColorData(ColorParticleData.create(new Color(255,255,255)).setEasing(Easing.ELASTIC_IN).build())
+                        .setLifetime(1)
+                        .setMotion(0, 0, 0)
+                        .enableNoClip(),
+                level,
+                start,
+                end,
+                densityPerBlock,
+                0.03
+        );
+    }
+
+    public static WorldParticleBuilder spawnLine(WorldParticleBuilder builder, Level level, Vec3 one, Vec3 two, int densityPerBlock, double intensityOffset) {
+        Vec3 diff = two.subtract(one);
+        double length = diff.length();
+
+        int particleCount = (int) Math.ceil(length * densityPerBlock);
+
+        for (int i = 0; i <= particleCount; i++) {
+            double t = (double) i / particleCount;
+            Vec3 pos = one.lerp(two, t);
+
+            double offsetX = (Math.random() * 2 - 1) * intensityOffset;
+            double offsetY = (Math.random() * 2 - 1) * intensityOffset;
+            double offsetZ = (Math.random() * 2 - 1) * intensityOffset;
+
+            Vec3 posWithOffset = pos.add(offsetX, offsetY, offsetZ);
+
+            level.addParticle(builder.getParticleOptions(), false, posWithOffset.x, posWithOffset.y, posWithOffset.z, 0, 0, 0);
+        }
+
+        return builder;
+    }
+
 
     private static Entity raycastEntityHit(Level level, Entity entityOwner, Vec3 start, Vec3 end) {
         AABB searchBox = new AABB(start, end).inflate(1.0D);
