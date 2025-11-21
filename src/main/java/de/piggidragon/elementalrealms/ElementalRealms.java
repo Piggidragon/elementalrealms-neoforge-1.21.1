@@ -8,6 +8,7 @@ import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
 import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
 import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.ModChunkgen;
 import de.piggidragon.elementalrealms.registries.worldgen.features.ModFeatures;
 import de.piggidragon.elementalrealms.registries.worldgen.structures.ModStructurePlacements;
@@ -50,6 +51,7 @@ public class ElementalRealms {
         ModChunkgen.register(modEventBus);
         ModFeatures.register(modEventBus);
         ModMenus.register(modEventBus);
+        ModSounds.register(modEventBus);
 
         // Client-only: register configuration screen
         if (FMLEnvironment.dist == Dist.CLIENT) {

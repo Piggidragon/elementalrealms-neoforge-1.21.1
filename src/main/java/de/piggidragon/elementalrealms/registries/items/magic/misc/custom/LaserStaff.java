@@ -2,6 +2,9 @@ package de.piggidragon.elementalrealms.registries.items.magic.misc.custom;
 
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderManager;
 import de.piggidragon.elementalrealms.client.particles.lodestone.tasks.LaserBeamTask;
+import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
+import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +27,14 @@ public class LaserStaff extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         if (level.isClientSide) {
-            LaserBeamTask laserBeamTask = new LaserBeamTask(player, level, reach, 50, 10f, 100, 10);
+            player.playNotifySound(
+                    ModSounds.LASER_BEAM.get(),
+                    SoundSource.PLAYERS,
+                    1.0f,
+                    1.0f
+            );
+
+            LaserBeamTask laserBeamTask = new LaserBeamTask(player, level, reach, 25, 10f, 120, 10);
             if (!RenderManager.hasTask(laserBeamTask)) {
                 RenderManager.addTask(laserBeamTask);
             }

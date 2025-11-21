@@ -3,6 +3,10 @@ package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderManager;
 import de.piggidragon.elementalrealms.client.particles.lodestone.RenderOrTickTask;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
+import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -10,11 +14,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
+import team.lodestar.lodestone.handlers.RenderHandler;
+import team.lodestar.lodestone.registry.client.LodestoneRenderTypes;
 import team.lodestar.lodestone.registry.common.particle.LodestoneParticleTypes;
 import team.lodestar.lodestone.systems.easing.Easing;
 import team.lodestar.lodestone.systems.particle.builder.WorldParticleBuilder;
 import team.lodestar.lodestone.systems.particle.data.GenericParticleData;
 import team.lodestar.lodestone.systems.particle.data.color.ColorParticleData;
+import team.lodestar.lodestone.systems.particle.render_types.LodestoneWorldParticleRenderType;
 
 import java.awt.*;
 import java.util.Optional;
@@ -90,17 +97,17 @@ public class LaserBeamTask implements RenderOrTickTask {
 
         spawnLine(
                 WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
-                        .setScaleData(GenericParticleData.create(0.3f).setEasing(Easing.ELASTIC_IN).build())
-                        .setTransparencyData(GenericParticleData.create(0.2f).setEasing(Easing.ELASTIC_IN).build())
-                        .setColorData(ColorParticleData.create(50,0,50).setEasing(Easing.ELASTIC_IN).build())
+                        .setScaleData(GenericParticleData.create(1f).setEasing(Easing.ELASTIC_IN).build())
+                        .setTransparencyData(GenericParticleData.create(0.1f).setEasing(Easing.ELASTIC_IN).build())
+                        //.setRenderType(LodestoneWorldParticleRenderType.LUMITRANSPARENT)
+                        .setColorData(ColorParticleData.create(255,0,0).setEasing(Easing.ELASTIC_IN).build())
                         .setLifetime(1)
-                        .setMotion(0, 0, 0)
                         .enableNoClip(),
                 level,
                 start,
                 end,
                 densityPerBlock,
-                0.05
+                0.015
         );
     }
 
@@ -110,16 +117,16 @@ public class LaserBeamTask implements RenderOrTickTask {
         spawnLine(
                 WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
                         .setScaleData(GenericParticleData.create(0.15f).setEasing(Easing.ELASTIC_IN).build())
-                        .setTransparencyData(GenericParticleData.create(1f).setEasing(Easing.ELASTIC_IN).build())
-                        .setColorData(ColorParticleData.create(new Color(255,255,255)).setEasing(Easing.ELASTIC_IN).build())
+                        .setRenderType(LodestoneWorldParticleRenderType.LUMITRANSPARENT)
+                        .setRenderTarget(RenderHandler.LATE_DELAYED_RENDER)
+                        .setColorData(ColorParticleData.create(new Color(255,0,0)).setEasing(Easing.ELASTIC_IN).build())
                         .setLifetime(1)
-                        .setMotion(0, 0, 0)
                         .enableNoClip(),
                 level,
                 start,
                 end,
                 densityPerBlock,
-                0.03
+                0.025
         );
     }
 

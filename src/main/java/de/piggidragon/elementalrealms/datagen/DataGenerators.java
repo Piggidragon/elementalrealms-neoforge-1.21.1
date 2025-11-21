@@ -52,5 +52,7 @@ public class DataGenerators {
                 ModDatapackProvider.createBuilder(),
                 Set.of(ElementalRealms.MODID)
         ));
+
+        generator.addProvider(event.includeClient(), new ModSoundsProvider(packOutput, event.getExistingFileHelper()));
     }
 }
