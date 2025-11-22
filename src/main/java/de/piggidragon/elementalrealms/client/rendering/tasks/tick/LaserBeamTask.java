@@ -4,7 +4,6 @@ import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.TickTask;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -23,7 +22,7 @@ import java.util.Optional;
  */
 public class LaserBeamTask implements TickTask {
 
-    private final Player player;
+    private final Entity entity;
     private final Level level;
 
     private final float damageAmount;
@@ -33,7 +32,7 @@ public class LaserBeamTask implements TickTask {
     private final Vec3 directionVec;
     private Vec3 endPos;
 
-    private final float beamRange;
+    private final double beamRange;
     private final int travelTime;
     private final int lifeTicks;
 
@@ -46,21 +45,21 @@ public class LaserBeamTask implements TickTask {
 
     private int currentTick = 0;
 
-    public LaserBeamTask(Player player, Level level, float beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
-        this.player = player;
+    public LaserBeamTask(Entity entity, Level level, double beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
+        this(entity, level, entity.position(), entity.getViewVector(1.0f), beamRange, densityPerBlock, damageAmount, lifeTicks, travelTime);
+    }
+
+    public LaserBeamTask(Entity entity, Level level, Vec3 customStartPos, Vec3 directionVec, double beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
+        this.entity = entity;
         this.level = level;
         this.damageAmount = damageAmount;
-        this.beamRange = beamRange;
         this.densityPerBlock = densityPerBlock;
         this.lifeTicks = lifeTicks;
         this.travelTime = travelTime;
-
-        this.directionVec = player.getLookAngle();
-
-        // Startposition leicht anpassen (Augenhöhe + etwas vorwärts)
-        this.startPos = player.getEyePosition().add(directionVec.scale(0.5f));
-        // Initialisieren, um NullPointer im ersten Render-Pass zu vermeiden
-        this.endPos = this.startPos;
+        this.directionVec = directionVec;
+        this.startPos = customStartPos;
+        this.endPos = startPos;
+        this.beamRange = beamRange;
     }
 
     @Override
@@ -77,10 +76,8 @@ public class LaserBeamTask implements TickTask {
             renderLaser(level, startPos, endPos, densityPerBlock);
         }
 
-        Entity hitEntity = raycastEntityHit(level, player, startPos, endPos);
+        Entity hitEntity = raycastEntityHit(level, entity, startPos, endPos);
         if (hitEntity != null) {
-            // Achtung: Das sendet jeden Tick ein Packet (20x pro Sekunde Schaden).
-            // Ggf. hier noch einen Cooldown oder "InvulnerabilityFrame"-Check einbauen.
             PacketDistributor.sendToServer(
                     new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
             );
@@ -90,7 +87,6 @@ public class LaserBeamTask implements TickTask {
     }
 
     public void update() {
-        // Berechnung des Fortschritts (0.0 bis 1.0) basierend auf TravelTime
         double progress = 1.0;
         if (travelTime > 0) {
             progress = Math.min(1.0, (double) currentTick / travelTime);
@@ -106,18 +102,16 @@ public class LaserBeamTask implements TickTask {
         Vec3 direction = targetPos.subtract(startPos);
         double distance = direction.length();
 
-        // Sicherheitscheck: Wenn Distanz fast 0 ist, normalize() nicht aufrufen
         if (distance < 0.05) return;
 
         direction = direction.normalize();
         int particleCount = (int) (distance * density);
 
-        // --- 1. Äußerer Glow (Aura) ---
         WorldParticleBuilder builder = WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
                 .setTransparencyData(GenericParticleData.create(0.75f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.45f, 0.0f).build()) // Dicke Aura
+                .setScaleData(GenericParticleData.create(0.45f, 0.0f).build())
                 .setColorData(ColorParticleData.create(START_COLOR, END_COLOR).build())
-                .setLifetime(12) // Kurzlebig für Animations-Effekt
+                .setLifetime(12)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .setMotion(0, 0, 0)
                 .enableNoClip();
@@ -126,7 +120,6 @@ public class LaserBeamTask implements TickTask {
             double progress = (double) i / particleCount;
             Vec3 spawnPos = startPos.add(direction.scale(distance * progress));
 
-            // Jitter (Zufallswackeln) für elektrischen Effekt
             double jitter = 0.06;
             double oX = (Math.random() - 0.5) * jitter;
             double oY = (Math.random() - 0.5) * jitter;
@@ -135,16 +128,14 @@ public class LaserBeamTask implements TickTask {
             builder.spawn(level, spawnPos.x + oX, spawnPos.y + oY, spawnPos.z + oZ);
         }
 
-        // --- 2. Innerer Kern (Heller Strahl) ---
         WorldParticleBuilder coreBuilder = WorldParticleBuilder.create(LodestoneParticleTypes.SPARKLE_PARTICLE)
                 .setTransparencyData(GenericParticleData.create(1.0f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.15f, 0.0f).build()) // Dünner Kern
+                .setScaleData(GenericParticleData.create(0.15f, 0.0f).build())
                 .setColorData(ColorParticleData.create(CORE_COLOR, CORE_END_COLOR).build())
                 .setLifetime(8)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .enableNoClip();
 
-        // Der Kern braucht weniger Partikel
         int coreCount = (int) (distance * 2.5);
         for (int i = 0; i < coreCount; i++) {
             double progress = (double) i / coreCount;
@@ -172,3 +163,4 @@ public class LaserBeamTask implements TickTask {
         return hitEntity;
     }
 }
+

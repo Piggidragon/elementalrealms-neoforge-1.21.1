@@ -1,9 +1,12 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
+import de.piggidragon.elementalrealms.client.rendering.tasks.tick.LaserBeamTask;
 import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.DragonLaserBeamPacket;
 import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
@@ -19,6 +22,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -65,6 +69,12 @@ public class ModPacketHandler {
                 ParticleHitEntityPacket.TYPE,
                 ParticleHitEntityPacket.STREAM_CODEC,
                 ModPacketHandler::handleParticleHitEntity
+        );
+
+        registrar.playToClient(
+                DragonLaserBeamPacket.TYPE,
+                DragonLaserBeamPacket.STREAM_CODEC,
+                ModPacketHandler::handleDragonLaserBeam
         );
     }
 
@@ -181,5 +191,31 @@ public class ModPacketHandler {
                         offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
             }
         }
+    }
+
+    private static void handleDragonLaserBeam(DragonLaserBeamPacket packet, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (FMLEnvironment.dist != Dist.CLIENT) return;
+            Minecraft minecraft = Minecraft.getInstance();
+            Level level = minecraft.level;
+            if (level == null) return;
+            Entity dragonEntity = level.getEntity(packet.dragonId());
+            if (!(dragonEntity instanceof EnderDragon)) return;
+            double beamRange = packet.startPos().distanceTo(packet.endPos());
+
+            LaserBeamTask laserBeamTask = new LaserBeamTask(
+                    dragonEntity,
+                    level,
+                    packet.startPos(),
+                    packet.endPos().subtract(packet.startPos()).normalize(),
+                    beamRange,
+                    10,
+                    10f,
+                    120,
+                    2
+            );
+
+            RenderManager.addTickTask(laserBeamTask);
+        });
     }
 }
