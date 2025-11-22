@@ -11,6 +11,7 @@ import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
 import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
+import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -211,7 +212,7 @@ public class ModPacketHandler {
                     beamRange,
                     10,
                     2f,
-                    120,
+                    60,
                     2
             );
 
