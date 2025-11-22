@@ -5,17 +5,16 @@ import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.tick.LaserBeamTask;
 import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
-import de.piggidragon.elementalrealms.packets.custom.DragonLaserBeamPacket;
-import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
-import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
+import de.piggidragon.elementalrealms.packets.custom.*;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
@@ -25,6 +24,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -75,6 +76,12 @@ public class ModPacketHandler {
                 DragonLaserBeamPacket.TYPE,
                 DragonLaserBeamPacket.STREAM_CODEC,
                 ModPacketHandler::handleDragonLaserBeam
+        );
+
+        registrar.playToServer(
+                LaserBeamDestroyBlockPacket.TYPE,
+                LaserBeamDestroyBlockPacket.STREAM_CODEC,
+                ModPacketHandler::handleDragonLaserBeamDestroyBlock
         );
     }
 
@@ -210,12 +217,50 @@ public class ModPacketHandler {
                     packet.endPos().subtract(packet.startPos()).normalize(),
                     beamRange,
                     10,
-                    2f,
-                    60,
+                    1f,
+                    110,
                     2
             );
 
             RenderManager.addTickTask(laserBeamTask);
+        });
+    }
+
+    /**
+     * Handles the packet on the server side.
+     * Destroys blocks within the specified radius of the center.
+     *
+     * @param context The packet context.
+     */
+    public static void handleDragonLaserBeamDestroyBlock(final LaserBeamDestroyBlockPacket packet, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player().level() instanceof ServerLevel serverLevel) {
+                Vec3 center = packet.center();
+                float r = packet.radius();
+                int rCeil = (int) Math.ceil(r);
+
+                BlockPos centerPos = BlockPos.containing(center);
+
+                // Iterate through all blocks in the bounding box of the radius
+                for (int x = -rCeil; x <= rCeil; x++) {
+                    for (int y = -rCeil; y <= rCeil; y++) {
+                        for (int z = -rCeil; z <= rCeil; z++) {
+                            // Check spherical distance
+                            if (x * x + y * y + z * z <= r * r) {
+                                BlockPos targetPos = centerPos.offset(x, y, z);
+                                BlockState state = serverLevel.getBlockState(targetPos);
+
+                                // Destroy block if it's not air and not unbreakable (like bedrock)
+                                if (!state.isAir() && state.getDestroySpeed(serverLevel, targetPos) >= 0) {
+                                    // true = drop items, false = no drops (vaporized)
+                                    // Using true for now so loot drops
+                                    serverLevel.destroyBlock(targetPos, true, context.player());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 }
