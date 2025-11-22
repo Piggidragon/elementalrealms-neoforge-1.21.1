@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.client.events;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.client.particles.lodestone.RenderManager;
+import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.entities.client.EmptyPortalRenderer;
 import net.minecraft.client.Minecraft;
@@ -60,6 +60,8 @@ public class ClientModEvents {
     public static void onClientTick(LevelTickEvent.Post event) {
         // Only run on client side
         if (!event.getLevel().isClientSide()) return;
+
+        RenderManager.removeRequestedTasks();
 
         // Tick all tasks for logic updates (position tracking, damage, etc.)
         RenderManager.tickAll();

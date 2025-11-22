@@ -1,9 +1,9 @@
-package de.piggidragon.elementalrealms.client.particles.lodestone;
+package de.piggidragon.elementalrealms.client.rendering.tasks;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 
-public interface RenderOrTickTask {
+public interface RenderTask {
     /**
      * Called every frame for rendering (60+ times per second)
      *
@@ -12,12 +12,5 @@ public interface RenderOrTickTask {
      * @param multiBufferSource The buffer source for rendering
      */
     default void render(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource){
-    }
-
-    /**
-     * Called every tick for logic updates (20 times per second)
-     */
-    default void tick() {
-        // Optional: Override in implementations that need tick logic
     }
 }
