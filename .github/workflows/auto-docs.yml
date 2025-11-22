@@ -2,7 +2,7 @@ name: Documentation Generator
 
 on:
   pull_request:
-    types: [ opened, synchronize ]
+    types: [ opened ]
     paths:
       - 'src/main/java/**/*.java'
 
@@ -13,6 +13,8 @@ permissions:
 
 jobs:
   generate-docs-issue:
+    if: github.event.pull_request.user.type != 'Bot' && github.event.pull_request.user.login != 'copilot[documentation-specialist]'
+
     runs-on: ubuntu-latest
 
     steps:
