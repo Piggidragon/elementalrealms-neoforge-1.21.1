@@ -40,9 +40,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         AffinityItems.AFFINITY_SHARDS.values().forEach(item ->
                 basicItem(item.get())
         );
-
-        getBuilder("laser_staff")
-                .parent(new ModelFile.UncheckedModelFile("minecraft:item/blaze_rod"));
     }
 
     /**

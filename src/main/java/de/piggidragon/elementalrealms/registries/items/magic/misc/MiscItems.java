@@ -1,7 +1,6 @@
 package de.piggidragon.elementalrealms.registries.items.magic.misc;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.custom.LaserStaff;
 import de.piggidragon.elementalrealms.registries.items.magic.misc.custom.SchoolStaff;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -23,11 +22,6 @@ public class MiscItems {
     public static final DeferredItem<Item> DIMENSION_STAFF = ITEMS.registerItem(
             "dimension_staff",
             (p) -> new SchoolStaff(p.durability(16).rarity(Rarity.UNCOMMON))
-    );
-
-    public static final DeferredItem<Item> LASER_STAFF = ITEMS.registerItem(
-            "laser_staff",
-            (p) -> new LaserStaff(p.durability(50).rarity(Rarity.RARE))
     );
 
     /**

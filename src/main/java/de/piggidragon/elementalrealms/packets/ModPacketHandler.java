@@ -210,7 +210,7 @@ public class ModPacketHandler {
                     packet.endPos().subtract(packet.startPos()).normalize(),
                     beamRange,
                     10,
-                    10f,
+                    2f,
                     120,
                     2
             );
