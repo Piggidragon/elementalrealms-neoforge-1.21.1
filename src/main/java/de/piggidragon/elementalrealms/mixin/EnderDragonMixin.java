@@ -39,40 +39,36 @@ import java.util.stream.Collectors;
 public abstract class EnderDragonMixin extends Mob {
 
     /**
-     * Accessor for the dragon's head part.
-     */
-    @Final
-    @Shadow public EnderDragonPart head;
-
-    /**
-     * Stores the reference position of the player at the start of a check interval.
-     */
-    @Unique
-    private final Map<UUID, Vec3> elementalrealms_neoforge_1_21_1$anchorPositions = new HashMap<>();
-
-    /**
-     * Counts the ticks since the last position check.
-     */
-    @Unique
-    private final Map<UUID, Integer> elementalrealms_neoforge_1_21_1$checkTimer = new HashMap<>();
-
-    /**
-     * Cooldown timer for the laser attack per player.
-     */
-    @Unique
-    private final Map<UUID, Integer> elementalrealms_neoforge_1_21_1$playerLaserCooldown = new HashMap<>();
-
-    /**
      * The interval in ticks to check for player movement (60 ticks = 3 seconds).
      */
     @Unique
     private static final int CHECK_INTERVAL = 60;
-
     /**
      * The radius in blocks the player must move outside of within the interval.
      */
     @Unique
     private static final double CHECK_RADIUS = 1.5;
+    /**
+     * Stores the reference position of the player at the start of a check interval.
+     */
+    @Unique
+    private final Map<UUID, Vec3> elementalrealms_neoforge_1_21_1$anchorPositions = new HashMap<>();
+    /**
+     * Counts the ticks since the last position check.
+     */
+    @Unique
+    private final Map<UUID, Integer> elementalrealms_neoforge_1_21_1$checkTimer = new HashMap<>();
+    /**
+     * Cooldown timer for the laser attack per player.
+     */
+    @Unique
+    private final Map<UUID, Integer> elementalrealms_neoforge_1_21_1$playerLaserCooldown = new HashMap<>();
+    /**
+     * Accessor for the dragon's head part.
+     */
+    @Final
+    @Shadow
+    public EnderDragonPart head;
 
     /**
      * Constructor matching the super class.

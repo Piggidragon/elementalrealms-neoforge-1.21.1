@@ -165,7 +165,8 @@ public class PortalEntity extends Entity {
      * Handles entity collision pushing.
      */
     @Override
-    public void push(Entity entity) {}
+    public void push(Entity entity) {
+    }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
@@ -252,7 +253,8 @@ public class PortalEntity extends Entity {
      * Defines synchronized data for client-server communication.
      */
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+    }
 
     /**
      * Updates the portal every tick.

@@ -27,7 +27,9 @@ public class ModMenus {
      */
     public static void register(IEventBus bus) {
         MENUS.register(bus);
-    }    /**
+    }
+
+    /**
      * Menu type for the affinity book screen.
      * Displays player affinities and their completion progress.
      */

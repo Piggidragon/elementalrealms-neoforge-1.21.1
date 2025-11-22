@@ -15,7 +15,7 @@ import team.lodestar.lodestone.systems.particle.data.GenericParticleData;
 import team.lodestar.lodestone.systems.particle.data.color.ColorParticleData;
 import team.lodestar.lodestone.systems.particle.render_types.LodestoneWorldParticleRenderType;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,32 +27,26 @@ import java.util.List;
  */
 public class LaserBeamTask implements TickTask {
 
-    private final Entity entity;
-    private final Level level;
-
-    private final float damageAmount;
-    private final int densityPerBlock;
-
-    private final Vec3 startPos;
-    private final Vec3 directionVec;
-    private Vec3 endPos;
-
-    private final double beamRange;
-    private final int travelTime;
-    private final int lifeTicks;
-
     /**
      * The radius of the destructive bubble at the end of the laser.
      */
     private static final float BUBBLE_RADIUS = 1.5f;
-
     // Ender Dragon Colors (Neon Purple -> Magenta)
     private static final Color START_COLOR = new Color(180, 0, 255);
     private static final Color END_COLOR = new Color(255, 100, 255);
     // Core Colors (White -> Light Pink)
     private static final Color CORE_COLOR = new Color(255, 255, 255);
     private static final Color CORE_END_COLOR = new Color(255, 200, 255);
-
+    private final Entity entity;
+    private final Level level;
+    private final float damageAmount;
+    private final int densityPerBlock;
+    private final Vec3 startPos;
+    private final Vec3 directionVec;
+    private final double beamRange;
+    private final int travelTime;
+    private final int lifeTicks;
+    private Vec3 endPos;
     private int currentTick = 0;
 
     /**
@@ -94,59 +88,6 @@ public class LaserBeamTask implements TickTask {
         this.startPos = customStartPos;
         this.endPos = startPos;
         this.beamRange = beamRange;
-    }
-
-    /**
-     * Executes the per-tick logic for the laser beam.
-     * <p>
-     * Updates positions, renders particles, handles entity hits, and requests block destruction.
-     */
-    @Override
-    public void tick() {
-        if (currentTick > lifeTicks) {
-            RenderManager.requestRemoveTickTask(this);
-            return;
-        }
-
-        updatePositions();
-
-        if (startPos.distanceToSqr(endPos) > 0.01) {
-            renderLaser(level, startPos, endPos, densityPerBlock);
-            // Render the bubble at the end
-            renderHitSphere(level, endPos, BUBBLE_RADIUS);
-
-            // Periodically destroy blocks inside the bubble
-            // We do this every 5 ticks to reduce packet spam
-            if (currentTick % 5 == 0) {
-                requestBlockDestruction(endPos, BUBBLE_RADIUS);
-            }
-        }
-
-        List<Entity> hitEntity = searchEntityBoxHit(level, entity, new AABB(startPos, endPos).inflate(0.3));
-        hitEntity.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(2)));
-
-        for (Entity e : hitEntity) {
-            if(e != null) {
-                PacketDistributor.sendToServer(
-                        new LaserBeamHitEntityPacket(e.getId(), damageAmount)
-                );
-            }
-        }
-
-        currentTick++;
-    }
-
-    /**
-     * Updates the end position of the laser based on travel time and range.
-     */
-    public void updatePositions() {
-        double progress = 1.0;
-        if (travelTime > 0) {
-            progress = Math.min(1.0, (double) currentTick / travelTime);
-        }
-
-        double currentLength = beamRange * progress;
-        endPos = startPos.add(directionVec.scale(currentLength));
     }
 
     /**
@@ -251,22 +192,12 @@ public class LaserBeamTask implements TickTask {
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .enableNoClip();
 
-        for(int i = 0; i < 3; i++) {
-            Vec3 randomInner = new Vec3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
+        for (int i = 0; i < 3; i++) {
+            Vec3 randomInner = new Vec3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5)
                     .normalize().scale(Math.random() * radius * 0.8);
             Vec3 spawnPos = center.add(randomInner);
             coreBuilder.spawn(level, spawnPos.x, spawnPos.y, spawnPos.z);
         }
-    }
-
-    /**
-     * Sends a packet to the server requesting block destruction at the given location.
-     *
-     * @param pos    The center position of the destruction.
-     * @param radius The radius of destruction.
-     */
-    private void requestBlockDestruction(Vec3 pos, float radius) {
-        PacketDistributor.sendToServer(new LaserBeamDestroyBlockPacket(pos, radius));
     }
 
     /**
@@ -281,5 +212,68 @@ public class LaserBeamTask implements TickTask {
         List<Entity> entityHitList = new ArrayList<>();
         entityHitList.addAll(level.getEntities(entityOwner, box, e -> e.isAlive() && e != entityOwner));
         return entityHitList;
+    }
+
+    /**
+     * Executes the per-tick logic for the laser beam.
+     * <p>
+     * Updates positions, renders particles, handles entity hits, and requests block destruction.
+     */
+    @Override
+    public void tick() {
+        if (currentTick > lifeTicks) {
+            RenderManager.requestRemoveTickTask(this);
+            return;
+        }
+
+        updatePositions();
+
+        if (startPos.distanceToSqr(endPos) > 0.01) {
+            renderLaser(level, startPos, endPos, densityPerBlock);
+            // Render the bubble at the end
+            renderHitSphere(level, endPos, BUBBLE_RADIUS);
+
+            // Periodically destroy blocks inside the bubble
+            // We do this every 5 ticks to reduce packet spam
+            if (currentTick % 5 == 0) {
+                requestBlockDestruction(endPos, BUBBLE_RADIUS);
+            }
+        }
+
+        List<Entity> hitEntity = searchEntityBoxHit(level, entity, new AABB(startPos, endPos).inflate(0.3));
+        hitEntity.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(2)));
+
+        for (Entity e : hitEntity) {
+            if (e != null) {
+                PacketDistributor.sendToServer(
+                        new LaserBeamHitEntityPacket(e.getId(), damageAmount)
+                );
+            }
+        }
+
+        currentTick++;
+    }
+
+    /**
+     * Updates the end position of the laser based on travel time and range.
+     */
+    public void updatePositions() {
+        double progress = 1.0;
+        if (travelTime > 0) {
+            progress = Math.min(1.0, (double) currentTick / travelTime);
+        }
+
+        double currentLength = beamRange * progress;
+        endPos = startPos.add(directionVec.scale(currentLength));
+    }
+
+    /**
+     * Sends a packet to the server requesting block destruction at the given location.
+     *
+     * @param pos    The center position of the destruction.
+     * @param radius The radius of destruction.
+     */
+    private void requestBlockDestruction(Vec3 pos, float radius) {
+        PacketDistributor.sendToServer(new LaserBeamDestroyBlockPacket(pos, radius));
     }
 }

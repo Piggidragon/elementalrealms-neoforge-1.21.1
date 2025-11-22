@@ -34,10 +34,10 @@ public record LaserBeamDestroyBlockPacket(
     public static final StreamCodec<RegistryFriendlyByteBuf, LaserBeamDestroyBlockPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ModStreamCodecs.VEC3_STREAM_CODEC,
-                LaserBeamDestroyBlockPacket::center,
-                ByteBufCodecs.FLOAT,
-                LaserBeamDestroyBlockPacket::radius,
-                LaserBeamDestroyBlockPacket::new
+                    LaserBeamDestroyBlockPacket::center,
+                    ByteBufCodecs.FLOAT,
+                    LaserBeamDestroyBlockPacket::radius,
+                    LaserBeamDestroyBlockPacket::new
             );
 
     @Override
