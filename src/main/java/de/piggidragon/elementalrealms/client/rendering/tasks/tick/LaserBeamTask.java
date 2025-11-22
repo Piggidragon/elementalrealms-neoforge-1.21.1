@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.client.rendering.tasks.tick;
 
 import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.TickTask;
-import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
+import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -14,8 +14,9 @@ import team.lodestar.lodestone.systems.particle.data.GenericParticleData;
 import team.lodestar.lodestone.systems.particle.data.color.ColorParticleData;
 import team.lodestar.lodestone.systems.particle.render_types.LodestoneWorldParticleRenderType;
 
-import java.awt.*;
-import java.util.Optional;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Laser beam task with frame-based particle spawning using Lodestone
@@ -69,24 +70,27 @@ public class LaserBeamTask implements TickTask {
             return;
         }
 
-        update();
+        updatePositions();
 
-        // Nur rendern, wenn der Strahl eine Länge hat
         if (startPos.distanceToSqr(endPos) > 0.01) {
             renderLaser(level, startPos, endPos, densityPerBlock);
         }
 
-        Entity hitEntity = raycastEntityHit(level, entity, startPos, endPos);
-        if (hitEntity != null) {
-            PacketDistributor.sendToServer(
-                    new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
-            );
+        List<Entity> hitEntity = searchEntityBoxHit(level, entity, new AABB(startPos, endPos).inflate(0.3));
+        hitEntity.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(2)));
+
+        for (Entity e : hitEntity) {
+            if(e != null) {
+                PacketDistributor.sendToServer(
+                        new LaserBeamHitEntityPacket(e.getId(), damageAmount)
+                );
+            }
         }
 
         currentTick++;
     }
 
-    public void update() {
+    public void updatePositions() {
         double progress = 1.0;
         if (travelTime > 0) {
             progress = Math.min(1.0, (double) currentTick / travelTime);
@@ -144,23 +148,10 @@ public class LaserBeamTask implements TickTask {
         }
     }
 
-    private static Entity raycastEntityHit(Level level, Entity entityOwner, Vec3 start, Vec3 end) {
-        AABB searchBox = new AABB(start, end).inflate(1.0D);
-        Entity hitEntity = null;
-        double closestDistance = Double.MAX_VALUE;
-
-        for (Entity entity : level.getEntities(entityOwner, searchBox, e -> e.isAlive() && e != entityOwner)) {
-            AABB entityBox = entity.getBoundingBox().inflate(0.3);
-            Optional<Vec3> optional = entityBox.clip(start, end);
-            if (optional.isPresent()) {
-                double distance = start.distanceToSqr(optional.get());
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    hitEntity = entity;
-                }
-            }
-        }
-        return hitEntity;
+    private static List<Entity> searchEntityBoxHit(Level level, Entity entityOwner, AABB box) {
+        List<Entity> entityHitList = new ArrayList<>();
+        entityHitList.addAll(level.getEntities(entityOwner, box, e -> e.isAlive() && e != entityOwner));
+        return entityHitList;
     }
 }
 

@@ -7,11 +7,10 @@ import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
 import de.piggidragon.elementalrealms.packets.custom.DragonLaserBeamPacket;
+import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
 import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
-import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
-import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -67,8 +66,8 @@ public class ModPacketHandler {
         );
 
         registrar.playToServer(
-                ParticleHitEntityPacket.TYPE,
-                ParticleHitEntityPacket.STREAM_CODEC,
+                LaserBeamHitEntityPacket.TYPE,
+                LaserBeamHitEntityPacket.STREAM_CODEC,
                 ModPacketHandler::handleParticleHitEntity
         );
 
@@ -79,7 +78,7 @@ public class ModPacketHandler {
         );
     }
 
-    private static void handleParticleHitEntity(ParticleHitEntityPacket particleHitEntityPacket, IPayloadContext iPayloadContext) {
+    private static void handleParticleHitEntity(LaserBeamHitEntityPacket particleHitEntityPacket, IPayloadContext iPayloadContext) {
         iPayloadContext.enqueueWork(() -> {
             if (iPayloadContext.player() instanceof ServerPlayer serverPlayer) {
                 Level level = serverPlayer.level();

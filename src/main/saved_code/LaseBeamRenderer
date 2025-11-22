@@ -3,7 +3,7 @@ package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.piggidragon.elementalrealms.client.rendering.tasks.TickTask;
-import de.piggidragon.elementalrealms.packets.custom.ParticleHitEntityPacket;
+import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.Entity;

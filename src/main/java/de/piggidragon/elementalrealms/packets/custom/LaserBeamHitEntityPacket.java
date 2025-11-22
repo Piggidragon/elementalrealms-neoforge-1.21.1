@@ -7,23 +7,23 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record ParticleHitEntityPacket(
+public record LaserBeamHitEntityPacket(
         int hitEntityID,
         float damageAmount
 ) implements CustomPacketPayload {
 
-    public static final Type<ParticleHitEntityPacket> TYPE =
+    public static final Type<LaserBeamHitEntityPacket> TYPE =
             new Type<>(
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "hit_entity")
             );
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ParticleHitEntityPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, LaserBeamHitEntityPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.INT,
-                    ParticleHitEntityPacket::hitEntityID,
+                    LaserBeamHitEntityPacket::hitEntityID,
                     ByteBufCodecs.FLOAT,
-                    ParticleHitEntityPacket::damageAmount,
-                    ParticleHitEntityPacket::new
+                    LaserBeamHitEntityPacket::damageAmount,
+                    LaserBeamHitEntityPacket::new
             );
 
     @Override

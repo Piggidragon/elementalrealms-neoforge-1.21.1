@@ -72,7 +72,7 @@ public abstract class EnderDragonMixin extends Mob {
      * The radius in blocks the player must move outside of within the interval.
      */
     @Unique
-    private static final double CHECK_RADIUS = 3.0;
+    private static final double CHECK_RADIUS = 1.5;
 
     /**
      * Constructor matching the super class.
@@ -194,9 +194,9 @@ public abstract class EnderDragonMixin extends Mob {
             }
         }
 
-        // Send the visual packet to the target (or all players if needed, but logic here targets specific player)
-        // Note: DragonLaserBeamPacket likely handles rendering for the client
-        PacketDistributor.sendToPlayer(target,
+        // Send the laser beam packet to the target player for rendering
+        PacketDistributor.sendToPlayer(
+                target,
                 new DragonLaserBeamPacket(dragon.getId(), startPos, endPos));
 
         level.sendParticles(ParticleTypes.PORTAL, startPos.x, startPos.y, startPos.z,
