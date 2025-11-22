@@ -11,21 +11,19 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModBlocks {
 
     /**
-     * Deferred register for block registrations
+     * Deferred register for block registrations.
      */
-    // Block-Registry
     public static final DeferredRegister.Blocks BLOCKS =
             DeferredRegister.createBlocks(ElementalRealms.MODID);
 
     /**
-     * Deferred register for block items
+     * Deferred register for block items.
      */
-    // Item-Registry
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(ElementalRealms.MODID);
 
     /*
-    // Block-Registrierung mit Eigenschaften
+    // Example block registration with properties:
     public static final DeferredBlock<SchoolDimensionPortal> SCHOOL_DIMENSION_PORTAL =
             BLOCKS.registerBlock("school_dimension_portal",
                     (p) -> new SchoolDimensionPortal(p
@@ -38,11 +36,10 @@ public final class ModBlocks {
                             .isRedstoneConductor((s, r, pos) -> false))
             );
 
-    // Item-Registrierung für den Block
+    // Example block item registration:
     public static final DeferredItem<BlockItem> SCHOOL_DIMENSION_PORTAL_ITEM =
             ITEMS.registerSimpleBlockItem("school_dimension_portal", SCHOOL_DIMENSION_PORTAL,
                     new Item.Properties());
-
      */
 
     /**
@@ -50,7 +47,6 @@ public final class ModBlocks {
      *
      * @param bus The mod's event bus for registration
      */
-    // Registrierungsmethode fürs EventBus
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
         ITEMS.register(bus);
