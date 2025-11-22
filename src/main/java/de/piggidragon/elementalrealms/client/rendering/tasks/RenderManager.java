@@ -6,6 +6,10 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Manages client-side rendering and tick tasks.
+ * Provides thread-safe registration and execution of custom visual effects.
+ */
 public class RenderManager {
     public static final List<RenderTask> RENDER_TASKS = new ArrayList<>();
     public static final List<TickTask> TICK_TASKS = new ArrayList<>();
@@ -13,7 +17,7 @@ public class RenderManager {
     public static final List<RenderTask> RENDER_TASKS_TO_REMOVE = new ArrayList<>();
 
     /**
-     * Adds a new render task to the manager
+     * Adds a new tick task to the manager.
      *
      * @param task The task to add
      */
@@ -23,6 +27,11 @@ public class RenderManager {
         }
     }
 
+    /**
+     * Adds a new render task to the manager.
+     *
+     * @param task The task to add
+     */
     public static void addRenderTask(RenderTask task) {
         synchronized (RENDER_TASKS) {
             RENDER_TASKS.add(task);
@@ -30,7 +39,7 @@ public class RenderManager {
     }
 
     /**
-     * Executes all render tasks (called every frame)
+     * Executes all render tasks (called every frame).
      *
      * @param partialTicks      Interpolation value between 0.0 and 1.0
      * @param poseStack         The pose stack for rendering
@@ -46,8 +55,8 @@ public class RenderManager {
     }
 
     /**
-     * Ticks all render tasks (called every tick - 20 times per second)
-     * This is where logic updates happen, separate from rendering
+     * Ticks all render tasks (called every tick - 20 times per second).
+     * This is where logic updates happen, separate from rendering.
      */
     public static void tickAll() {
         synchronized (TICK_TASKS) {
@@ -58,7 +67,7 @@ public class RenderManager {
     }
 
     /**
-     * Removes a tick task from the manager
+     * Marks a tick task for removal.
      *
      * @param task The task to remove
      */
@@ -69,7 +78,7 @@ public class RenderManager {
     }
 
     /**
-     * Removes a render task from the manager
+     * Marks a render task for removal.
      *
      * @param task The task to remove
      */
@@ -79,6 +88,10 @@ public class RenderManager {
         }
     }
 
+    /**
+     * Removes all marked tasks from their respective lists.
+     * Called at the start of each frame to prevent concurrent modification.
+     */
     public static void removeRequestedTasks() {
         synchronized (TICK_TASKS) {
             if (!TICK_TASKS_TO_REMOVE.isEmpty()) {
@@ -95,7 +108,7 @@ public class RenderManager {
     }
 
     /**
-     * Checks if a tick task is currently registered
+     * Checks if a tick task is currently registered.
      *
      * @param task The task to check
      * @return true if the task is registered
@@ -107,7 +120,7 @@ public class RenderManager {
     }
 
     /**
-     * Checks if a render task is currently registered
+     * Checks if a render task is currently registered.
      *
      * @param task The task to check
      * @return true if the task is registered
