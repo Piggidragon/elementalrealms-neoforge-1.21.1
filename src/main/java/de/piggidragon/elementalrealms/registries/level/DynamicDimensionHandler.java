@@ -1,10 +1,10 @@
 package de.piggidragon.elementalrealms.registries.level;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
-import de.piggidragon.elementalrealms.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import net.commoble.infiniverse.api.InfiniverseAPI;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;

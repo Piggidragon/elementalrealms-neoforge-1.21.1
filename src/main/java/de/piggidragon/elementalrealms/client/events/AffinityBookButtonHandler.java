@@ -178,7 +178,7 @@ public class AffinityBookButtonHandler {
      * @param shift           Whether to shift right (true) or reset (false)
      */
     private static void shiftInventoryForAffinityBook(AbstractContainerScreen<?> containerScreen, boolean shift) {
-        if (!(containerScreen instanceof EffectRenderingInventoryScreen<?> inventoryScreen)) {
+        if (!(containerScreen instanceof EffectRenderingInventoryScreen<?>)) {
             return;
         }
 
@@ -295,23 +295,5 @@ public class AffinityBookButtonHandler {
         affinityButtons.remove(containerScreen);
         affinityOverlays.remove(containerScreen);
         recipeBookButtons.remove(containerScreen);
-    }
-
-    /**
-     * Manually set whether the affinity book should be open.
-     *
-     * @param shouldBeOpen Whether the affinity book should persist as open
-     */
-    public static void setShouldAffinityBookBeOpen(boolean shouldBeOpen) {
-        shouldAffinityBookBeOpen = shouldBeOpen;
-    }
-
-    /**
-     * Get the current affinity book persistence state.
-     *
-     * @return true if affinity book should be open when inventory reopens
-     */
-    public static boolean shouldAffinityBookBeOpen() {
-        return shouldAffinityBookBeOpen;
     }
 }

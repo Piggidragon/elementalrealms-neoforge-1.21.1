@@ -2,8 +2,8 @@ package de.piggidragon.elementalrealms.events;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.guis.hud.AffinityHotbarManager;
-import de.piggidragon.elementalrealms.guis.hud.AffinityHudOverlay;
+import de.piggidragon.elementalrealms.registries.guis.hud.AffinityHotbarManager;
+import de.piggidragon.elementalrealms.registries.guis.hud.AffinityHudOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -20,7 +20,9 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID, value = Dist.CLIENT)
 public class HotbarRenderHandler {
-    /** Texture for the custom hotbar */
+    /**
+     * Texture for the custom hotbar
+     */
     private static final ResourceLocation CUSTOM_HOTBAR_TEXTURE = ResourceLocation.fromNamespaceAndPath(
             ElementalRealms.MODID, "hud/hotbar"
     );

@@ -1,0 +1,12 @@
+{
+  "laser_beam": {
+    "replace": true,
+    "sounds": [
+      {
+        "name": "elementalrealms:laser_beam",
+        "volume": 0.5
+      }
+    ],
+    "subtitle": "sound.elementalrealms.laser_beam"
+  }
+}

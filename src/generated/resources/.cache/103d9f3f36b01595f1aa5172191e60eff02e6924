@@ -1,5 +1,6 @@
-// 1.21.1	2025-11-10T20:29:02.0340389	Registries
+// 1.21.1	2025-11-21T01:35:15.4581466	Registries
+bc2c622ffa7d8bad1fe0a9d1ec14d752ac20ef90 data/elementalrealms/damage_type/laser.json
 d8da6d8a4b25fe8b6898907cd43723300b192eb7 data/elementalrealms/neoforge/biome_modifier/add_portal.json
-6389081b0b464061945bbd5ee1fefa603609dd7f data/elementalrealms/worldgen/configured_feature/portal_configured.json
+b9a8aac7956c2dbb92396570701d6d55f53e099b data/elementalrealms/worldgen/configured_feature/portal_configured.json
 42b10c354326b3edb2cd1edf11652a24f5e32e78 data/elementalrealms/worldgen/placed_feature/portal_placed_surface.json
 9f3910b30966aef1d3527855211ef3e2892fbe28 data/elementalrealms/worldgen/placed_feature/portal_placed_under.json

@@ -1,8 +1,8 @@
 package de.piggidragon.elementalrealms.registries.entities.custom;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.particles.PortalParticles;
+import de.piggidragon.elementalrealms.client.particles.vanilla.PortalParticles;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
@@ -39,23 +39,19 @@ import java.util.*;
  */
 public class PortalEntity extends Entity {
 
+    // Portal positioning constants
+    public static final double PORTAL_HEIGHT_OFFSET = 5.0; // Blocks above spawn position
+    public static final double PORTAL_Z_OFFSET = 2.0; // Blocks offset from spawn
+    // Search radius for existing portals
+    public static final double PORTAL_SEARCH_RADIUS = 128.0; // Blocks to search for existing portals
     // Particle effect constants
     private static final int PARTICLE_SPAWN_INTERVAL = 5; // Ticks between particle spawns
     private static final int PARTICLE_COUNT = 3; // Number of particles per spawn
     private static final double PARTICLE_RADIUS = 0.8; // Spiral radius for particles
     private static final double PARTICLE_Y_OFFSET = 0.5; // Vertical offset for particles
-    
-    // Portal positioning constants
-    public static final double PORTAL_HEIGHT_OFFSET = 5.0; // Blocks above spawn position
-    public static final double PORTAL_Z_OFFSET = 2.0; // Blocks offset from spawn
-    
     // Explosion constants
     private static final float PORTAL_EXPLOSION_POWER = 25.0f; // Explosion radius when spawning
     private static final double PORTAL_EXPLOSION_Y_OFFSET = 1.0; // Vertical offset for explosion
-    
-    // Search radius for existing portals
-    public static final double PORTAL_SEARCH_RADIUS = 128.0; // Blocks to search for existing portals
-
     private final ResourceKey<Level> portalLevel; // Dimension where this portal exists
     private ResourceKey<Level> targetLevel; // Dimension to teleport to
     private UUID ownerUUID = null;
@@ -118,8 +114,14 @@ public class PortalEntity extends Entity {
         return this.ownerUUID;
     }
 
+    /**
+     * Retrieves the server level for a given dimension key.
+     *
+     * @param targetLevel the dimension key
+     * @return the corresponding server level, or null if not found
+     */
     @Nullable
-    private ServerLevel getLevelfromKey(ResourceKey<Level> targetLevel) {
+    private ServerLevel getLevelFromKey(ResourceKey<Level> targetLevel) {
         MinecraftServer server = this.getServer();
         if (server == null) {
             return null;
@@ -356,7 +358,7 @@ public class PortalEntity extends Entity {
                         player.level().dimension(), new Vec3(player.getX(), player.getY(), player.getZ())
                 );
 
-                ServerLevel destinationLevel = getLevelfromKey(targetLevel);
+                ServerLevel destinationLevel = getLevelFromKey(targetLevel);
 
                 // Determine spawn position based on target dimension
                 Vec3 destinationPos;
@@ -411,7 +413,7 @@ public class PortalEntity extends Entity {
                 Vec3 returnPos = returnLevelPos.values().iterator().next();
                 ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-                player.teleportTo(getLevelfromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch);
+                player.teleportTo(getLevelFromKey(returnLevel), returnPos.x + 2, returnPos.y, returnPos.z + 2, relatives, yaw, pitch);
                 player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
                 player.setPortalCooldown();
 

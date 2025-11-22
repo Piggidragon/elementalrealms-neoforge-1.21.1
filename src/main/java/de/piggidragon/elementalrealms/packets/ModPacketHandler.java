@@ -1,18 +1,31 @@
 package de.piggidragon.elementalrealms.packets;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.guis.menus.custom.AffinityBookMenu;
+import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
+import de.piggidragon.elementalrealms.client.rendering.tasks.tick.LaserBeamTask;
+import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
-import de.piggidragon.elementalrealms.packets.custom.OpenAffinityBookPacket;
+import de.piggidragon.elementalrealms.packets.custom.*;
+import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -42,7 +55,7 @@ public class ModPacketHandler {
         // Register AffinitySuccessPacket (Server -> Client)
         registrar.playToClient(
                 AffinitySuccessPacket.TYPE,
-                AffinitySuccessPacket.CODEC,
+                AffinitySuccessPacket.STREAM_CODEC,
                 ModPacketHandler::handleAffinitySuccess
         );
 
@@ -52,6 +65,43 @@ public class ModPacketHandler {
                 OpenAffinityBookPacket.STREAM_CODEC,
                 ModPacketHandler::handleOpenAffinityBook
         );
+
+        registrar.playToServer(
+                LaserBeamHitEntityPacket.TYPE,
+                LaserBeamHitEntityPacket.STREAM_CODEC,
+                ModPacketHandler::handleParticleHitEntity
+        );
+
+        registrar.playToClient(
+                DragonLaserBeamPacket.TYPE,
+                DragonLaserBeamPacket.STREAM_CODEC,
+                ModPacketHandler::handleDragonLaserBeam
+        );
+
+        registrar.playToServer(
+                LaserBeamDestroyBlockPacket.TYPE,
+                LaserBeamDestroyBlockPacket.STREAM_CODEC,
+                ModPacketHandler::handleDragonLaserBeamDestroyBlock
+        );
+    }
+
+    private static void handleParticleHitEntity(LaserBeamHitEntityPacket particleHitEntityPacket, IPayloadContext iPayloadContext) {
+        iPayloadContext.enqueueWork(() -> {
+            if (iPayloadContext.player() instanceof ServerPlayer serverPlayer) {
+                Level level = serverPlayer.level();
+                Entity hitEntity = level.getEntity(particleHitEntityPacket.hitEntityID());
+                if (hitEntity instanceof LivingEntity targetEntity) {
+
+                    Holder<DamageType> damageTypeHolder = serverPlayer.level().registryAccess()
+                            .registryOrThrow(Registries.DAMAGE_TYPE)
+                            .getHolderOrThrow(ModDatapackProvider.LASER);
+
+                    DamageSource damageSource = new DamageSource(damageTypeHolder, null, serverPlayer);
+
+                    targetEntity.hurt(damageSource, particleHitEntityPacket.damageAmount());
+                }
+            }
+        });
     }
 
     /**
@@ -148,5 +198,69 @@ public class ModPacketHandler {
                         offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
             }
         }
+    }
+
+    private static void handleDragonLaserBeam(DragonLaserBeamPacket packet, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (FMLEnvironment.dist != Dist.CLIENT) return;
+            Minecraft minecraft = Minecraft.getInstance();
+            Level level = minecraft.level;
+            if (level == null) return;
+            Entity dragonEntity = level.getEntity(packet.dragonId());
+            if (!(dragonEntity instanceof EnderDragon)) return;
+            double beamRange = packet.startPos().distanceTo(packet.endPos());
+
+            LaserBeamTask laserBeamTask = new LaserBeamTask(
+                    dragonEntity,
+                    level,
+                    packet.startPos(),
+                    packet.endPos().subtract(packet.startPos()).normalize(),
+                    beamRange,
+                    10,
+                    1f,
+                    110,
+                    2
+            );
+
+            RenderManager.addTickTask(laserBeamTask);
+        });
+    }
+
+    /**
+     * Handles the packet on the server side.
+     * Destroys blocks within the specified radius of the center.
+     *
+     * @param context The packet context.
+     */
+    public static void handleDragonLaserBeamDestroyBlock(final LaserBeamDestroyBlockPacket packet, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player().level() instanceof ServerLevel serverLevel) {
+                Vec3 center = packet.center();
+                float r = packet.radius();
+                int rCeil = (int) Math.ceil(r);
+
+                BlockPos centerPos = BlockPos.containing(center);
+
+                // Iterate through all blocks in the bounding box of the radius
+                for (int x = -rCeil; x <= rCeil; x++) {
+                    for (int y = -rCeil; y <= rCeil; y++) {
+                        for (int z = -rCeil; z <= rCeil; z++) {
+                            // Check spherical distance
+                            if (x * x + y * y + z * z <= r * r) {
+                                BlockPos targetPos = centerPos.offset(x, y, z);
+                                BlockState state = serverLevel.getBlockState(targetPos);
+
+                                // Destroy block if it's not air and not unbreakable (like bedrock)
+                                if (!state.isAir() && state.getDestroySpeed(serverLevel, targetPos) >= 0) {
+                                    // true = drop items, false = no drops (vaporized)
+                                    // Using true for now so loot drops
+                                    serverLevel.destroyBlock(targetPos, true, context.player());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 }

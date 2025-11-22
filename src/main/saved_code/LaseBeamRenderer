@@ -1,0 +1,163 @@
+package de.piggidragon.elementalrealms.client.particles.lodestone.tasks;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import de.piggidragon.elementalrealms.client.rendering.tasks.TickTask;
+import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.joml.Vector3f;
+import team.lodestar.lodestone.registry.client.LodestoneRenderTypes;
+import team.lodestar.lodestone.systems.rendering.VFXBuilders;
+
+import java.awt.*;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+/**
+ * Laser beam using Lodestone's built-in beam rendering for smooth frame-based rendering
+ */
+public class LaserBeamTask implements RenderTask {
+
+    private final Player player;
+    private final Level level;
+    private final float beamRange;
+    private static final float damageAmount = 10.0f;
+
+    private Vec3 currentStartPos;
+    private Vec3 currentEndPos;
+
+    // Beam visual properties
+    private static final float BEAM_WIDTH = 0.2f; // Core beam thickness
+    private static final float GLOW_WIDTH = 0.3f;  // Glow effect thickness
+    private static final Color BEAM_COLOR = new Color(255, 0, 0); // Bright red
+    private static final Color GLOW_COLOR = new Color(255, 100, 100, 100); // Soft red glow
+
+    public LaserBeamTask(Player player, Level level, float beamRange) {
+        this.player = player;
+        this.level = level;
+        this.beamRange = beamRange;
+
+        // Initialize positions
+        Vec3 lookVec = player.getLookAngle();
+        Vec3 eyePos = player.getEyePosition(1.0f);
+        this.currentStartPos = eyePos.add(lookVec.scale(1.2));
+        this.currentEndPos = eyePos.add(lookVec.scale(beamRange));
+    }
+
+    @Override
+    public void tick() {
+        // Update positions for damage calculation
+        Vec3 lookVec = player.getLookAngle();
+        Vec3 eyePos = player.getEyePosition(1.0f);
+        this.currentStartPos = eyePos.add(lookVec.scale(1.2));
+        this.currentEndPos = eyePos.add(lookVec.scale(beamRange));
+
+        Entity hitEntity = raycastEntityHit(level, player, currentStartPos, currentEndPos);
+
+        if (hitEntity != null) {
+            PacketDistributor.sendToServer(
+                    new ParticleHitEntityPacket(hitEntity.getId(), damageAmount)
+            );
+        }
+    }
+
+    @Override
+    public void render(float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource) {
+        // Render laser beam using Lodestone's VFX system
+        renderLaserBeam(poseStack, player, beamRange, partialTicks);
+    }
+
+    private void renderLaserBeam(PoseStack poseStack, Player player, float range, float partialTicks) {
+        poseStack.pushPose();
+
+        Vec3 cam = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        poseStack.translate(-cam.x, -cam.y, -cam.z);
+
+        Vec3 eye = player.getEyePosition(partialTicks);
+        Vec3 look = player.getLookAngle();
+        Vec3 start = eye.add(look.scale(1.2));
+        poseStack.translate(start.x, start.y, start.z);
+
+        poseStack.mulPose(Axis.YP.rotationDegrees(-player.getYRot()));
+        poseStack.mulPose(Axis.XP.rotationDegrees(player.getXRot()));
+
+        VFXBuilders.WorldVFXBuilder builder = VFXBuilders.createWorld()
+                .setRenderType(LodestoneRenderTypes.ADDITIVE_SOLID)
+                .setAlpha(1.0f);
+
+        // Inner beam (Core)
+        builder.setColor(BEAM_COLOR);
+        renderBoxBeam(poseStack, builder, range, BEAM_WIDTH);
+
+        // Glow around the beam
+        builder.setColor(GLOW_COLOR);
+        renderBoxBeam(poseStack, builder, range, GLOW_WIDTH);
+
+        poseStack.popPose();
+    }
+
+    /**
+     * Hilfsmethode zum Rendern des boxförmigen Strahls mit gegebener Breite
+     */
+    private void renderBoxBeam(PoseStack poseStack, VFXBuilders.WorldVFXBuilder builder, float range, float width) {
+        float half = width / 2f;
+        Vec3 startLocal = Vec3.ZERO;
+        Vec3 endLocal = new Vec3(0, 0, range);
+
+        Consumer<Vec3[]> renderQuad = verts -> {
+            Vector3f[] pos = new Vector3f[]{
+                    new Vector3f((float) verts[0].x, (float) verts[0].y, (float) verts[0].z),
+                    new Vector3f((float) verts[1].x, (float) verts[1].y, (float) verts[1].z),
+                    new Vector3f((float) verts[2].x, (float) verts[2].y, (float) verts[2].z),
+                    new Vector3f((float) verts[3].x, (float) verts[3].y, (float) verts[3].z)
+            };
+            builder.renderQuad(poseStack.last().pose(), pos);
+        };
+
+        Vec3[] side1 = {startLocal.add( half,  half, 0), startLocal.add( half, -half, 0),
+                endLocal.add( half, -half, 0),   endLocal.add( half,  half, 0)};
+        Vec3[] side2 = {startLocal.add(-half,  half, 0), startLocal.add(-half, -half, 0),
+                endLocal.add(-half, -half, 0),   endLocal.add(-half,  half, 0)};
+        Vec3[] side3 = {startLocal.add( half,  half, 0), startLocal.add(-half,  half, 0),
+                endLocal.add(-half,  half, 0),   endLocal.add( half,  half, 0)};
+        Vec3[] side4 = {startLocal.add( half, -half, 0), startLocal.add(-half, -half, 0),
+                endLocal.add(-half, -half, 0),   endLocal.add( half, -half, 0)};
+        Vec3[] capS  = {startLocal.add( half,  half, 0), startLocal.add( half, -half, 0),
+                startLocal.add(-half, -half, 0), startLocal.add(-half,  half, 0)};
+        Vec3[] capE  = {endLocal.add( half,  half, 0), endLocal.add( half, -half, 0),
+                endLocal.add(-half, -half, 0), endLocal.add(-half,  half, 0)};
+
+        renderQuad.accept(side1);
+        renderQuad.accept(side2);
+        renderQuad.accept(side3);
+        renderQuad.accept(side4);
+        renderQuad.accept(capS);
+        renderQuad.accept(capE);
+    }
+
+    private static Entity raycastEntityHit(Level level, Player player, Vec3 start, Vec3 end) {
+        AABB searchBox = new AABB(start, end).inflate(1.0D);
+        Entity hitEntity = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        for (Entity entity : level.getEntities(player, searchBox, e -> e.isAlive() && e != player)) {
+            AABB entityBox = entity.getBoundingBox().inflate(0.3);
+            Optional<Vec3> optional = entityBox.clip(start, end);
+            if (optional.isPresent()) {
+                double distance = start.distanceToSqr(optional.get());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    hitEntity = entity;
+                }
+            }
+        }
+        return hitEntity;
+    }
+}

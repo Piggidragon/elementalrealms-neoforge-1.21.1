@@ -27,7 +27,7 @@ import java.util.List;
 public class DragonDeathHandler {
 
     private static final ResourceLocation DRAGON_ADVANCEMENT_ID =
-            ResourceLocation.fromNamespaceAndPath("elementalrealms", "root");
+            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "root");
 
     private static volatile boolean advancementCompleted = false;
 

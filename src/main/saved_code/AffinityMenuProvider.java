@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.guis.menus.custom;
+package de.piggidragon.elementalrealms.registries.guis.menus.custom;
 
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import net.minecraft.network.FriendlyByteBuf;
@@ -22,25 +22,16 @@ public class AffinityMenuProvider implements MenuProvider {
 
     /**
      * Creates a new menu provider with affinity data
+     *
      * @param affinities List of all affinities with completion percentages
      */
     public AffinityMenuProvider(List<AffinityBookMenu.AffinityData> affinities) {
         this.affinities = affinities;
     }
 
-    @Override
-    public Component getDisplayName() {
-        return Component.translatable("gui.elementalrealms.affinity.title");
-    }
-
-    @Nullable
-    @Override
-    public AbstractContainerMenu createMenu(int containerId, Inventory playerInv, Player player) {
-        return null; // Not used when using FriendlyByteBuf
-    }
-
     /**
      * Opens the affinity menu for the given player
+     *
      * @param player The player to open the menu for
      */
     public static void openForPlayer(ServerPlayer player) {
@@ -75,7 +66,8 @@ public class AffinityMenuProvider implements MenuProvider {
 
     /**
      * Writes affinity data to the buffer for client synchronization
-     * @param buf The buffer to write to
+     *
+     * @param buf        The buffer to write to
      * @param affinities The affinity data to write
      */
     private static void writeAffinityData(
@@ -90,5 +82,16 @@ public class AffinityMenuProvider implements MenuProvider {
             buf.writeEnum(affinity.getAffinity());
             buf.writeInt(affinity.getCompletionPercent());
         }
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("gui.elementalrealms.affinity.title");
+    }
+
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(int containerId, Inventory playerInv, Player player) {
+        return null; // Not used when using FriendlyByteBuf
     }
 }

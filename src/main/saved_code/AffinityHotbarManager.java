@@ -1,20 +1,28 @@
-package de.piggidragon.elementalrealms.guis.hud;
+package de.piggidragon.elementalrealms.registries.guis.hud;
 
 /**
  * Manages the state and animation of the Affinity Hotbar.
  * Controls fade-in and fade-out with cubic interpolation.
  */
 public class AffinityHotbarManager {
-    /** Duration of slide animation in milliseconds */
+    /**
+     * Duration of slide animation in milliseconds
+     */
     private static final int SLIDE_DURATION = 500;
 
-    /** Whether the custom hotbar is currently displayed */
+    /**
+     * Whether the custom hotbar is currently displayed
+     */
     private static boolean replaced = false;
 
-    /** Start time of the animation in milliseconds */
+    /**
+     * Start time of the animation in milliseconds
+     */
     private static long animationStartTime = 0;
 
-    /** Whether the animation is currently fading in (true) or out (false) */
+    /**
+     * Whether the animation is currently fading in (true) or out (false)
+     */
     private static boolean slidingIn = true;
 
     /**

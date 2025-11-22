@@ -33,7 +33,7 @@ public record AffinitySuccessPacket(
      * Codec for network serialization.
      * Converts ItemStack and Affinity enum to bytes for transmission.
      */
-    public static final StreamCodec<RegistryFriendlyByteBuf, AffinitySuccessPacket> CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, AffinitySuccessPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ItemStack.STREAM_CODEC,
                     AffinitySuccessPacket::itemStack,
