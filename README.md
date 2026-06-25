@@ -18,19 +18,21 @@
 
 Harness the power of 12 elemental affinities across 3 tiers. New players receive random affinities on their first login.
 
-| Tier | Description | Affinities |
-|------|-------------|-----------|
-| **ELEMENTAL** | Basic elemental powers | Fire, Water, Wind, Earth |
-| **DEVIANT** | Advanced — requires base affinity at 100% | Lightning (←Fire), Ice (←Water), Sound (←Wind), Gravity (←Earth) |
-| **ETERNAL** | Ultimate — only one per player | Life, Space, Time |
-| **VOID** | No affinity / resets all affinities | Void |
+| Tier          | Description                               | Affinities                                                       |
+|---------------|-------------------------------------------|------------------------------------------------------------------|
+| **ELEMENTAL** | Basic elemental powers                    | Fire, Water, Wind, Earth                                         |
+| **DEVIANT**   | Advanced — requires base affinity at 100% | Lightning (←Fire), Ice (←Water), Sound (←Wind), Gravity (←Earth) |
+| **ETERNAL**   | Ultimate — only one per player            | Life, Space, Time                                                |
+| **VOID**      | No affinity / resets all affinities       | Void                                                             |
 
 **Items:**
+
 - **Affinity Stones** — Right-click to instantly gain 100% completion of a specific affinity (consumed on use).
 - **Affinity Shards** — Right-click to increment affinity progress by +5% (consumed on use).
 - **Void Stone** — Clears all current affinities.
 
 **Commands** (OP level 2):
+
 - `/affinities list` — Shows your current affinities
 - `/affinities set <affinity>` — Sets a specific affinity
 - `/affinities clear` — Removes all affinities
@@ -45,11 +47,13 @@ A staff with **16 durability** that opens a temporary portal to the **School Dim
 - Only usable in vanilla dimensions (Overworld, Nether, End).
 - Using the staff again removes your previous portal first.
 - Damageable — 16 uses before breaking.
-- All affinities grant mastery over different elements (Fire, Water, Earth, Wind, Lightning, Ice, Sound, Gravity, Time, Space, Life, Void).
+- All affinities grant mastery over different elements (Fire, Water, Earth, Wind, Lightning, Ice, Sound, Gravity, Time,
+  Space, Life, Void).
 
 ### 🐉 Dragon Laser
 
-The **Ender Dragon** has a new attack! If a player stays still for **3 seconds**, the dragon fires a **piercing laser beam** from its head.
+The **Ender Dragon** has a new attack! If a player stays still for **3 seconds**, the dragon fires a **piercing laser
+beam** from its head.
 
 - **5-second cooldown** between laser attacks per player.
 - Destroys blocks in the beam's path (drops items).
@@ -60,9 +64,11 @@ The **Ender Dragon** has a new attack! If a player stays still for **3 seconds**
 ### 🌍 Dimensions
 
 #### School Dimension
+
 `elementalrealms:school`
 
-A mystical realm accessible through the **Dimension Staff** or via a naturally spawned portal after defeating the Ender Dragon.
+A mystical realm accessible through the **Dimension Staff** or via a naturally spawned portal after defeating the Ender
+Dragon.
 
 - Flat void world with no natural terrain.
 - Contains a **spawn platform** assembled from 4 jigsaw variants (wood, nether, end, grass).
@@ -70,7 +76,9 @@ A mystical realm accessible through the **Dimension Staff** or via a naturally s
 - Overworld-like ambient lighting and sky effects.
 
 #### Dynamic Realms
-Dynamically generated dimensions created per-portal using the **Infiniverse API**. Each gets its own isolated **bounded world** (21×21 chunks / 336×336 blocks) with a custom generator.
+
+Dynamically generated dimensions created per-portal using the **Infiniverse API**. Each gets its own isolated **bounded
+world** (21×21 chunks / 336×336 blocks) with a custom generator.
 
 - Worlds are placed in a ring pattern around origin, expanding outward.
 - Generation centers persist across server restarts via `GenerationCenterData`.
@@ -81,9 +89,9 @@ Dynamically generated dimensions created per-portal using the **Infiniverse API*
 
 Portals generate naturally in all biomes:
 
-| Type | Rarity | Placement |
-|------|--------|-----------|
-| Surface Portal | ~1 per 250 chunks | On terrain surface |
+| Type               | Rarity            | Placement              |
+|--------------------|-------------------|------------------------|
+| Surface Portal     | ~1 per 250 chunks | On terrain surface     |
 | Underground Portal | ~1 per 500 chunks | Between Y=-60 and Y=40 |
 
 Underground portals cause an **explosion** on spawn to clear space (configurable via `primed` flag).
@@ -101,23 +109,26 @@ Underground portals cause an **explosion** on spawn to clear space (configurable
 
 ### 🔧 Technical
 
-- **Custom Rarities:** LEGENDARY (gold text) for deviant stones, MYTHIC (dark purple text) for eternal stones — registered via NeoForge's `@EnumExtension`.
+- **Custom Rarities:** LEGENDARY (gold text) for deviant stones, MYTHIC (dark purple text) for eternal stones —
+  registered via NeoForge's `@EnumExtension`.
 - **Custom Damage Type:** `laser` — bypasses armor, shields, enchantments, and knockback.
 - **Custom Chunk Generator:** `BoundedChunkGenerator` limits worldgen to a configurable radius.
 - **Data Attachments:** Affinities, portal target levels, and return positions persist via NeoForge attachment system.
-- **Network:** Payload-based packet system with client/server handlers for affinity effects, laser beam rendering, block destruction, and entity damage.
-- **Datagen:** Automatic generation of item models, recipes, advancements, loot tables, block/item tags, sounds, and biome modifiers.
+- **Network:** Payload-based packet system with client/server handlers for affinity effects, laser beam rendering, block
+  destruction, and entity damage.
+- **Datagen:** Automatic generation of item models, recipes, advancements, loot tables, block/item tags, sounds, and
+  biome modifiers.
 
 ## 📋 Requirements
 
-| Dependency | Version |
-|------------|---------|
-| **Minecraft** | 1.21.1 |
-| **Mod Loader** | NeoForge 21.1.214 |
-| **Java** | 21+ |
-| **Infiniverse** | 2.0.1.0 |
-| **Lodestone** | 1.7.0 |
-| **Curios API** | 9.5.1 |
+| Dependency      | Version           |
+|-----------------|-------------------|
+| **Minecraft**   | 1.21.1            |
+| **Mod Loader**  | NeoForge 21.1.214 |
+| **Java**        | 21+               |
+| **Infiniverse** | 2.0.1.0           |
+| **Lodestone**   | 1.7.0             |
+| **Curios API**  | 9.5.1             |
 
 ## 📥 Installation
 
@@ -169,9 +180,11 @@ src/
 
 ## 🤝 Contributing
 
-This project is developed by **Piggidragon**. Bug reports and feature suggestions are welcome via [GitHub Issues](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/issues).
+This project is developed by **Piggidragon**. Bug reports and feature suggestions are welcome
+via [GitHub Issues](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/issues).
 
-Pull requests require passing CI checks (GitHub Actions build workflow) and should include JavaDoc documentation for new code.
+Pull requests require passing CI checks (GitHub Actions build workflow) and should include JavaDoc documentation for new
+code.
 
 ## 📝 License
 
@@ -179,4 +192,5 @@ All Rights Reserved. See `TEMPLATE_LICENSE.txt` for details.
 
 ---
 
-*Built with [NeoForge](https://neoforged.net/) | Powered by [Infiniverse](https://github.com/Commoble/infiniverse) & [Lodestone](https://github.com/LodestarMC/Lodestone)*
+*Built with [NeoForge](https://neoforged.net/) | Powered
+by [Infiniverse](https://github.com/Commoble/infiniverse) & [Lodestone](https://github.com/LodestarMC/Lodestone)*
