@@ -10,190 +10,84 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages player affinity data with validation rules.
+ * Server-side manager for player affinities. Enforces tier rules and
+ * triggers sound + client sync when affinities change.
  */
-public class ModAffinities {
+public final class ModAffinities {
 
-    /**
-     * Adds affinity to player with validation.
-     * Checks for duplicates, ETERNAL limit, and DEVIANT requirements.
-     *
-     * @param player   Target player
-     * @param affinity Affinity to add
-     * @throws IllegalArgumentException If validation fails
-     */
-    public static void addAffinity(ServerPlayer player, Affinity affinity) throws IllegalStateException {
-        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
+    private static final int MAX_COMPLETION = 100;
 
-        // Prevent duplicate
-        if (affinitiesImmutable.containsKey(affinity) && affinitiesImmutable.get(affinity) >= 100) {
-            throw new IllegalStateException("Player already has affinity: " + affinity);
-        }
-
-        // Validate before adding
-        validateAffinityCanBeAdded(affinity, affinitiesImmutable);
-
-        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
-
-        player.playNotifySound(
-                playAffinitySound(player, affinity),
-                SoundSource.PLAYERS,
-                0.5f,
-                0.5f
-        );
-
-        affinitiesMutable.remove(Affinity.VOID);
-        // Add affinity with 100% completion
-        affinitiesMutable.put(affinity, 100);
-
-        // Save changes
-        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
+    private ModAffinities() {
     }
 
     /**
-     * Incrementally increases affinity completion percentage and plays appropriate sound effects.
-     * Validation is performed to ensure affinity rules are followed (ETERNAL/DEVIANT constraints).
-     *
-     * @param player    Target player
-     * @param affinity  Affinity to increment
-     * @param increment Amount to add to completion percentage
-     * @throws IllegalStateException If affinity would exceed 100% or validation fails
+     * Adds an affinity at 100% completion. Throws if the player already holds it,
+     * already holds an eternal affinity, or is missing the required elemental base.
      */
-    public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) throws IllegalStateException {
-        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
+    public static void addAffinity(ServerPlayer player, Affinity affinity) {
+        Map<Affinity, Integer> current = getAffinities(player);
 
-        // Validate if affinity can be added (checks ETERNAL/DEVIANT rules)
-        validateAffinityCanBeAdded(affinity, affinitiesImmutable);
+        if (current.getOrDefault(affinity, 0) >= MAX_COMPLETION) {
+            throw new IllegalStateException("Player already has affinity: " + affinity);
+        }
+        validateCanAdd(affinity, current);
 
-        // Create mutable copy
-        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
+        Map<Affinity, Integer> next = new HashMap<>(current);
+        next.remove(Affinity.VOID);
+        next.put(affinity, MAX_COMPLETION);
 
-        // Get current completion (0 if not present)
-        int currentCompletion = affinitiesMutable.getOrDefault(affinity, 0);
+        player.playNotifySound(playAffinitySound(player, affinity), SoundSource.PLAYERS, 0.5f, 0.5f);
+        player.setData(ModAttachments.AFFINITIES.get(), next);
+    }
 
-        // Calculate new completion
-        int newCompletion = currentCompletion + increment;
+    /**
+     * Increases completion by {@code increment} percent. Throws if the new total
+     * would exceed 100% or the affinity fails tier validation.
+     */
+    public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) {
+        Map<Affinity, Integer> current = getAffinities(player);
+        validateCanAdd(affinity, current);
 
-        // Check if would exceed 100%
-        if (newCompletion > 100) {
+        Map<Affinity, Integer> next = new HashMap<>(current);
+        int newCompletion = next.getOrDefault(affinity, 0) + increment;
+
+        if (newCompletion > MAX_COMPLETION) {
             throw new IllegalStateException("Already completed: " + affinity);
         }
 
-        // Play appropriate sound based on completion status
-        SoundEvent sound = (newCompletion < 100) ? SoundEvents.PLAYER_LEVELUP : playAffinitySound(player, affinity);
+        SoundEvent sound = newCompletion < MAX_COMPLETION
+                ? SoundEvents.PLAYER_LEVELUP
+                : playAffinitySound(player, affinity);
         player.playNotifySound(sound, SoundSource.PLAYERS, 0.5f, 0.5f);
 
-        // Remove VOID affinity if present (any elemental affinity removes void)
-        affinitiesMutable.remove(Affinity.VOID);
-
-        // Set new completion value
-        affinitiesMutable.put(affinity, newCompletion);
-
-        // Save changes (triggers sync to client)
-        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
+        next.remove(Affinity.VOID);
+        next.put(affinity, newCompletion);
+        player.setData(ModAttachments.AFFINITIES.get(), next);
     }
 
     /**
-     * Validates if an affinity can be added to the player.
-     * Enforces ETERNAL limit (only one allowed) and DEVIANT prerequisites (requires base elemental at 100%).
-     *
-     * @param affinity          The affinity to validate
-     * @param currentAffinities Player's current affinities
-     * @throws IllegalStateException If validation fails
+     * Resets the player to a single VOID affinity at 0%. Throws if already void.
      */
-    private static void validateAffinityCanBeAdded(
-            Affinity affinity,
-            Map<Affinity, Integer> currentAffinities
-    ) {
-        // Check ETERNAL limit
-        if (affinity.getType() == AffinityType.ETERNAL && hasEternalAffinity(currentAffinities)) {
-            throw new IllegalStateException("Player already has an eternal affinity");
-        }
-
-        // Check DEVIANT requires base elemental
-        if (affinity.getType() == AffinityType.DEVIANT && !hasBaseAffinity(currentAffinities, affinity)) {
-            throw new IllegalStateException(
-                    "Player is missing base affinity for deviant: " + affinity.getElemental()
-            );
-        }
-    }
-
-    /**
-     * Checks if player has an eternal affinity.
-     *
-     * @param affinities Player's affinity map
-     * @return true if player has any ETERNAL type affinity
-     */
-    private static boolean hasEternalAffinity(Map<Affinity, Integer> affinities) {
-        return affinities.keySet().stream()
-                .anyMatch(a -> a.getType() == AffinityType.ETERNAL);
-    }
-
-    /**
-     * Checks if player has the required base affinity for a deviant at 100% completion
-     * A deviant affinity can only be started if its base elemental is fully mastered
-     *
-     * @param affinities The player's affinity map
-     * @param deviant    The deviant affinity to check
-     * @return True if player has the base elemental affinity at 100% completion
-     */
-    private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
-        return affinities.entrySet().stream()
-                .anyMatch(entry ->
-                        entry.getKey().getDeviant() == deviant &&  // Check if this affinity is the base
-                                entry.getValue() >= 100                     // Check if it's at 100% completion
-                );
-    }
-
-    /**
-     * Clears all affinities and sets to VOID.
-     *
-     * @param player Target player
-     * @throws IllegalArgumentException If player already has no affinities
-     */
-    public static void clearAffinities(ServerPlayer player) throws IllegalStateException {
-        Map<Affinity, Integer> affinitiesImmutable = getAffinities(player);
-
-        if (affinitiesImmutable.containsKey(Affinity.VOID)) {
+    public static void clearAffinities(ServerPlayer player) {
+        Map<Affinity, Integer> current = getAffinities(player);
+        if (current.containsKey(Affinity.VOID)) {
             throw new IllegalStateException("Player has no affinities to clear.");
         }
 
-        Map<Affinity, Integer> affinitiesMutable = new HashMap<>(affinitiesImmutable);
-
-        affinitiesMutable.clear();
-        affinitiesMutable.put(Affinity.VOID, 0);
-        player.setData(ModAttachments.AFFINITIES.get(), affinitiesMutable);
+        Map<Affinity, Integer> next = new HashMap<>(current);
+        next.clear();
+        next.put(Affinity.VOID, 0);
+        player.setData(ModAttachments.AFFINITIES.get(), next);
     }
 
-    /**
-     * Gets mutable list of player's affinities.
-     * Changes are automatically saved via data attachments.
-     *
-     * @param player Target player
-     * @return Mutable affinity list
-     */
     public static Map<Affinity, Integer> getAffinities(ServerPlayer player) {
         return player.getData(ModAttachments.AFFINITIES.get());
     }
 
-    /**
-     * Checks if player has specific affinity.
-     *
-     * @param player   Target player
-     * @param affinity Affinity to check
-     * @return true if player has this affinity
-     */
     public static boolean hasAffinity(ServerPlayer player, Affinity affinity) {
         return getAffinities(player).containsKey(affinity);
     }
 
-    /**
-     * Play appropriate sound based on affinity type.
-     *
-     * @param player   The player to receive the sound
-     * @param affinity The affinity that determines which sound to play
-     * @return The sound event corresponding to the affinity
-     */
     public static SoundEvent playAffinitySound(ServerPlayer player, Affinity affinity) {
         return switch (affinity) {
             case FIRE -> SoundEvents.FIRE_AMBIENT;
@@ -209,5 +103,27 @@ public class ModAffinities {
             case LIFE -> SoundEvents.PLAYER_BREATH;
             default -> SoundEvents.EXPERIENCE_ORB_PICKUP;
         };
+    }
+
+    private static void validateCanAdd(Affinity affinity, Map<Affinity, Integer> current) {
+        if (affinity.getType() == AffinityType.ETERNAL && hasEternalAffinity(current)) {
+            throw new IllegalStateException("Player already has an eternal affinity");
+        }
+        if (affinity.getType() == AffinityType.DEVIANT && !hasBaseAffinity(current, affinity)) {
+            throw new IllegalStateException(
+                    "Player is missing base affinity for deviant: " + affinity.getElemental()
+            );
+        }
+    }
+
+    private static boolean hasEternalAffinity(Map<Affinity, Integer> affinities) {
+        return affinities.keySet().stream()
+                .anyMatch(a -> a.getType() == AffinityType.ETERNAL);
+    }
+
+    private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
+        return affinities.entrySet().stream()
+                .anyMatch(entry ->
+                        entry.getKey().getDeviant() == deviant && entry.getValue() >= MAX_COMPLETION);
     }
 }

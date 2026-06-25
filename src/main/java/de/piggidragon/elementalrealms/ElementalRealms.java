@@ -24,22 +24,15 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.slf4j.Logger;
 
 /**
- * Main mod class for Elemental Realms.
- * Manages registration of all mod content: items, entities, dimensions, structures, and worldgen.
+ * Main entry point for Elemental Realms.
+ * Coordinates registration of all mod content with the NeoForge event bus.
  */
 @Mod(ElementalRealms.MODID)
 public class ElementalRealms {
     public static final String MODID = "elementalrealms";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    /**
-     * Mod constructor - initializes all deferred registries.
-     *
-     * @param modEventBus  Mod-specific event bus for registration
-     * @param modContainer Mod metadata and configuration container
-     */
     public ElementalRealms(IEventBus modEventBus, ModContainer modContainer) {
-        // Register all mod content
         ModAttachments.register(modEventBus);
         AffinityItems.register(modEventBus);
         MiscItems.register(modEventBus);
@@ -53,7 +46,6 @@ public class ElementalRealms {
         ModMenus.register(modEventBus);
         ModSounds.register(modEventBus);
 
-        // Client-only: register configuration screen
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
@@ -61,9 +53,6 @@ public class ElementalRealms {
         modEventBus.addListener(this::commonSetup);
     }
 
-    /**
-     * Common setup phase executed after registration finalization.
-     */
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("Common setup for {}", MODID);
     }

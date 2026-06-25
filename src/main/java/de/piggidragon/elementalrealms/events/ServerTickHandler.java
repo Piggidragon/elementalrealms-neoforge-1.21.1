@@ -7,12 +7,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
- * Handles server tick updates for animations and effects.
+ * Advances per-tick mod state on the server.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
-public class ServerTickHandler {
+public final class ServerTickHandler {
 
-    // Tick animations for active portal staffs every server tick
+    private ServerTickHandler() {
+    }
+
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Pre event) {
         SchoolStaff.tickAnimations();

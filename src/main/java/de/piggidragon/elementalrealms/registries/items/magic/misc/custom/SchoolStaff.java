@@ -26,43 +26,34 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Staff that creates temporary portals to School dimension via beam animation.
+ * Staff that opens a temporary portal to the School dimension via a beam animation.
  */
 public class SchoolStaff extends Item {
 
-    // Active animations tracked by player UUID - thread-safe for server tick access
-    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new ConcurrentHashMap<>();
-
-    // Portal configuration constants
-    private static final int PORTAL_DESPAWN_TICKS = 200; // Ticks until portal auto-despawns (10 seconds)
-    private static final double PORTAL_SPAWN_DISTANCE = 2.0; // Blocks in front of player
-    private static final double PORTAL_HEIGHT = 0.5; // Height offset from player feet
-    private static final double STAFF_TIP_DISTANCE = 0.8; // Distance in front of player for beam start
-    private static final int PORTAL_SEARCH_RADIUS = 1000; // Max radius to search for old portals
+    private static final int PORTAL_DESPAWN_TICKS = 200;
+    private static final double PORTAL_SPAWN_DISTANCE = 2.0;
+    private static final double PORTAL_HEIGHT = 0.5;
+    private static final double STAFF_TIP_DISTANCE = 0.8;
+    private static final int PORTAL_SEARCH_RADIUS = 1000;
+    private static final int BEAM_TOTAL_TICKS = 40;
+    private static final int BEAM_TICK_LIMIT = BEAM_TOTAL_TICKS;
 
     /**
-     * Creates the school staff item.
-     *
-     * @param properties Item properties including durability
+     * Active beam animations tracked by player UUID - thread-safe for server tick access.
      */
+    private static final Map<UUID, BeamAnimation> ACTIVE_ANIMATIONS = new ConcurrentHashMap<>();
+
     public SchoolStaff(Properties properties) {
         super(properties);
     }
 
     /**
-     * Updates all active beam animations. Must be called from server tick event.
+     * Advances all active beam animations. Must be called from the server tick event.
      */
     public static void tickAnimations() {
         ACTIVE_ANIMATIONS.entrySet().removeIf(entry -> !entry.getValue().tick());
     }
 
-    /**
-     * Spawns a portal entity at target position.
-     *
-     * @param level          The world level
-     * @param player         Owner of the portal
-     * @param targetPosition Position to spawn portal at
-     */
     private static void spawnPortal(Level level, Player player, Vec3 targetPosition) {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
@@ -72,18 +63,11 @@ public class SchoolStaff extends Item {
                 ModLevel.SCHOOL_DIMENSION,
                 player.getUUID()
         );
-
         portal.setPos(targetPosition.x, targetPosition.y, targetPosition.z);
         portal.setYRot(player.getYRot());
         level.addFreshEntity(portal);
     }
 
-    /**
-     * Removes all portals owned by player with disappear effects.
-     *
-     * @param level  The world level
-     * @param player Portal owner
-     */
     private static void removeOldPortals(Level level, Player player) {
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
@@ -93,70 +77,49 @@ public class SchoolStaff extends Item {
 
         for (PortalEntity portal : portals) {
             PortalParticles.createPortalDisappearEffect((ServerLevel) level, portal.position());
-            level.playSound(null, portal,
-                    SoundEvents.ENDER_EYE_DEATH, SoundSource.PLAYERS, 1, 0.7f);
+            level.playSound(null, portal, SoundEvents.ENDER_EYE_DEATH, SoundSource.PLAYERS, 1, 0.7f);
             portal.discard();
         }
     }
 
-    /**
-     * Handles staff usage to create portal beam animation.
-     */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
 
-        // Restrict to vanilla dimensions
         if (level.dimension() != Level.OVERWORLD && level.dimension() != Level.NETHER && level.dimension() != Level.END) {
             player.displayClientMessage(Component.literal("Can't use this here..."), true);
             return InteractionResultHolder.pass(itemStack);
         }
 
-        if (!level.isClientSide()) {
-            ServerLevel serverLevel = (ServerLevel) level;
-
-            // Calculate beam start at staff tip (in front of player eyes)
-            Vec3 staffTip = player.getEyePosition().add(
-                    player.getLookAngle().scale(STAFF_TIP_DISTANCE)
-            );
-
-            // Calculate target position 2 blocks ahead at torso height
-            Vec3 lookVec = player.getLookAngle();
-            Vec3 targetPos = new Vec3(
-                    player.getX() + lookVec.x * PORTAL_SPAWN_DISTANCE,
-                    player.getY() + PORTAL_HEIGHT,
-                    player.getZ() + lookVec.z * PORTAL_SPAWN_DISTANCE
-            );
-
-            // Remove existing portals before creating new one
-            removeOldPortals(level, player);
-
-            player.playNotifySound(
-                    SoundEvents.BEACON_ACTIVATE,
-                    SoundSource.PLAYERS,
-                    0.7F,
-                    1.5F
-            );
-
-            DimensionStaffParticles.addDurabilityEffects(serverLevel, player, player.getMainHandItem());
-
-            // Start beam animation (prevents multiple casts by same player)
-            ACTIVE_ANIMATIONS.put(player.getUUID(), new BeamAnimation(serverLevel, player, staffTip, targetPos));
-
-            // Damage staff
-            player.getMainHandItem().hurtAndBreak(1, serverLevel, player,
-                    item -> player.onEquippedItemBroken(item, EquipmentSlot.MAINHAND));
-
-            player.getCooldowns().addCooldown(player.getMainHandItem().getItem(), 0);
-            return InteractionResultHolder.success(itemStack);
+        if (level.isClientSide()) {
+            return InteractionResultHolder.pass(itemStack);
         }
-        return InteractionResultHolder.pass(itemStack);
+
+        ServerLevel serverLevel = (ServerLevel) level;
+        Vec3 look = player.getLookAngle();
+
+        Vec3 staffTip = player.getEyePosition().add(look.scale(STAFF_TIP_DISTANCE));
+        Vec3 targetPos = new Vec3(
+                player.getX() + look.x * PORTAL_SPAWN_DISTANCE,
+                player.getY() + PORTAL_HEIGHT,
+                player.getZ() + look.z * PORTAL_SPAWN_DISTANCE
+        );
+
+        removeOldPortals(level, player);
+
+        player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.5F);
+        DimensionStaffParticles.addDurabilityEffects(serverLevel, player, player.getMainHandItem());
+
+        ACTIVE_ANIMATIONS.put(player.getUUID(), new BeamAnimation(serverLevel, player, staffTip, targetPos));
+
+        player.getMainHandItem().hurtAndBreak(1, serverLevel, player,
+                item -> player.onEquippedItemBroken(item, EquipmentSlot.MAINHAND));
+        player.getCooldowns().addCooldown(player.getMainHandItem().getItem(), 0);
+        return InteractionResultHolder.success(itemStack);
     }
 
-    // Shows detailed tooltip on Shift press, otherwise shows Shift hint
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        // Show detailed tooltip when Shift is held, otherwise show hint
         if (tooltipFlag.hasShiftDown()) {
             tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.dimension_staff.line1"));
             tooltipComponents.add(Component.translatable("itemtooltip.elementalrealms.dimension_staff.line2"));
@@ -167,82 +130,53 @@ public class SchoolStaff extends Item {
     }
 
     /**
-     * Handles spiraling beam particle animation from staff to portal spawn point.
+     * Spiraling beam particle animation from staff tip to portal spawn point.
      */
-    private static class BeamAnimation {
-        final ServerLevel level;
-        final Player player;
-        final Vec3 startPos;
-        final Vec3 targetPos;
-        final Vec3 direction;
-        final double stepSize;
-        final int totalTicks = 40; // 2 seconds
-        int currentTick = 0;
+    private static final class BeamAnimation {
+        private final ServerLevel level;
+        private final Player player;
+        private final Vec3 startPos;
+        private final Vec3 targetPos;
+        private final Vec3 direction;
+        private final double stepSize;
+        private int currentTick = 0;
 
-        /**
-         * Initializes beam animation parameters.
-         *
-         * @param level     Server level for particle spawning
-         * @param player    Player who cast the beam
-         * @param startPos  Start position at staff tip
-         * @param targetPos End position where portal spawns
-         */
         BeamAnimation(ServerLevel level, Player player, Vec3 startPos, Vec3 targetPos) {
             this.level = level;
             this.player = player;
             this.startPos = startPos;
             this.targetPos = targetPos;
             this.direction = targetPos.subtract(startPos).normalize();
-            this.stepSize = startPos.distanceTo(targetPos) / totalTicks;
+            this.stepSize = startPos.distanceTo(targetPos) / BEAM_TOTAL_TICKS;
         }
 
-        /**
-         * Advances animation by one tick, spawning spiral particles along beam.
-         *
-         * @return true to continue animation, false when complete
-         */
         boolean tick() {
-            if (currentTick > totalTicks) {
+            if (currentTick > BEAM_TICK_LIMIT) {
                 return false;
             }
 
-            // Calculate current position along beam
-            double currentDistance = currentTick * stepSize;
-            Vec3 currentPos = startPos.add(direction.scale(currentDistance));
+            Vec3 currentPos = startPos.add(direction.scale(currentTick * stepSize));
 
-            // Create spiral with 3 rotating particles
             for (int i = 0; i < 3; i++) {
-                double angle = (currentTick * 0.3 + i * (Math.PI * 2 / 3));
-                double spiralRadius = 0.3;
+                double angle = currentTick * 0.3 + i * (Math.PI * 2 / 3);
+                double offsetX = Math.cos(angle) * 0.3;
+                double offsetZ = Math.sin(angle) * 0.3;
 
-                double offsetX = Math.cos(angle) * spiralRadius;
-                double offsetZ = Math.sin(angle) * spiralRadius;
-
-                // Spawn purple portal particles in spiral formation
-                level.sendParticles(
-                        ParticleTypes.PORTAL,
-                        currentPos.x + offsetX,
-                        currentPos.y,
-                        currentPos.z + offsetZ,
-                        1, 0.0, 0.0, 0.0, 0.02
-                );
+                level.sendParticles(ParticleTypes.PORTAL,
+                        currentPos.x + offsetX, currentPos.y, currentPos.z + offsetZ,
+                        1, 0.0, 0.0, 0.0, 0.02);
             }
 
-            // Add witch particles every 3 ticks for mystical effect
             if (currentTick % 3 == 0) {
-                level.sendParticles(
-                        ParticleTypes.WITCH,
+                level.sendParticles(ParticleTypes.WITCH,
                         currentPos.x, currentPos.y, currentPos.z,
-                        2, 0.1, 0.1, 0.1, 0.01
-                );
+                        2, 0.1, 0.1, 0.1, 0.01);
             }
 
-            // Spawn portal when beam reaches target
-            if (currentTick == totalTicks) {
+            if (currentTick == BEAM_TOTAL_TICKS) {
                 PortalParticles.createPortalArrivalEffect(level, targetPos);
                 level.playSound(null, targetPos.x, targetPos.y, targetPos.z,
-                        SoundEvents.CONDUIT_ACTIVATE, SoundSource.PLAYERS,
-                        0.4F, 0.6F);
+                        SoundEvents.CONDUIT_ACTIVATE, SoundSource.PLAYERS, 0.4F, 0.6F);
                 spawnPortal(level, player, targetPos);
                 return false;
             }

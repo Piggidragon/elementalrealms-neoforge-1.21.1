@@ -20,23 +20,46 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Laser beam task with frame-based particle spawning using Lodestone.
- * <p>
- * Handles the visual rendering of a laser beam, checks for entity collisions,
- * and creates a destructive sphere at the impact point.
+ * Per-tick laser beam task: extends toward the target, spawns Lodestone particles,
+ * detects entity hits, and periodically requests block destruction.
  */
 public class LaserBeamTask implements TickTask {
 
-    /**
-     * The radius of the destructive bubble at the end of the laser.
-     */
     private static final float BUBBLE_RADIUS = 1.5f;
-    // Ender Dragon Colors (Neon Purple -> Magenta)
+
+    // Beam colors: Neon Purple -> Magenta.
     private static final Color START_COLOR = new Color(180, 0, 255);
     private static final Color END_COLOR = new Color(255, 100, 255);
-    // Core Colors (White -> Light Pink)
+    // Core colors: White -> Light Pink.
     private static final Color CORE_COLOR = new Color(255, 255, 255);
     private static final Color CORE_END_COLOR = new Color(255, 200, 255);
+
+    private static final float BEAM_JITTER = 0.06f;
+    private static final int BEAM_PARTICLE_LIFETIME = 12;
+    private static final float BEAM_SCALE = 0.45f;
+    private static final float BEAM_TRANSPARENCY = 0.75f;
+    private static final float CORE_SCALE = 0.15f;
+    private static final int CORE_PARTICLE_LIFETIME = 8;
+    private static final float CORE_DENSITY_MULTIPLIER = 2.5f;
+
+    private static final float BUBBLE_SCALE = 0.3f;
+    private static final float BUBBLE_TRANSPARENCY = 0.6f;
+    private static final int BUBBLE_PARTICLE_LIFETIME = 10;
+    private static final int BUBBLE_PARTICLE_COUNT = 20;
+    private static final float BUBBLE_NOISE_MIN = 0.9f;
+    private static final float BUBBLE_NOISE_RANGE = 0.2f;
+
+    private static final float BUBBLE_INNER_SCALE = 0.2f;
+    private static final float BUBBLE_INNER_TRANSPARENCY = 0.8f;
+    private static final int BUBBLE_INNER_LIFETIME = 5;
+    private static final int BUBBLE_INNER_COUNT = 3;
+    private static final float BUBBLE_INNER_RADIUS_MULTIPLIER = 0.8f;
+
+    private static final double BEAM_PATH_EPSILON_SQUARED = 0.01;
+    private static final int BLOCK_DESTRUCTION_INTERVAL = 5;
+    private static final double BEAM_AABB_INFLATE = 0.3;
+    private static final double BUBBLE_AABB_INFLATE = 2;
+
     private final Entity entity;
     private final Level level;
     private final float damageAmount;
@@ -49,34 +72,10 @@ public class LaserBeamTask implements TickTask {
     private Vec3 endPos;
     private int currentTick = 0;
 
-    /**
-     * Constructs a new LaserBeamTask starting from the entity's eye position.
-     *
-     * @param entity          The entity casting the laser.
-     * @param level           The level the laser is in.
-     * @param beamRange       The maximum range of the laser.
-     * @param densityPerBlock How many particles to spawn per block of length.
-     * @param damageAmount    The damage dealt to entities hit.
-     * @param lifeTicks       How long the laser task should persist.
-     * @param travelTime      Ticks it takes for the laser to extend fully (0 for instant).
-     */
     public LaserBeamTask(Entity entity, Level level, double beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
         this(entity, level, entity.position(), entity.getViewVector(1.0f), beamRange, densityPerBlock, damageAmount, lifeTicks, travelTime);
     }
 
-    /**
-     * Constructs a new LaserBeamTask with a custom start position and direction.
-     *
-     * @param entity          The entity casting the laser (owner).
-     * @param level           The level the laser is in.
-     * @param customStartPos  The exact starting coordinate of the beam.
-     * @param directionVec    The normalized direction vector.
-     * @param beamRange       The maximum range of the laser.
-     * @param densityPerBlock How many particles to spawn per block of length.
-     * @param damageAmount    The damage dealt to entities hit.
-     * @param lifeTicks       How long the laser task should persist.
-     * @param travelTime      Ticks it takes for the laser to extend fully.
-     */
     public LaserBeamTask(Entity entity, Level level, Vec3 customStartPos, Vec3 directionVec, double beamRange, int densityPerBlock, float damageAmount, int lifeTicks, int travelTime) {
         this.entity = entity;
         this.level = level;
@@ -90,55 +89,48 @@ public class LaserBeamTask implements TickTask {
         this.beamRange = beamRange;
     }
 
-    /**
-     * Renders the main laser beam particles.
-     *
-     * @param level     The level to render in.
-     * @param startPos  The start of the segment.
-     * @param targetPos The end of the segment.
-     * @param density   The particle density.
-     */
+    private static List<Entity> searchEntityBoxHit(Level level, Entity entityOwner, AABB box) {
+        List<Entity> hits = new ArrayList<>();
+        hits.addAll(level.getEntities(entityOwner, box, e -> e.isAlive() && e != entityOwner));
+        return hits;
+    }
+
     private static void renderLaser(Level level, Vec3 startPos, Vec3 targetPos, int density) {
         if (!level.isClientSide) return;
 
         Vec3 direction = targetPos.subtract(startPos);
         double distance = direction.length();
-
         if (distance < 0.05) return;
-
         direction = direction.normalize();
-        int particleCount = (int) (distance * density);
 
-        WorldParticleBuilder builder = WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
-                .setTransparencyData(GenericParticleData.create(0.75f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.45f, 0.0f).build())
+        WorldParticleBuilder beamBuilder = WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
+                .setTransparencyData(GenericParticleData.create(BEAM_TRANSPARENCY, 0.0f).build())
+                .setScaleData(GenericParticleData.create(BEAM_SCALE, 0.0f).build())
                 .setColorData(ColorParticleData.create(START_COLOR, END_COLOR).build())
-                .setLifetime(12)
+                .setLifetime(BEAM_PARTICLE_LIFETIME)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .setMotion(0, 0, 0)
                 .enableNoClip();
 
-        for (int i = 0; i < particleCount; i++) {
-            double progress = (double) i / particleCount;
+        int beamParticleCount = (int) (distance * density);
+        for (int i = 0; i < beamParticleCount; i++) {
+            double progress = (double) i / beamParticleCount;
             Vec3 spawnPos = startPos.add(direction.scale(distance * progress));
-
-            double jitter = 0.06;
-            double oX = (Math.random() - 0.5) * jitter;
-            double oY = (Math.random() - 0.5) * jitter;
-            double oZ = (Math.random() - 0.5) * jitter;
-
-            builder.spawn(level, spawnPos.x + oX, spawnPos.y + oY, spawnPos.z + oZ);
+            double offsetX = (Math.random() - 0.5) * BEAM_JITTER;
+            double offsetY = (Math.random() - 0.5) * BEAM_JITTER;
+            double offsetZ = (Math.random() - 0.5) * BEAM_JITTER;
+            beamBuilder.spawn(level, spawnPos.x + offsetX, spawnPos.y + offsetY, spawnPos.z + offsetZ);
         }
 
         WorldParticleBuilder coreBuilder = WorldParticleBuilder.create(LodestoneParticleTypes.SPARKLE_PARTICLE)
                 .setTransparencyData(GenericParticleData.create(1.0f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.15f, 0.0f).build())
+                .setScaleData(GenericParticleData.create(CORE_SCALE, 0.0f).build())
                 .setColorData(ColorParticleData.create(CORE_COLOR, CORE_END_COLOR).build())
-                .setLifetime(8)
+                .setLifetime(CORE_PARTICLE_LIFETIME)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .enableNoClip();
 
-        int coreCount = (int) (distance * 2.5);
+        int coreCount = (int) (distance * CORE_DENSITY_MULTIPLIER);
         for (int i = 0; i < coreCount; i++) {
             double progress = (double) i / coreCount;
             Vec3 corePos = startPos.add(direction.scale(distance * progress));
@@ -147,78 +139,43 @@ public class LaserBeamTask implements TickTask {
     }
 
     /**
-     * Renders a hollow sphere of particles at the laser's hit position.
-     * Uses the same color scheme as the beam.
-     *
-     * @param level  The level to spawn particles in.
-     * @param center The center position of the sphere.
-     * @param radius The radius of the sphere.
+     * Hollow sphere of additive particles with a few inner sparkles for an "energy" look.
      */
     private static void renderHitSphere(Level level, Vec3 center, float radius) {
         if (!level.isClientSide) return;
 
-        int particleCount = 20; // Particles per tick for the sphere
-
         WorldParticleBuilder sphereBuilder = WorldParticleBuilder.create(LodestoneParticleTypes.WISP_PARTICLE)
-                .setTransparencyData(GenericParticleData.create(0.6f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.3f, 0.0f).build())
+                .setTransparencyData(GenericParticleData.create(BUBBLE_TRANSPARENCY, 0.0f).build())
+                .setScaleData(GenericParticleData.create(BUBBLE_SCALE, 0.0f).build())
                 .setColorData(ColorParticleData.create(START_COLOR, END_COLOR).build())
-                .setLifetime(10)
+                .setLifetime(BUBBLE_PARTICLE_LIFETIME)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .enableNoClip();
 
-        for (int i = 0; i < particleCount; i++) {
-            // Generate random point on the surface of the sphere (hollow bubble)
-            // Using Gaussian distribution for uniform spherical distribution
-            double x = Math.random() - 0.5;
-            double y = Math.random() - 0.5;
-            double z = Math.random() - 0.5;
-
-            Vec3 dir = new Vec3(x, y, z).normalize().scale(radius);
-
-            // Add some noise so it's not a perfect shell
-            double noise = 0.9 + (Math.random() * 0.2);
+        for (int i = 0; i < BUBBLE_PARTICLE_COUNT; i++) {
+            Vec3 dir = new Vec3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().scale(radius);
+            float noise = BUBBLE_NOISE_MIN + (float) (Math.random() * BUBBLE_NOISE_RANGE);
             Vec3 spawnPos = center.add(dir.scale(noise));
-
             sphereBuilder.spawn(level, spawnPos.x, spawnPos.y, spawnPos.z);
         }
 
-        // Add a few core particles for the "energy" look inside
         WorldParticleBuilder coreBuilder = WorldParticleBuilder.create(LodestoneParticleTypes.SPARKLE_PARTICLE)
-                .setTransparencyData(GenericParticleData.create(0.8f, 0.0f).build())
-                .setScaleData(GenericParticleData.create(0.2f, 0.0f).build())
+                .setTransparencyData(GenericParticleData.create(BUBBLE_INNER_TRANSPARENCY, 0.0f).build())
+                .setScaleData(GenericParticleData.create(BUBBLE_INNER_SCALE, 0.0f).build())
                 .setColorData(ColorParticleData.create(CORE_COLOR, CORE_END_COLOR).build())
-                .setLifetime(5)
+                .setLifetime(BUBBLE_INNER_LIFETIME)
                 .setRenderType(LodestoneWorldParticleRenderType.ADDITIVE)
                 .enableNoClip();
 
-        for (int i = 0; i < 3; i++) {
-            Vec3 randomInner = new Vec3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5)
-                    .normalize().scale(Math.random() * radius * 0.8);
-            Vec3 spawnPos = center.add(randomInner);
+        for (int i = 0; i < BUBBLE_INNER_COUNT; i++) {
+            Vec3 inner = new Vec3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5)
+                    .normalize()
+                    .scale(Math.random() * radius * BUBBLE_INNER_RADIUS_MULTIPLIER);
+            Vec3 spawnPos = center.add(inner);
             coreBuilder.spawn(level, spawnPos.x, spawnPos.y, spawnPos.z);
         }
     }
 
-    /**
-     * Searches for entities within a given bounding box that are hit by the laser.
-     *
-     * @param level       The level to search in.
-     * @param entityOwner The owner of the laser (to ignore self-hits).
-     * @param box         The bounding box to search.
-     * @return A list of entities hit.
-     */
-    private static List<Entity> searchEntityBoxHit(Level level, Entity entityOwner, AABB box) {
-        List<Entity> entityHitList = new ArrayList<>();
-        entityHitList.addAll(level.getEntities(entityOwner, box, e -> e.isAlive() && e != entityOwner));
-        return entityHitList;
-    }
-
-    /**
-     * Executes the per-tick logic for the laser beam.
-     * <p>
-     * Updates positions, renders particles, handles entity hits, and requests block destruction.
-     */
     @Override
     public void tick() {
         if (currentTick > lifeTicks) {
@@ -228,51 +185,34 @@ public class LaserBeamTask implements TickTask {
 
         updatePositions();
 
-        if (startPos.distanceToSqr(endPos) > 0.01) {
+        if (startPos.distanceToSqr(endPos) > BEAM_PATH_EPSILON_SQUARED) {
             renderLaser(level, startPos, endPos, densityPerBlock);
-            // Render the bubble at the end
             renderHitSphere(level, endPos, BUBBLE_RADIUS);
 
-            // Periodically destroy blocks inside the bubble
-            // We do this every 5 ticks to reduce packet spam
-            if (currentTick % 5 == 0) {
+            if (currentTick % BLOCK_DESTRUCTION_INTERVAL == 0) {
                 requestBlockDestruction(endPos, BUBBLE_RADIUS);
             }
         }
 
-        List<Entity> hitEntity = searchEntityBoxHit(level, entity, new AABB(startPos, endPos).inflate(0.3));
-        hitEntity.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(2)));
+        List<Entity> hitEntities = new ArrayList<>();
+        hitEntities.addAll(searchEntityBoxHit(level, entity, new AABB(startPos, endPos).inflate(BEAM_AABB_INFLATE)));
+        hitEntities.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(BUBBLE_AABB_INFLATE)));
 
-        for (Entity e : hitEntity) {
-            if (e != null) {
-                PacketDistributor.sendToServer(
-                        new LaserBeamHitEntityPacket(e.getId(), damageAmount)
-                );
-            }
+        for (Entity e : hitEntities) {
+            PacketDistributor.sendToServer(new LaserBeamHitEntityPacket(e.getId(), damageAmount));
         }
 
         currentTick++;
     }
 
     /**
-     * Updates the end position of the laser based on travel time and range.
+     * Extends the end position from start toward the target, scaled by travel time progress.
      */
     public void updatePositions() {
-        double progress = 1.0;
-        if (travelTime > 0) {
-            progress = Math.min(1.0, (double) currentTick / travelTime);
-        }
-
-        double currentLength = beamRange * progress;
-        endPos = startPos.add(directionVec.scale(currentLength));
+        double progress = travelTime > 0 ? Math.min(1.0, (double) currentTick / travelTime) : 1.0;
+        endPos = startPos.add(directionVec.scale(beamRange * progress));
     }
 
-    /**
-     * Sends a packet to the server requesting block destruction at the given location.
-     *
-     * @param pos    The center position of the destruction.
-     * @param radius The radius of destruction.
-     */
     private void requestBlockDestruction(Vec3 pos, float radius) {
         PacketDistributor.sendToServer(new LaserBeamDestroyBlockPacket(pos, radius));
     }

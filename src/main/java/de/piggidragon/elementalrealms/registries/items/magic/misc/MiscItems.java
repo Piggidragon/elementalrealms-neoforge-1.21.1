@@ -9,26 +9,23 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
- * Registry for dimension-related items.
+ * Deferred items that don't fit into affinity or material categories.
  */
-public class MiscItems {
+public final class MiscItems {
+
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(ElementalRealms.MODID);
-
     /**
-     * Staff that creates temporary portals to School dimension.
-     * 16 uses, beam animation, 10-second portals.
+     * Staff that opens temporary portals to the School dimension. 16 uses.
      */
     public static final DeferredItem<Item> DIMENSION_STAFF = ITEMS.registerItem(
             "dimension_staff",
-            (p) -> new SchoolStaff(p.durability(16).rarity(Rarity.UNCOMMON))
+            props -> new SchoolStaff(props.durability(16).rarity(Rarity.UNCOMMON))
     );
 
-    /**
-     * Registers all dimension items with the mod event bus.
-     *
-     * @param bus The mod event bus
-     */
+    private MiscItems() {
+    }
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

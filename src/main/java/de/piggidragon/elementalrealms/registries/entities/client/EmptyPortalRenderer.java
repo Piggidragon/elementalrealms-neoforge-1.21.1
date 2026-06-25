@@ -8,32 +8,21 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Empty renderer for PortalEntity.
- * Actual rendering is done through Lodestone particle effects.
+ * No-op renderer for {@link PortalEntity}. The portal's visuals come from
+ * Lodestone particles spawned by the entity itself, not from a model.
  */
 public class EmptyPortalRenderer extends EntityRenderer<PortalEntity> {
 
-    /**
-     * Creates an empty portal renderer.
-     *
-     * @param context the renderer context
-     */
     public EmptyPortalRenderer(EntityRendererProvider.Context context) {
         super(context);
     }
 
-    /**
-     * Renders nothing - portal uses particle effects instead.
-     */
     @Override
     public void render(PortalEntity entity, float entityYaw, float partialTicks,
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        // Intentionally empty - rendering handled by Lodestone particles
+        // Intentionally empty - rendering handled by Lodestone particles.
     }
 
-    /**
-     * Returns a dummy texture location (never used).
-     */
     @Override
     public ResourceLocation getTextureLocation(PortalEntity entity) {
         return ResourceLocation.withDefaultNamespace("textures/entity/empty.png");

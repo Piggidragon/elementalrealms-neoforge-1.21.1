@@ -14,46 +14,27 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 /**
- * Utility methods for portal entity operations and worldgen validation.
+ * Helpers for portal entities and worldgen validation.
  */
-public class PortalUtils {
+public final class PortalUtils {
 
-    // Dimension spawn validation constants
-    private static final int NETHER_MAX_Y = 128; // Maximum Y for Nether portal spawns (avoid ceiling)
-    private static final int END_MIN_Y = 50; // Minimum Y for End portal spawns (avoid void)
+    private static final int NETHER_MAX_Y = 128;
+    private static final int END_MIN_Y = 50;
 
-    /**
-     * Checks if a block position is suitable for portal base placement.
-     * Rejects air blocks and fluid blocks (water, lava).
-     *
-     * @param state Block state at position
-     * @return true if solid non-fluid block
-     */
+    private PortalUtils() {
+    }
+
     public static boolean isSuitableForPortalBase(BlockState state) {
-        // Skip air blocks
         if (state.isAir()) return false;
-
-        // Skip fluids (water, lava, custom fluids)
         return state.getFluidState().isEmpty();
     }
 
-    /**
-     * Finds the nearest portal entity within search radius.
-     * Used by /portal locate command.
-     *
-     * @param level        Server level to search in
-     * @param position     Center of search area
-     * @param searchRadius Maximum distance in blocks
-     * @return Nearest portal or null if none found
-     */
     public static PortalEntity findNearestPortal(ServerLevel level, Vec3 position, double searchRadius) {
-
         AABB searchArea = new AABB(
                 position.x - searchRadius, position.y - searchRadius, position.z - searchRadius,
                 position.x + searchRadius, position.y + searchRadius, position.z + searchRadius
         );
 
-        // Get all living portal entities in area
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
                 searchArea,
@@ -68,39 +49,20 @@ public class PortalUtils {
             if (distance < nearestDistance) {
                 nearestDistance = distance;
                 nearestPortal = portal;
-
             }
         }
         return nearestPortal;
     }
 
-    /**
-     * Checks if dimension key matches vanilla dimensions.
-     *
-     * @param level Dimension key to check
-     * @return true if Overworld, Nether, or End
-     */
     public static boolean isVanilla(ResourceKey<Level> level) {
         return level == Level.OVERWORLD || level == Level.NETHER || level == Level.END;
     }
 
-    /**
-     * Validates if position is safe for portal spawn in given dimension.
-     * Prevents ceiling spawns in Nether and void spawns in End.
-     *
-     * @param level WorldGen level
-     * @param pos   Portal spawn position
-     * @return true if position is valid for portal
-     */
     public static boolean isValidDimensionForSpawn(WorldGenLevel level, BlockPos pos) {
-
-        if (level.getLevel().dimension() == Level.OVERWORLD) {
-            return true;
-        } else if (level.getLevel().dimension() == Level.NETHER) {
-            return pos.getY() < NETHER_MAX_Y; // Avoid ceiling spawning
-        } else if (level.getLevel().dimension() == Level.END) {
-            return pos.getY() > END_MIN_Y; // Avoid void spawning
-        }
+        ResourceKey<Level> dimension = level.getLevel().dimension();
+        if (dimension == Level.OVERWORLD) return true;
+        if (dimension == Level.NETHER) return pos.getY() < NETHER_MAX_Y;
+        if (dimension == Level.END) return pos.getY() > END_MIN_Y;
         return false;
     }
 }

@@ -8,73 +8,59 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Randomized affinity assignment for new players using weighted probability.
+ * Weighted random affinity assignment for new players.
  */
-public class ModAffinitiesRoll {
+public final class ModAffinitiesRoll {
 
     /**
-     * Checks if random event occurs based on probability percentage.
-     *
-     * @param random             Random source
-     * @param probabilityPercent Chance 0-100
-     * @return true if event occurs
+     * Roll probabilities for each of the four pick slots.
      */
-    private static boolean chance(RandomSource random, int probabilityPercent) {
-        if (probabilityPercent <= 0) return false;
-        if (probabilityPercent >= 100) return true;
-        return random.nextInt(100) < probabilityPercent;
+    private static final int[] ROLL_CHANCES = {100, 25, 20, 20};
+
+    /**
+     * Chance a successful roll also grants the matching deviant affinity.
+     */
+    private static final int DEVIANT_CHANCE_PERCENT = 25;
+
+    private ModAffinitiesRoll() {
     }
 
     /**
-     * Selects random elemental affinity player doesn't have.
-     *
-     * @param player             Target player
-     * @param probabilityPercent Chance to select
-     * @return Selected affinity or VOID if none available
-     */
-    private static Affinity randomElementalAffinity(ServerPlayer player, int probabilityPercent) {
-        RandomSource random = player.getRandom();
-
-        List<Affinity> available = Affinity.getAllElemental().stream()
-                .filter(a -> !ModAffinities.hasAffinity(player, a))
-                .toList();
-        if (available.isEmpty()) return Affinity.VOID;
-
-        if (chance(random, probabilityPercent)) {
-            return available.get(random.nextInt(available.size()));
-        } else {
-            return Affinity.VOID;
-        }
-    }
-
-    /**
-     * Generates random affinities for new player.
-     * Rolls 4 times with decreasing probability: 100%, 25%, 20%, 20%.
-     * Each roll has 25% chance to also grant deviant variant.
-     *
-     * @param player Target player
-     * @return Map of affinities to add
+     * Generates a map of affinities to add to a player. Up to four elemental
+     * affinities are chosen with decreasing probability; each carries a chance
+     * of also granting its deviant variant.
      */
     public static Map<Affinity, Integer> rollAffinities(ServerPlayer player) {
         RandomSource random = player.getRandom();
-        Map<Affinity, Integer> affinitiesToAdd = new HashMap<>();
+        Map<Affinity, Integer> result = new HashMap<>();
 
-        // Roll with decreasing probability
-        for (int x : new int[]{100, 25, 20, 20}) {
-            Affinity newAffinity = randomElementalAffinity(player, x);
-
-            if (newAffinity != Affinity.VOID) {
-                affinitiesToAdd.put(newAffinity, 100);
-
-                // 25% chance for deviant variant
-                if (chance(random, 25)) {
-                    Affinity deviant = newAffinity.getDeviant();
-                    affinitiesToAdd.put(deviant, 100);
-                }
-            } else {
+        for (int chance : ROLL_CHANCES) {
+            Affinity rolled = rollElementalAffinity(player, random, chance);
+            if (rolled == Affinity.VOID) {
                 break;
             }
+            result.put(rolled, 100);
+
+            if (chance(random, DEVIANT_CHANCE_PERCENT)) {
+                result.put(rolled.getDeviant(), 100);
+            }
         }
-        return affinitiesToAdd;
+        return result;
+    }
+
+    private static Affinity rollElementalAffinity(ServerPlayer player, RandomSource random, int probabilityPercent) {
+        List<Affinity> available = Affinity.getAllElemental().stream()
+                .filter(a -> !ModAffinities.hasAffinity(player, a))
+                .toList();
+        if (available.isEmpty()) {
+            return Affinity.VOID;
+        }
+        return chance(random, probabilityPercent)
+                ? available.get(random.nextInt(available.size()))
+                : Affinity.VOID;
+    }
+
+    private static boolean chance(RandomSource random, int probabilityPercent) {
+        return random.nextInt(100) < probabilityPercent;
     }
 }

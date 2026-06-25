@@ -15,57 +15,38 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 
 /**
- * Worldgen feature for spawning portal entities during world generation.
- * Used to create naturally occurring portals in vanilla dimensions.
+ * Places a portal entity during worldgen. Underground portals are primed to
+ * explode on their first server tick to clear space around them.
  */
 public class PortalSpawnFeature extends Feature<PortalConfiguration> {
 
-    // Portal placement constants
-    private static final double PORTAL_CENTER_OFFSET = 0.5; // Centers portal in block
-    private static final int UNDERGROUND_THRESHOLD = 41; // Y-level below which portals are primed for explosion
+    private static final double PORTAL_CENTER_OFFSET = 0.5;
+    private static final int UNDERGROUND_THRESHOLD = 41;
 
-    /**
-     * Creates portal spawn feature with configuration codec.
-     *
-     * @param codec Configuration codec for serialization
-     */
     public PortalSpawnFeature(Codec<PortalConfiguration> codec) {
         super(codec);
     }
 
-    /**
-     * Attempts to place a portal entity during worldgen.
-     */
     @Override
     public boolean place(FeaturePlaceContext<PortalConfiguration> context) {
         WorldGenLevel level = context.level();
         BlockPos pos = context.origin();
-        RandomSource randomSource = level.getRandom();
-
+        RandomSource random = level.getRandom();
         MinecraftServer server = level.getServer();
-        if (server == null) {
-            return false;
-        }
+        if (server == null) return false;
+        if (!PortalUtils.isValidDimensionForSpawn(level, pos)) return false;
+        if (!PortalUtils.isSuitableForPortalBase(level.getBlockState(pos.below()))) return false;
 
-        if (!PortalUtils.isValidDimensionForSpawn(level, pos)) {
-            return false;
-        }
-
-        if (!PortalUtils.isSuitableForPortalBase(level.getBlockState(pos.below()))) {
-            return false;
-        }
-
-        PortalEntity portal = new PortalEntity(
-                ModEntities.PORTAL_ENTITY.get(),
-                level.getLevel()
-        );
-
+        PortalEntity portal = new PortalEntity(ModEntities.PORTAL_ENTITY.get(), level.getLevel());
         portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(server, portal, ModLevel.getRandomLevel()));
 
-        portal.setPos(pos.getX() + PORTAL_CENTER_OFFSET, pos.getY() + PORTAL_CENTER_OFFSET, pos.getZ() + PORTAL_CENTER_OFFSET);
-        portal.setYRot(randomSource.nextFloat() * 360.0F);
+        portal.setPos(
+                pos.getX() + PORTAL_CENTER_OFFSET,
+                pos.getY() + PORTAL_CENTER_OFFSET,
+                pos.getZ() + PORTAL_CENTER_OFFSET
+        );
+        portal.setYRot(random.nextFloat() * 360.0F);
 
-        // Prime underground portals for explosion
         if (pos.getY() < UNDERGROUND_THRESHOLD) {
             portal.prime();
         }

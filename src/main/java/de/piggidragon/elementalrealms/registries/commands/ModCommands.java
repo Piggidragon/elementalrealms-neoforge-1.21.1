@@ -18,7 +18,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -27,34 +26,28 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * Registers custom commands for managing affinities and portals.
+ * Registers the {@code /portal} and {@code /affinities} commands.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
-public class ModCommands {
+public final class ModCommands {
 
-    /**
-     * Provides auto-completion suggestions for valid affinity names.
-     */
-    public static final SuggestionProvider<CommandSourceStack> AFFINITY_SUGGESTIONS = (context, builder) -> {
+    private static final SuggestionProvider<CommandSourceStack> AFFINITY_SUGGESTIONS = (context, builder) -> {
         for (Affinity a : Affinity.values()) {
             builder.suggest(a.toString());
         }
         return builder.buildFuture();
     };
-
-    /**
-     * Provides auto-completion suggestions for valid dimension names.
-     */
-    public static final SuggestionProvider<CommandSourceStack> LEVEL_SUGGESTIONS = (context, builder) -> {
+    private static final SuggestionProvider<CommandSourceStack> LEVEL_SUGGESTIONS = (context, builder) -> {
         for (ResourceKey<Level> level : ModLevel.getLevels()) {
             builder.suggest(level.location().toString());
         }
         return builder.buildFuture();
     };
+    private static final double PORTAL_SPAWN_DISTANCE = 2.0;
+    private static final double PORTAL_HEIGHT = 0.5;
+    private ModCommands() {
+    }
 
-    /**
-     * Registers /portal and /affinities commands.
-     */
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         var dispatcher = event.getDispatcher();
@@ -66,17 +59,18 @@ public class ModCommands {
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                                     int radius = IntegerArgumentType.getInteger(ctx, "radius");
-
-                                    ServerLevel level = (ServerLevel) player.level();
-                                    PortalEntity portal = PortalUtils.findNearestPortal(level, player.position(), radius);
+                                    PortalEntity portal = PortalUtils.findNearestPortal(
+                                            player.serverLevel(), player.position(), radius);
 
                                     if (portal != null) {
+                                        double distance = portal.position().distanceTo(player.position());
                                         ctx.getSource().sendSuccess(() -> Component.literal(
-                                                "Found portal at: " + portal.position() +
-                                                        " (Distance: " + String.format("%.2f", portal.position().distanceTo(player.position())) + " blocks)"
+                                                "Found portal at: " + portal.position()
+                                                        + " (Distance: " + String.format("%.2f", distance) + " blocks)"
                                         ), false);
                                     } else {
-                                        ctx.getSource().sendFailure(Component.literal("No portal found within " + radius + " blocks"));
+                                        ctx.getSource().sendFailure(Component.literal(
+                                                "No portal found within " + radius + " blocks"));
                                     }
                                     return 1;
                                 })
@@ -86,33 +80,11 @@ public class ModCommands {
                         .then(Commands.literal("random")
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-
-                                    ResourceKey<Level> levelResourceKey = ModLevel.getRandomLevel();
-
-                                    // Create portal entity
-                                    PortalEntity portal = new PortalEntity(
-                                            ModEntities.PORTAL_ENTITY.get(),
-                                            player.level(),
-                                            false,
-                                            -1,
-                                            null,
-                                            player.getUUID()
-                                    );
-
-                                    portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal, levelResourceKey));
-
-                                    // Position portal 2 blocks in front of player
-                                    Vec3 lookVec = player.getLookAngle();
-                                    double distance = 2.0;
-                                    Vec3 targetPos = new Vec3(
-                                            player.getX() + lookVec.x * distance,
-                                            player.getY() + 0.5,
-                                            player.getZ() + lookVec.z * distance
-                                    );
-
-                                    portal.setPos(targetPos.x, targetPos.y, targetPos.z);
-                                    portal.setYRot(player.getYRot());
-                                    player.level().addFreshEntity(portal);
+                                    spawnPortalInFront(player, DynamicDimensionHandler.createDimensionForPortal(
+                                            player.level().getServer(),
+                                            new PortalEntity(ModEntities.PORTAL_ENTITY.get(), player.level(), false, -1, null, player.getUUID()),
+                                            ModLevel.getRandomLevel()
+                                    ));
                                     return 1;
                                 })
                         )
@@ -120,16 +92,16 @@ public class ModCommands {
                                 .suggests(LEVEL_SUGGESTIONS)
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                    String dimString = StringArgumentType.getString(ctx, "dimension");
-                                    ResourceLocation location = ResourceLocation.parse(dimString);
-                                    ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, location);
+                                    ResourceKey<Level> dimensionKey = ResourceKey.create(
+                                            Registries.DIMENSION,
+                                            ResourceLocation.parse(StringArgumentType.getString(ctx, "dimension"))
+                                    );
 
                                     if (!ModLevel.getLevels().contains(dimensionKey)) {
                                         ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
                                         return 0;
                                     }
 
-                                    // Create portal entity
                                     PortalEntity portal = new PortalEntity(
                                             ModEntities.PORTAL_ENTITY.get(),
                                             player.level(),
@@ -138,23 +110,11 @@ public class ModCommands {
                                             null,
                                             player.getUUID()
                                     );
-
                                     if (ModLevel.getLevelsRandomSource().contains(dimensionKey)) {
-                                        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(player.level().getServer(), portal, dimensionKey));
+                                        portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(
+                                                player.level().getServer(), portal, dimensionKey));
                                     }
-
-                                    // Position portal 2 blocks in front of player
-                                    Vec3 lookVec = player.getLookAngle();
-                                    double distance = 2.0;
-                                    Vec3 targetPos = new Vec3(
-                                            player.getX() + lookVec.x * distance,
-                                            player.getY() + 0.5,
-                                            player.getZ() + lookVec.z * distance
-                                    );
-
-                                    portal.setPos(targetPos.x, targetPos.y, targetPos.z);
-                                    portal.setYRot(player.getYRot());
-                                    player.level().addFreshEntity(portal);
+                                    spawnPortalInFront(player, null);
                                     return 1;
                                 })
                         )
@@ -166,8 +126,8 @@ public class ModCommands {
                 .then(Commands.literal("list")
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                            var affinities = ModAffinities.getAffinities(player);
-                            ctx.getSource().sendSuccess(() -> Component.literal("Your affinities: " + affinities), false);
+                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                    "Your affinities: " + ModAffinities.getAffinities(player)), false);
                             return 1;
                         })
                 )
@@ -176,13 +136,14 @@ public class ModCommands {
                                 .suggests(AFFINITY_SUGGESTIONS)
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                    String affinityName = StringArgumentType.getString(ctx, "affinity");
+                                    String name = StringArgumentType.getString(ctx, "affinity");
                                     try {
-                                        Affinity affinity = Affinity.valueOf(affinityName.toUpperCase());
+                                        Affinity affinity = Affinity.valueOf(name.toUpperCase());
                                         ModAffinities.addAffinity(player, affinity);
-                                        ctx.getSource().sendSuccess(() -> Component.literal("Set affinity: " + affinity), false);
+                                        ctx.getSource().sendSuccess(
+                                                () -> Component.literal("Set affinity: " + affinity), false);
                                     } catch (IllegalArgumentException e) {
-                                        ctx.getSource().sendFailure(Component.literal("Invalid affinity: " + affinityName));
+                                        ctx.getSource().sendFailure(Component.literal("Invalid affinity: " + name));
                                     } catch (IllegalStateException e) {
                                         ctx.getSource().sendFailure(Component.literal(e.getMessage()));
                                     }
@@ -199,7 +160,8 @@ public class ModCommands {
                                 ctx.getSource().sendFailure(Component.literal("No affinities to clear!"));
                                 return 0;
                             }
-                            ctx.getSource().sendSuccess(() -> Component.literal("Cleared all affinities."), false);
+                            ctx.getSource().sendSuccess(
+                                    () -> Component.literal("Cleared all affinities."), false);
                             return 1;
                         })
                 )
@@ -209,24 +171,45 @@ public class ModCommands {
                             try {
                                 ModAffinities.clearAffinities(player);
                             } catch (IllegalStateException ignored) {
-                                // Player has no affinities to clear - this is fine for reroll
+                                // No affinities yet - roll directly.
                             }
-
-                            // Roll new random affinities
                             for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
-                                if (affinity != Affinity.VOID) {
-                                    try {
-                                        ModAffinities.addAffinity(player, affinity);
-                                    } catch (IllegalStateException e) {
-                                        ElementalRealms.LOGGER.error("Error re-rolling affinities for player " + player.getName().getString() + ": " + e.getMessage());
-                                    }
+                                if (affinity == Affinity.VOID) continue;
+                                try {
+                                    ModAffinities.addAffinity(player, affinity);
+                                } catch (IllegalStateException e) {
+                                    ElementalRealms.LOGGER.error(
+                                            "Error rerolling affinities for {}: {}",
+                                            player.getName().getString(), e.getMessage());
                                 }
                             }
-                            ctx.getSource().sendSuccess(() -> Component.literal("Re-rolled affinities."), false);
+                            ctx.getSource().sendSuccess(
+                                    () -> Component.literal("Re-rolled affinities."), false);
                             return 1;
                         })
                 )
         );
+    }
 
+    private static void spawnPortalInFront(ServerPlayer player, ResourceKey<Level> targetLevel) {
+        PortalEntity portal = new PortalEntity(
+                ModEntities.PORTAL_ENTITY.get(),
+                player.level(),
+                false,
+                -1,
+                targetLevel,
+                player.getUUID()
+        );
+        if (targetLevel != null) {
+            portal.setTargetLevel(targetLevel);
+        }
+        Vec3 look = player.getLookAngle();
+        portal.setPos(
+                player.getX() + look.x * PORTAL_SPAWN_DISTANCE,
+                player.getY() + PORTAL_HEIGHT,
+                player.getZ() + look.z * PORTAL_SPAWN_DISTANCE
+        );
+        portal.setYRot(player.getYRot());
+        player.level().addFreshEntity(portal);
     }
 }

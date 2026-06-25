@@ -11,32 +11,20 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Supplier;
 
 /**
- * Registry for all custom menu types in the mod.
+ * Menu types for mod GUI screens.
  */
-public class ModMenus {
-    /**
-     * Deferred register for menu types.
-     */
+public final class ModMenus {
+
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, ElementalRealms.MODID);
 
-    /**
-     * Registers all menu types with the mod event bus.
-     *
-     * @param bus The mod's event bus for registration
-     */
-    public static void register(IEventBus bus) {
-        MENUS.register(bus);
+    private ModMenus() {
     }
 
-    /**
-     * Menu type for the affinity book screen.
-     * Displays player affinities and their completion progress.
-     */
-    public static final Supplier<MenuType<AffinityBookMenu>> AFFINITY_MENU =
-            MENUS.register("affinity_menu", () ->
-                    IMenuTypeExtension.create(AffinityBookMenu::new)
-            );
+    public static void register(IEventBus bus) {
+        MENUS.register(bus);
+    }    public static final Supplier<MenuType<AffinityBookMenu>> AFFINITY_MENU =
+            MENUS.register("affinity_menu", () -> IMenuTypeExtension.create(AffinityBookMenu::new));
 
 
 }

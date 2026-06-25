@@ -13,14 +13,10 @@ import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement
 import java.util.Optional;
 
 /**
- * Structure placement restricted to world spawn chunk (0, 0).
- * Used for dimension entry platforms that must spawn at origin.
+ * Structure placement that restricts generation to the world spawn chunk (0, 0).
  */
 public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
 
-    /**
-     * Codec for JSON serialization of placement configuration.
-     */
     public static final MapCodec<SpawnChunkPlacement> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     Vec3i.offsetCodec(16).optionalFieldOf("locate_offset", Vec3i.ZERO).forGetter(placement -> placement.locateOffset),
@@ -33,7 +29,6 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
                     RandomSpreadType.CODEC.optionalFieldOf("spread_type", RandomSpreadType.LINEAR).forGetter(placement -> placement.spreadType)
             ).apply(instance, SpawnChunkPlacement::new));
 
-    // Fields for codec getters
     private final Vec3i locateOffset;
     private final FrequencyReductionMethod frequencyReductionMethod;
     private final float frequency;
@@ -43,28 +38,22 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
     private final int separation;
     private final RandomSpreadType spreadType;
 
-    /**
-     * Creates spawn-only placement with standard RandomSpread parameters.
-     *
-     * @param locateOffset             Offset for /locate command
-     * @param frequencyReductionMethod Frequency reduction strategy
-     * @param frequency                Spawn probability (0.0-1.0)
-     * @param salt                     Random seed modifier
-     * @param exclusionZone            Optional overlap prevention zone
-     * @param spacing                  Grid spacing in chunks
-     * @param separation               Minimum distance between structures
-     * @param spreadType               Distribution pattern
-     * @throws RuntimeException if spacing <= separation
-     */
-    public SpawnChunkPlacement(Vec3i locateOffset,
-                               FrequencyReductionMethod frequencyReductionMethod,
-                               float frequency,
-                               int salt,
-                               Optional<ExclusionZone> exclusionZone,
-                               int spacing,
-                               int separation,
-                               RandomSpreadType spreadType) {
+    public SpawnChunkPlacement(
+            Vec3i locateOffset,
+            FrequencyReductionMethod frequencyReductionMethod,
+            float frequency,
+            int salt,
+            Optional<ExclusionZone> exclusionZone,
+            int spacing,
+            int separation,
+            RandomSpreadType spreadType
+    ) {
         super(locateOffset, frequencyReductionMethod, frequency, salt, exclusionZone, spacing, separation, spreadType);
+
+        if (spacing <= separation) {
+            throw new RuntimeException(
+                    "Spacing must be greater than separation! Spacing: " + spacing + ", Separation: " + separation);
+        }
 
         this.locateOffset = locateOffset;
         this.frequencyReductionMethod = frequencyReductionMethod;
@@ -74,10 +63,6 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
         this.spacing = spacing;
         this.separation = separation;
         this.spreadType = spreadType;
-
-        if (spacing <= separation) {
-            throw new RuntimeException("Spacing must be greater than separation! Spacing: " + spacing + ", Separation: " + separation);
-        }
     }
 
     @Override
@@ -120,9 +105,6 @@ public class SpawnChunkPlacement extends RandomSpreadStructurePlacement {
         return this.spreadType;
     }
 
-    /**
-     * Restricts structure generation to spawn chunk (0, 0) only.
-     */
     @Override
     protected boolean isPlacementChunk(ChunkGeneratorStructureState structureState, int x, int z) {
         return x == 0 && z == 0;

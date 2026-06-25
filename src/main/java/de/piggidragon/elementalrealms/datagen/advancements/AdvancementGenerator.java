@@ -20,16 +20,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * Generates progression advancements for the mod.
+ * Generates the mod's advancement tree.
  */
 public class AdvancementGenerator implements AdvancementSubProvider {
 
-    /**
-     * Generates all advancements for the mod.
-     */
     @Override
     public void generate(HolderLookup.Provider provider, Consumer<AdvancementHolder> consumer) {
-        // Root: Kill Ender Dragon
         AdvancementHolder rootAdvancement = Advancement.Builder.advancement()
                 .display(
                         new ItemStack(AffinityItems.AFFINITY_STONES.get(Affinity.SPACE).get()),
@@ -43,15 +39,11 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                 )
                 .addCriterion("killed_dragon",
                         KilledTrigger.TriggerInstance.playerKilledEntity(
-                                Optional.of(
-                                        EntityPredicate.Builder.entity()
-                                                .of(EntityType.ENDER_DRAGON)
-                                                .build()
-                                )
+                                Optional.of(EntityPredicate.Builder.entity().of(EntityType.ENDER_DRAGON).build())
                         )
                 )
                 .save(consumer, "elementalrealms:root");
-        // Get Dimension Staff
+
         Advancement.Builder.advancement()
                 .parent(rootAdvancement)
                 .display(

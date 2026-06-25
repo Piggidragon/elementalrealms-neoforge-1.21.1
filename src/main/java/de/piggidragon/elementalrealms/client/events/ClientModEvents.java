@@ -15,27 +15,19 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 /**
- * Client-side event handlers for entity renderers.
+ * Client-only entity renderer registration and per-frame render/tick task dispatch.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID, value = Dist.CLIENT)
-public class ClientModEvents {
+public final class ClientModEvents {
 
-    /**
-     * Registers entity renderers for custom entities.
-     *
-     * @param event the renderer registration event
-     */
+    private ClientModEvents() {
+    }
+
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        // Register empty renderer for portal (actual rendering via Lodestone particles)
         event.registerEntityRenderer(ModEntities.PORTAL_ENTITY.get(), EmptyPortalRenderer::new);
     }
 
-    /**
-     * Handles rendering of particles every frame (60+ FPS)
-     *
-     * @param event The render level stage event
-     */
     @SubscribeEvent
     public static void renderEvent(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
@@ -47,23 +39,14 @@ public class ClientModEvents {
         PoseStack poseStack = event.getPoseStack();
         float partialTick = event.getPartialTick().getGameTimeDeltaTicks();
 
-        // Render all tasks with interpolation
         RenderManager.executeAll(partialTick, poseStack, bufferSource);
     }
 
-    /**
-     * Handles tick logic for particles (20 TPS)
-     *
-     * @param event The level tick event
-     */
     @SubscribeEvent
     public static void onClientTick(LevelTickEvent.Post event) {
-        // Only run on client side
         if (!event.getLevel().isClientSide()) return;
 
         RenderManager.removeRequestedTasks();
-
-        // Tick all tasks for logic updates (position tracking, damage, etc.)
         RenderManager.tickAll();
     }
 }

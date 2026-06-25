@@ -11,26 +11,18 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Supplier;
 
 /**
- * Registry for custom worldgen features.
- * Defines placement behaviors for naturally occurring structures.
+ * Deferred register for custom worldgen features.
  */
-public class ModFeatures {
+public final class ModFeatures {
+
     public static final DeferredRegister<Feature<?>> FEATURES =
             DeferredRegister.create(Registries.FEATURE, ElementalRealms.MODID);
-
-    /**
-     * Portal spawn feature for naturally generating portals in world.
-     */
     public static final Supplier<Feature<PortalConfiguration>> PORTAL_FEATURE =
-            FEATURES.register("portal_feature", () ->
-                    new PortalSpawnFeature(PortalConfiguration.CODEC));
+            FEATURES.register("portal_feature", () -> new PortalSpawnFeature(PortalConfiguration.CODEC));
 
+    private ModFeatures() {
+    }
 
-    /**
-     * Registers all features with the mod event bus.
-     *
-     * @param bus Mod event bus for registration
-     */
     public static void register(IEventBus bus) {
         FEATURES.register(bus);
     }

@@ -10,29 +10,25 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
- * Handles player login events to initialize magical affinities for new players.
+ * Assigns random affinities to first-time players on login.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
-public class PlayerLoginHandler {
-    /**
-     * Assigns random affinities to new players on first login.
-     */
+public final class PlayerLoginHandler {
+
+    private PlayerLoginHandler() {
+    }
+
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            // Skip if player already has affinities
-            if (!ModAffinities.getAffinities(player).isEmpty()) {
-                return;
-            }
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!ModAffinities.getAffinities(player).isEmpty()) return;
 
-            // Roll and assign random affinities
-            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
-                if (affinity != Affinity.VOID) {
-                    try {
-                        ModAffinities.addAffinity(player, affinity);
-                    } catch (IllegalStateException ignored) {
-                    }
-                }
+        for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
+            if (affinity == Affinity.VOID) continue;
+            try {
+                ModAffinities.addAffinity(player, affinity);
+            } catch (IllegalStateException e) {
+                ElementalRealms.LOGGER.debug("Skipped affinity {} for {}: {}", affinity, player, e.getMessage());
             }
         }
     }

@@ -16,43 +16,33 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Registers all data generators for automated JSON file creation.
+ * Registers all data generators used by the mod.
  */
-@EventBusSubscriber(modid = ElementalRealms.MODID)  // Add bus = MOD
-public class DataGenerators {
+@EventBusSubscriber(modid = ElementalRealms.MODID)
+public final class DataGenerators {
 
-    /**
-     * Registers all data generators during the data generation phase.
-     */
+    private DataGenerators() {
+    }
+
     @SubscribeEvent
     public static void onGatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        // Model provider (client-side)
         generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, event.getExistingFileHelper()));
-
-        // Recipe provider (server-side)
         generator.addProvider(event.includeServer(), new AffinityRecipeProvider(packOutput, lookupProvider));
-
-        // Advancement provider (server-side)
-        generator.addProvider(
-                event.includeServer(),  // Changed from true to event.includeServer()
-                new ModAdvancementProvider(
-                        packOutput,
-                        lookupProvider,
-                        List.of(new AdvancementGenerator())
-                )
-        );
-
+        generator.addProvider(event.includeServer(), new ModAdvancementProvider(
+                packOutput,
+                lookupProvider,
+                List.of(new AdvancementGenerator())
+        ));
         generator.addProvider(event.includeServer(), new DatapackBuiltinEntriesProvider(
                 packOutput,
                 lookupProvider,
                 ModDatapackProvider.createBuilder(),
                 Set.of(ElementalRealms.MODID)
         ));
-
         generator.addProvider(event.includeClient(), new ModSoundsProvider(packOutput, event.getExistingFileHelper()));
     }
 }

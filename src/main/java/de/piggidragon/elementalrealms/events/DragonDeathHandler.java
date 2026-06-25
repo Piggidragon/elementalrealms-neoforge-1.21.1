@@ -21,61 +21,37 @@ import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
 import java.util.List;
 
 /**
- * Spawns dimensional portal when player defeats Ender Dragon.
+ * Spawns a permanent School-dimension portal at world spawn when the dragon is defeated.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
-public class DragonDeathHandler {
+public final class DragonDeathHandler {
 
     private static final ResourceLocation DRAGON_ADVANCEMENT_ID =
             ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "root");
 
     private static volatile boolean advancementCompleted = false;
 
-    /**
-     * Event handler triggered when any player earns an advancement.
-     * Checks if the earned advancement is the dragon defeat advancement,
-     * and spawns a portal if so.
-     */
+    private DragonDeathHandler() {
+    }
+
+    public static boolean isAdvancementCompleted() {
+        return advancementCompleted;
+    }
+
     @SubscribeEvent
     public static void onAdvancementEarn(AdvancementEvent.AdvancementEarnEvent event) {
         Player player = event.getEntity();
         AdvancementHolder advancement = event.getAdvancement();
 
-        // Only process the specific dragon advancement
-        if (!advancement.id().equals(DRAGON_ADVANCEMENT_ID)) {
-            return;
-        }
-
-        // Only process on server side to prevent duplicate portals
-        if (player.level().isClientSide()) {
-            return;
-        }
+        if (!advancement.id().equals(DRAGON_ADVANCEMENT_ID)) return;
+        if (player.level().isClientSide()) return;
 
         advancementCompleted = true;
-
         ServerLevel level = (ServerLevel) player.level();
-        MinecraftServer server = level.getServer();
-
-        // Spawn the portal at world spawn
-        DragonDeathHandler.spawnPortalOrigin(server);
+        spawnPortalOrigin(level.getServer());
     }
 
-    /**
-     * Checks if the dragon defeat advancement has been completed.
-     *
-     * @return true if advancement is completed
-     */
-    public static boolean isAdvancementCompleted() {
-        return advancementCompleted;
-    }
-
-    /**
-     * Spawns permanent portal at world spawn leading to School dimension.
-     *
-     * @param server The Minecraft server instance
-     */
     public static void spawnPortalOrigin(MinecraftServer server) {
-
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) return;
 
@@ -85,19 +61,18 @@ public class DragonDeathHandler {
                 ModLevel.SCHOOL_DIMENSION
         );
 
-        // Find safe spawn position at world spawn
-        BlockPos worldSpawn = overworld.getSharedSpawnPos();
-        BlockPos safePos = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, worldSpawn);
+        BlockPos spawn = overworld.getSharedSpawnPos();
+        BlockPos surface = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, spawn);
+        portal.setPos(
+                surface.getX(),
+                surface.getY() + PortalEntity.PORTAL_HEIGHT_OFFSET,
+                surface.getZ() + PortalEntity.PORTAL_Z_OFFSET
+        );
 
-        portal.setPos(safePos.getX(), safePos.getY() + PortalEntity.PORTAL_HEIGHT_OFFSET, safePos.getZ() + PortalEntity.PORTAL_Z_OFFSET);
-
-        // Notify all online players about the portal's appearance
+        Component message = Component.literal("You can feel the dimension barrier cracking...");
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         for (ServerPlayer player : players) {
-            player.displayClientMessage(
-                    Component.literal("You can feel the dimension barrier cracking..."),
-                    true // Display as action bar message
-            );
+            player.displayClientMessage(message, true);
         }
 
         overworld.addFreshEntity(portal);
