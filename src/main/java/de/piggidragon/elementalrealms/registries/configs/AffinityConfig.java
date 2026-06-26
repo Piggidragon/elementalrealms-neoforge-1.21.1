@@ -20,6 +20,7 @@ public final class AffinityConfig implements Json5Reloadable {
     // Effective values, refreshed by reload().
     private static int[] slotChances = {100, 25, 20, 20};
     private static int deviantChancePercent = 25;
+    private static int maxCompletionPercent = 100;
     private static boolean deviantRequiresBase = true;
     private static boolean elementalGuaranteed = true;
     private static boolean eternalAllOrNothing = true;
@@ -69,6 +70,12 @@ public final class AffinityConfig implements Json5Reloadable {
                 deviantChancePercent = roll.get("deviantChancePercent").getAsInt();
             }
         }
+        if (obj.has("completion")) {
+            JsonObject completion = obj.get("completion").getAsJsonObject();
+            if (completion.has("maxCompletionPercent")) {
+                maxCompletionPercent = completion.get("maxCompletionPercent").getAsInt();
+            }
+        }
         if (obj.has("tiers")) {
             JsonObject tiers = obj.get("tiers").getAsJsonObject();
             if (tiers.has("deviantRequiresBase")) {
@@ -106,6 +113,12 @@ public final class AffinityConfig implements Json5Reloadable {
                     "deviantChancePercent": 25
                   },
 
+                  "completion": {
+                    // Max completion (%) any affinity can reach. Items that would push completion
+                    // beyond this throw IllegalStateException; tier-validation thresholds use this too.
+                    "maxCompletionPercent": 100
+                  },
+
                   "tiers": {
                     // DEVIANT affinity requires its ELEMENTAL base at 100%.
                     "deviantRequiresBase": true,
@@ -124,6 +137,7 @@ public final class AffinityConfig implements Json5Reloadable {
 
     public static int[] slotChances() { return slotChances.clone(); }
     public static int deviantChancePercent() { return deviantChancePercent; }
+    public static int maxCompletionPercent() { return maxCompletionPercent; }
     public static boolean deviantRequiresBase() { return deviantRequiresBase; }
     public static boolean elementalGuaranteed() { return elementalGuaranteed; }
     public static boolean eternalAllOrNothing() { return eternalAllOrNothing; }
