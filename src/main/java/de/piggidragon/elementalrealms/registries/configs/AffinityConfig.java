@@ -11,6 +11,7 @@ import net.minecraft.world.item.Rarity;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Loads {@code config/elementalrealms/affinities.json}. Controls the login roll
@@ -18,6 +19,14 @@ import java.util.Map;
  * <p>
  * The values mirror what was previously hardcoded in {@code ModAffinitiesRoll}
  * (Phase-0.3 will swap the live callers to read from this config).
+ * <p>
+ * Rarity lookup is lazy: the per-affinity rarity maps are not materialised
+ * during {@link #reload()} (which can fire in {@code static {}} context via
+ * {@code INSTANCE = new AffinityConfig()}, before the FML loader has injected
+ * {@link ModRarities#LEGENDARY}/{@link ModRarities#MYTHIC} into the {@code Rarity}
+ * enum). The first call to {@link #stoneRarity(Affinity)} or
+ * {@link #shardRarity(Affinity)} resolves the maps against live {@code Rarity}
+ * constants; subsequent reloads re-seed them in place.
  */
 public final class AffinityConfig implements Json5Reloadable {
 
@@ -42,10 +51,14 @@ public final class AffinityConfig implements Json5Reloadable {
     private static int elementalMaxIterations = 5;
     private static double partialCompletionSlope = 3.0;
 
-    // Rarity mapping per item kind (issue #24). Resolved at lookup time:
-    // per-affinity override -> per-tier override -> "default" -> EPIC fallback.
-    private static final Map<Affinity, Rarity> STONE_RARITIES = new EnumMap<>(Affinity.class);
-    private static final Map<Affinity, Rarity> SHARD_RARITIES = new EnumMap<>(Affinity.class);
+    // Parsed JSON5 sub-sections, retained across reloads so the rarity lookup can
+    // re-apply them lazily once the FML loader has injected LEGENDARY / MYTHIC.
+    // null until the first reload() that sees a "rarities" block.
+    private static volatile JsonObject lastRaritiesRoot;
+    private static final AtomicReference<Map<Affinity, Rarity>> STONE_RARITIES =
+            new AtomicReference<>();
+    private static final AtomicReference<Map<Affinity, Rarity>> SHARD_RARITIES =
+            new AtomicReference<>();
 
     public static final AffinityConfig INSTANCE = new AffinityConfig();
 
@@ -66,10 +79,17 @@ public final class AffinityConfig implements Json5Reloadable {
         if (root == null) {
             writeDefaultIfMissing(file);
             ElementalRealms.LOGGER.debug("affinities.json not found - wrote defaults. Using in-memory defaults.");
+            lastRaritiesRoot = null;
+            // Drop any cached maps so the next lookup rebuilds from defaults.
+            STONE_RARITIES.set(null);
+            SHARD_RARITIES.set(null);
             return;
         }
         if (!Json5ConfigLoader.validateSchema(root, SCHEMA_VERSION)) {
             ElementalRealms.LOGGER.warn("affinities.json schema mismatch - keeping in-memory defaults.");
+            // Don't drop lastRaritiesRoot - the old config might still be valid for
+            // the schema we're running with, and dropping it would force a rebuild
+            // against hardcoded defaults.
             return;
         }
 
@@ -101,16 +121,18 @@ public final class AffinityConfig implements Json5Reloadable {
             JsonObject drops = obj.getAsJsonObject("drops");
             eternalStoneRarityPercent = Json5SectionReader.getInt(drops, "eternalStoneRarityPercent", eternalStoneRarityPercent);
         }
+        // Capture the rarities block but don't resolve it yet - resolution touches
+        // LEGENDARY/MYTHIC which only exist after the FML loader has injected them.
         if (obj.has("rarities")) {
-            JsonObject rarities = obj.getAsJsonObject("rarities");
-            applyRaritySection(rarities, "stones", STONE_RARITIES, defaultStoneRarities());
-            applyRaritySection(rarities, "shards", SHARD_RARITIES, defaultShardRarities());
+            lastRaritiesRoot = obj.getAsJsonObject("rarities");
         } else {
-            STONE_RARITIES.clear();
-            STONE_RARITIES.putAll(defaultStoneRarities());
-            SHARD_RARITIES.clear();
-            SHARD_RARITIES.putAll(defaultShardRarities());
+            lastRaritiesRoot = null;
         }
+        // Invalidate cached maps so the next lookup re-applies the (possibly new)
+        // lastRaritiesRoot. Do NOT touch the maps in-place here - the old map might
+        // still be referenced by code that ran before this reload fired.
+        STONE_RARITIES.set(null);
+        SHARD_RARITIES.set(null);
 
         ElementalRealms.LOGGER.debug("affinities.json loaded: slotChances={}, deviantChance={}",
                 java.util.Arrays.toString(slotChances), deviantChancePercent);
@@ -121,11 +143,17 @@ public final class AffinityConfig implements Json5Reloadable {
      * Lookup order for each entry: explicit per-affinity name -> per-tier name
      * (elemental/deviant/eternal/void) -> {@code "default"} -> hardcoded fallback.
      * Unknown rarity strings log a warning and fall back to EPIC.
+     * <p>
+     * MUST NOT be called from {@code static {}} context - it touches
+     * {@link ModRarities#legendary()}, which throws if the enum extension hasn't
+     * been injected yet.
      */
-    private static void applyRaritySection(JsonObject raritiesRoot, String kind,
-                                           Map<Affinity, Rarity> target, Map<Affinity, Rarity> defaults) {
-        target.clear();
-        JsonObject section = (raritiesRoot.has(kind) && raritiesRoot.get(kind).isJsonObject())
+    private static Map<Affinity, Rarity> buildRarityMap(String kind, Map<Affinity, Rarity> defaults) {
+        Map<Affinity, Rarity> map = new EnumMap<>(Affinity.class);
+        JsonObject raritiesRoot = lastRaritiesRoot;
+        JsonObject section = (raritiesRoot != null
+                && raritiesRoot.has(kind)
+                && raritiesRoot.get(kind).isJsonObject())
                 ? raritiesRoot.getAsJsonObject(kind)
                 : new JsonObject();
 
@@ -137,7 +165,7 @@ public final class AffinityConfig implements Json5Reloadable {
             if (section.has(explicitKey)) {
                 Rarity r = resolveRarityName(section, explicitKey, fallback);
                 if (r != null) {
-                    target.put(affinity, r);
+                    map.put(affinity, r);
                     continue;
                 }
             }
@@ -146,19 +174,22 @@ public final class AffinityConfig implements Json5Reloadable {
             if (section.has(tierKey)) {
                 Rarity r = resolveRarityName(section, tierKey, fallback);
                 if (r != null) {
-                    target.put(affinity, r);
+                    map.put(affinity, r);
                     continue;
                 }
             }
             // 3. seeded default (matches the issue #24 spec)
-            target.put(affinity, defaults.getOrDefault(affinity, fallback));
+            map.put(affinity, defaults.getOrDefault(affinity, fallback));
         }
+        return map;
     }
 
     /**
      * Maps a string like {@code "EPIC"} or {@code "LEGENDARY"} to the runtime
      * {@link Rarity} instance. {@code null} on miss/wrong-type so the caller can
      * fall through to the next lookup layer.
+     * <p>
+     * Same timing caveat as {@link #buildRarityMap}: don't call from {@code static {}}.
      */
     private static Rarity resolveRarityName(JsonObject section, String key, Rarity fallback) {
         if (!section.has(key) || !section.get(key).isJsonPrimitive()) {
@@ -326,13 +357,35 @@ public final class AffinityConfig implements Json5Reloadable {
     public static int elementalMaxIterations() { return elementalMaxIterations; }
     public static double partialCompletionSlope() { return partialCompletionSlope; }
 
-    /** Resolves the rarity of an Affinity Stone. Never returns {@code null}. */
+    /**
+     * Resolves the rarity of an Affinity Stone. Lazily builds the underlying
+     * map on first call so we never touch {@link ModRarities#legendary()} before
+     * the FML loader has injected the custom enum constant.
+     */
     public static Rarity stoneRarity(Affinity affinity) {
-        return STONE_RARITIES.getOrDefault(affinity, Rarity.EPIC);
+        Map<Affinity, Rarity> map = STONE_RARITIES.get();
+        if (map == null) {
+            map = buildRarityMap("stones", defaultStoneRarities());
+            // Race-tolerant: if another thread won, use their map (same shape).
+            if (!STONE_RARITIES.compareAndSet(null, map)) {
+                map = STONE_RARITIES.get();
+            }
+        }
+        return map.getOrDefault(affinity, Rarity.EPIC);
     }
 
-    /** Resolves the rarity of an Affinity Shard. Never returns {@code null}. */
+    /**
+     * Resolves the rarity of an Affinity Shard. Same lazy contract as
+     * {@link #stoneRarity(Affinity)}.
+     */
     public static Rarity shardRarity(Affinity affinity) {
-        return SHARD_RARITIES.getOrDefault(affinity, Rarity.RARE);
+        Map<Affinity, Rarity> map = SHARD_RARITIES.get();
+        if (map == null) {
+            map = buildRarityMap("shards", defaultShardRarities());
+            if (!SHARD_RARITIES.compareAndSet(null, map)) {
+                map = SHARD_RARITIES.get();
+            }
+        }
+        return map.getOrDefault(affinity, Rarity.RARE);
     }
 }
