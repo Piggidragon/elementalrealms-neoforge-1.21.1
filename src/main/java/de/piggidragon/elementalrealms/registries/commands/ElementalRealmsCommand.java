@@ -118,8 +118,6 @@ public final class ElementalRealmsCommand {
                         .then(Commands.argument("radius", IntegerArgumentType.integer(1, 30000000))
                                 .executes(ElementalRealmsCommand::portalLocate)))
                 .then(Commands.literal("spawn")
-                        .then(Commands.literal("random")
-                                .executes(ElementalRealmsCommand::portalSpawnRandom))
                         .then(Commands.argument("dimension", StringArgumentType.greedyString())
                                 .suggests(LEVEL_SUGGESTIONS)
                                 .executes(ElementalRealmsCommand::portalSpawnDimension)));
@@ -144,48 +142,39 @@ public final class ElementalRealmsCommand {
         return 1;
     }
 
-    private static int portalSpawnRandom(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+private static int portalSpawnDimension(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        ResourceKey<Level> target = DynamicDimensionHandler.createDimensionForPortal(
-                player.level().getServer(),
-                null,
-                ModLevel.getRandomLevel()
-        );
-        if (target == null) {
-            ctx.getSource().sendFailure(Component.literal("Could not create a new realm dimension"));
-            return 0;
-        }
-        spawnDebugPortal(player, target);
-        return 1;
-    }
-
-    private static int portalSpawnDimension(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        ServerPlayer player = ctx.getSource().getPlayerOrException();
-        ResourceKey<Level> dimensionKey = ResourceKey.create(
+        ResourceKey<Level> templateKey = ResourceKey.create(
                 Registries.DIMENSION,
                 ResourceLocation.parse(StringArgumentType.getString(ctx, "dimension"))
         );
 
-        if (!ModLevel.getLevels().contains(dimensionKey)) {
+        if (!ModLevel.getLevels().contains(templateKey)) {
             ctx.getSource().sendFailure(Component.literal("Invalid Dimension"));
             return 0;
         }
 
-        ResourceKey<Level> portalTarget;
-        if (ModLevel.getLevelsRandomSource().contains(dimensionKey)) {
-            // RandomSource dimensions get a freshly-allocated realm_<n> generated for them.
-            ResourceKey<Level> generated = DynamicDimensionHandler.createDimensionForPortal(
-                    player.level().getServer(), null, dimensionKey);
-            if (generated == null) {
-                ctx.getSource().sendFailure(Component.literal("Could not create a new realm dimension"));
+        // SCHOOL_DIMENSION routes directly to itself (no template stem is registered for it;
+        // the school portal is reached via the Dragon-spawn path / Dimension Staff, not this
+        // debug command). For non-school templates, createDimensionForPortal() clones the
+        // template's chunk generator into a fresh realm_<N> and returns that key. We pass
+        // null as the portal argument because createDimensionForPortal only uses the portal
+        // for its PORTAL_TARGET_LEVEL attachment, and we want the fresh realm key (not a
+        // throwaway portal's null attachment) for the spawn.
+        ResourceKey<Level> resolvedTarget;
+        if (templateKey.equals(ModLevel.SCHOOL_DIMENSION)) {
+            resolvedTarget = ModLevel.SCHOOL_DIMENSION;
+        } else {
+            ResourceKey<Level> created = DynamicDimensionHandler.createDimensionForPortal(
+                    player.level().getServer(), null, templateKey);
+            if (created == null) {
+                ctx.getSource().sendFailure(Component.literal(
+                        "Failed to create dimension for template " + templateKey.location()));
                 return 0;
             }
-            portalTarget = generated;
-        } else {
-            // Existing (test / test2 / school) dimensions route directly to themselves.
-            portalTarget = dimensionKey;
+            resolvedTarget = created;
         }
-        spawnDebugPortal(player, portalTarget);
+        spawnDebugPortal(player, resolvedTarget);
         return 1;
     }
 
