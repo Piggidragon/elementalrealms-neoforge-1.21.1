@@ -33,10 +33,28 @@ Harness the power of 12 elemental affinities across 3 tiers. New players receive
 
 **Commands** (OP level 2):
 
-- `/affinities list` — Shows your current affinities
-- `/affinities set <affinity>` — Sets a specific affinity
-- `/affinities clear` — Removes all affinities
-- `/affinities reroll` — Re-rolls random affinities
+- `/elementalrealms affinities list` — Shows your current affinities
+- `/elementalrealms affinities set <affinity>` — Sets a specific affinity
+- `/elementalrealms affinities clear` — Removes all affinities
+- `/elementalrealms affinities reroll` — Re-rolls random affinities
+- `/elementalrealms affinities roll show` — Lists every field in the
+  affinities roll config with its current effective value (see §5.2 of
+  `docs/PLANS.md` for field semantics).
+- `/elementalrealms affinities roll set <field> <value>` — Mutates a single
+  roll-config field on disk and reloads without server restart. Int fields
+  accept `0..100`; array fields (any name ending in `SkewPercent`) accept
+  comma-separated integers that must sum to `≤ 100`.
+
+**Login roll (first login):** one random ELEMENTAL affinity at hardcoded 100%
+(the player's anchor element, always full strength), plus a rare chance of the
+matching DEVIANT as a partial (capped at the configured `deviantMaxCompletion`,
+default 80%), plus a decaying loop that may add additional ELEMENTAL partials
+(capped at `elementalMaxCompletion`, default 80%). Partial completions use a
+continuous left-skew distribution (`(int)(max * U^slope)`, default `slope=3`)
+so low values are common and high values are rare — the @ max bucket itself
+is < 1%. ETERNAL affinities are never assigned at login — they come from
+boss stones only. Tune the partial caps and skew via
+`config/elementalrealms/affinities.json` or the two `roll` commands above.
 
 ### 🪄 Dimension Staff
 

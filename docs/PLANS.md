@@ -98,7 +98,81 @@ Fantasy-academy hub entered after the Dragon fight.
 
 ### 5.2 Login roll
 
-One ELEMENTAL at 100%, partial % on others. Rarity-skewed distribution.
+First-login random assignment of affinities. Driven by `affinities.json.roll`
+(see §19). Three stages (issue #23):
+
+1. **Stage 1 — guaranteed Elemental at 100% (hardcoded).** One random ELEMENTAL
+   affinity at **100%** — this is hardcoded by spec, not read from config.
+   This is the player's anchor element, always full strength. The configurable
+   `maxCompletionPercent` does NOT bound Stage 1.
+2. **Stage 2 — rare Deviant partial.** Roll `deviantPartialChancePercent`
+   (default 5%) for the matching DEVIANT of the guaranteed Elemental at a
+   partial completion. The completion is rolled from a continuous left-skew
+   distribution capped at `deviantMaxCompletionPercent` (default 80%).
+3. **Stage 3 — decaying Elemental/Deviant loop.** Up to
+   `elementalMaxIterations` (default 5) additional iterations. Each: roll
+   "continue?" starting at `elementalContinueChanceStartPercent` (default
+   50%), halving per iter via `elementalContinueChanceDecayPercent`
+   (default 50%). On success: pick a candidate and roll a partial completion
+   capped at `elementalMaxCompletionPercent` (default 80%).
+   - Candidate rules:
+     - ELEMENTAL candidates: any elemental the player does not yet hold.
+     - DEVIANT candidates: any Deviant whose matching Elemental is held at
+       100% (i.e. the guaranteed one, and only that one since Stage 1 is the
+       only @100% source at login). Stage 2 may have already claimed it.
+     - Deviant vs Elemental weight is `partialDeviantWeightPercent`
+       (default 15). If the chosen pool is empty, fall back to the other
+       pool before returning VOID.
+
+**Partial-completion distribution (stages 2 + 3):**
+
+`completion = (int)(maxCompletion * U^slope)`, where `U ~ Uniform[0,1)` and
+`slope >= 1` controls the skew. This replaces the earlier bucket-skew
+approach (which had a dominant top bucket that almost always landed at the
+max).
+
+- `slope = 1` → uniform across [0, max].
+- `slope = 3` (default) → heavily left-skewed: ~79% of partials land ≤ 40%
+  when `max = 80`; the @ max bucket itself is < 1%.
+- `slope > 3` → more extreme (rare high rolls).
+
+Result is `(int)`-truncated, so partials are integer percentages (matching
+shard-item increments of +1/+3/+5%). Zero is mapped to 1% so the caller
+never has to skip on 0%.
+
+**Distributional intent (defaults, 100 fresh players):**
+- ~95% get just 1× guaranteed Elemental @ 100%.
+- ~5% get guaranteed + matching Deviant partial.
+- Of those that pass the first stage-3 continue (~50%), ~25% pass the next,
+  ~12% the next, etc. — additional partials become exponentially rare.
+- Stage-3 partials land at low values (typically 5-25%) more often than at
+  the max (rare exception, by design).
+
+**Invariants:**
+- ETERNAL affinities are never assigned at login (filtered by tier in
+  candidate pools; stage 2 only emits the matching DEVIANT of the chosen
+  ELEMENTAL which is by definition DEVIANT-typed).
+- Player can never end up with unbounded affinities (loop capped at
+  `elementalMaxIterations`).
+- Login-side write goes through `ModAffinities.addAffinity` for the 100%
+  Stage-1 element (hardcoded; `addAffinity` always sets 100% by spec) and
+  `addIncrementAffinity` for partials (capped at 100% — shard items carry
+  the player from partial to full).
+
+**Configurable vs hardcoded at a glance:**
+| Knob | Bound | Where |
+|---|---|---|
+| Stage 1 Elemental completion | 100% (hardcoded) | `AffinitiesRoll.rollAffinities` Stage 1 |
+| Stage 2 Deviant completion | `deviantMaxCompletionPercent` (default 80%) | Config |
+| Stage 3 partial completion | `elementalMaxCompletionPercent` (default 80%) | Config |
+| Stage 2 + 3 distribution skew | `partialCompletionSlope` (default 3.0) | Config (continuous U^slope) |
+| Shard-item completion | 100% (hardcoded) | `ModAffinities.addIncrementAffinity` |
+| Stone-item / login Stage 1 | 100% (hardcoded) | `ModAffinities.addAffinity` |
+
+**Tuning at runtime:** OP-only commands
+`/elementalrealms affinities roll show` and
+`/elementalrealms affinities roll set <field> <value>` write the config file
+and reload — no server restart needed.
 
 ### 5.3 Learning more
 
@@ -470,7 +544,7 @@ client/
 | `common.toml` | Toggles, multipliers, audio sliders |
 | `server.toml` | Server-only tunables |
 | `client.toml` | Client-only (HUD, particles, audio) |
-| `affinities.json` | Roll chances, deviant mapping, rarities, vanilla-effect thresholds |
+| `affinities.json` | Roll mechanics (`roll` section, see §5.2 for field semantics), completion cap (`completion.maxCompletionPercent`), tier rules (`tiers`), drop rates (`drops`) |
 | `dimensions.json` | Pocket size, ring layout, affinity → pocket map, dimensional effects, affinity-buff thresholds |
 | `spells.json` | Spell definitions (damage, cooldown, mana, VFX hooks, combo rules) |
 | `bosses.json` | Boss stats per affinity |
