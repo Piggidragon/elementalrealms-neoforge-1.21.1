@@ -26,6 +26,23 @@ public final class AffinityConfig implements Json5Reloadable {
     private static boolean eternalAllOrNothing = true;
     private static int eternalStoneRarityPercent = 5;
 
+    // Three-stage roll (issue #23).
+    // Stage 1 always fires: 1 guaranteed ELEMENTAL at 100% (hardcoded).
+    // Stage 2: rare roll for matching DEVIANT at partial completion (left-skewed).
+    // Stage 3: decaying loop for additional ELEMENTALs / DEVIANTs (left-skewed).
+    // Stage 2 + 3 partials use a continuous left-skew distribution
+    // (completion = (int)(maxCompletion * U^slope)) with implicit int-cast truncation.
+    private static int deviantPartialChancePercent = 10;
+    private static int deviantMaxCompletionPercent = 80;
+    private static int partialDeviantWeightPercent = 15;
+    private static int elementalContinueChanceStartPercent = 50;
+    private static int elementalContinueChanceDecayPercent = 50;
+    private static int elementalMaxCompletionPercent = 80;
+    private static int elementalMaxIterations = 5;
+    // Exponential left-skew: completion = (int)(maxCompletion * U^slope).
+    // slope=1 -> uniform, slope=3 -> ~79% <= 40% (default), slope>3 -> more extreme.
+    private static double partialCompletionSlope = 3.0;
+
     public static final AffinityConfig INSTANCE = new AffinityConfig();
 
     public AffinityConfig() {
@@ -58,6 +75,14 @@ public final class AffinityConfig implements Json5Reloadable {
             slotChances = new Json5SectionReader(roll).getIntArray("slotChances", slotChances);
             elementalGuaranteed = Json5SectionReader.getBoolean(roll, "elementalGuaranteed", elementalGuaranteed);
             deviantChancePercent = Json5SectionReader.getInt(roll, "deviantChancePercent", deviantChancePercent);
+            deviantPartialChancePercent = Json5SectionReader.getInt(roll, "deviantPartialChancePercent", deviantPartialChancePercent);
+            deviantMaxCompletionPercent = Json5SectionReader.getInt(roll, "deviantMaxCompletionPercent", deviantMaxCompletionPercent);
+            partialDeviantWeightPercent = Json5SectionReader.getInt(roll, "partialDeviantWeightPercent", partialDeviantWeightPercent);
+            elementalContinueChanceStartPercent = Json5SectionReader.getInt(roll, "elementalContinueChanceStartPercent", elementalContinueChanceStartPercent);
+            elementalContinueChanceDecayPercent = Json5SectionReader.getInt(roll, "elementalContinueChanceDecayPercent", elementalContinueChanceDecayPercent);
+            elementalMaxCompletionPercent = Json5SectionReader.getInt(roll, "elementalMaxCompletionPercent", elementalMaxCompletionPercent);
+            elementalMaxIterations = Json5SectionReader.getInt(roll, "elementalMaxIterations", elementalMaxIterations);
+            partialCompletionSlope = Json5SectionReader.getDouble(roll, "partialCompletionSlope", partialCompletionSlope);
         }
         if (obj.has("completion")) {
             JsonObject completion = obj.getAsJsonObject("completion");
@@ -91,7 +116,25 @@ public final class AffinityConfig implements Json5Reloadable {
                     "slotChances": [100, 25, 20, 20],
                     "elementalGuaranteed": true,
                     // When a roll succeeds, chance (%) the matching DEVIANT also unlocks.
-                    "deviantChancePercent": 25
+                    "deviantChancePercent": 25,
+
+                    // Three-stage roll (issue #23):
+                    //   Stage 1: 1 guaranteed ELEMENTAL at 100% (hardcoded).
+                    //   Stage 2: rare DEVIANT partial roll for the matching Deviant.
+                    //   Stage 3: decaying loop for additional ELEMENTALs (and the matching
+                    //            Deviant if Stage 2 didn't already claim it).
+                    // Partial completions use the continuous left-skew
+                    // completion = round(maxCompletion * U^slope) — see partialCompletionSlope.
+                    "deviantPartialChancePercent": 10,
+                    "deviantMaxCompletionPercent": 80,
+                    "partialDeviantWeightPercent": 15,
+                    "elementalContinueChanceStartPercent": 50,
+                    "elementalContinueChanceDecayPercent": 50,
+                    "elementalMaxCompletionPercent": 80,
+                    "elementalMaxIterations": 5,
+                    // slope=1 is uniform; slope=3 (default) is heavily left-skewed:
+                    // with maxCompletion=80, ~79% of partials land <= 40%.
+                    "partialCompletionSlope": 3.0
                   },
 
                   "completion": {
@@ -123,4 +166,14 @@ public final class AffinityConfig implements Json5Reloadable {
     public static boolean elementalGuaranteed() { return elementalGuaranteed; }
     public static boolean eternalAllOrNothing() { return eternalAllOrNothing; }
     public static int eternalStoneRarityPercent() { return eternalStoneRarityPercent; }
+
+    // Three-stage roll (issue #23).
+    public static int deviantPartialChancePercent() { return deviantPartialChancePercent; }
+    public static int deviantMaxCompletionPercent() { return deviantMaxCompletionPercent; }
+    public static int partialDeviantWeightPercent() { return partialDeviantWeightPercent; }
+    public static int elementalContinueChanceStartPercent() { return elementalContinueChanceStartPercent; }
+    public static int elementalContinueChanceDecayPercent() { return elementalContinueChanceDecayPercent; }
+    public static int elementalMaxCompletionPercent() { return elementalMaxCompletionPercent; }
+    public static int elementalMaxIterations() { return elementalMaxIterations; }
+    public static double partialCompletionSlope() { return partialCompletionSlope; }
 }
