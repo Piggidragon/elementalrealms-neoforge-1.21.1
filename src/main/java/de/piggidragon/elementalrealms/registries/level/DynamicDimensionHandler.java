@@ -59,9 +59,15 @@ public final class DynamicDimensionHandler {
             initialize(server);
         }
 
-        ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
-        if (portalTargetLevel != Level.OVERWORLD) {
-            return portalTargetLevel;
+        // When a portal is passed, it may already have a targetLevel set (e.g. SchoolDimension
+        // stamped on it earlier). Honor that and skip the new-realm-allocation path.
+        // The portal may also be null when callers just want a fresh realm_<n> assigned
+        // (e.g. /portal spawn commands after the PR #40 cleanup) — treat as "no preset".
+        if (portal != null) {
+            ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+            if (portalTargetLevel != Level.OVERWORLD) {
+                return portalTargetLevel;
+            }
         }
 
         ResourceKey<Level> dimensionKey = ResourceKey.create(
@@ -85,7 +91,9 @@ public final class DynamicDimensionHandler {
             );
 
             if (newLevel != null) {
-                portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
+                if (portal != null) {
+                    portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
+                }
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
                 generationCenters.recordAssignedIndex(generationCenters.getCurrentMaxIndex() + 1);
