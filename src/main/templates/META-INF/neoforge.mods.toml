@@ -47,6 +47,11 @@ authors = "${mod_authors}" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description = '''${mod_description}'''
 
+# Path to a JSON5 file under META-INF/ declaring custom enum constants to be
+# injected into vanilla enums via FML's runtime_enum_extender. Format: see
+# https://docs.neoforged.net/docs/advanced/extensibleenums
+enumExtensions="META-INF/enumextensions.json"
+
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 [[mixins]]
 config = "${mod_id}.mixins.json"
