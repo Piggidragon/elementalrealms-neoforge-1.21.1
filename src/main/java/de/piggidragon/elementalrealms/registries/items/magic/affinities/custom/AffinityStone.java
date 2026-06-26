@@ -3,7 +3,7 @@ package de.piggidragon.elementalrealms.registries.items.magic.affinities.custom;
 import de.piggidragon.elementalrealms.client.particles.vanilla.AffinityParticles;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesSuccessPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -77,7 +77,7 @@ public class AffinityStone extends Item {
             player.playNotifySound(SoundEvents.TOTEM_USE, SoundSource.PLAYERS, BASE_STONE_VOLUME, pitch);
         }
 
-        PacketDistributor.sendToPlayer(serverPlayer, new AffinitySuccessPacket(originalStack, affinity));
+        PacketDistributor.sendToPlayer(serverPlayer, new AffinitiesSuccessPacket(originalStack, affinity));
         return consumed ? InteractionResultHolder.success(itemStack) : InteractionResultHolder.fail(itemStack);
     }
 

@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.packets.custom;
+package de.piggidragon.elementalrealms.packets.custom.enderdragon;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -10,21 +10,21 @@ import net.minecraft.resources.ResourceLocation;
 /**
  * Client -> server request to apply laser-beam damage to an entity.
  */
-public record LaserBeamHitEntityPacket(
+public record EnderDragonLaserBeamHitEntityPacket(
         int hitEntityID,
         float damageAmount
 ) implements CustomPacketPayload {
 
-    public static final Type<LaserBeamHitEntityPacket> TYPE =
+    public static final Type<EnderDragonLaserBeamHitEntityPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "hit_entity"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, LaserBeamHitEntityPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, EnderDragonLaserBeamHitEntityPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.INT,
-                    LaserBeamHitEntityPacket::hitEntityID,
+                    EnderDragonLaserBeamHitEntityPacket::hitEntityID,
                     ByteBufCodecs.FLOAT,
-                    LaserBeamHitEntityPacket::damageAmount,
-                    LaserBeamHitEntityPacket::new
+                    EnderDragonLaserBeamHitEntityPacket::damageAmount,
+                    EnderDragonLaserBeamHitEntityPacket::new
             );
 
     @Override

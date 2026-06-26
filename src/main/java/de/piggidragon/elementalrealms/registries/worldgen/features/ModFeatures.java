@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.registries.worldgen.features;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.registries.worldgen.features.config.PortalConfiguration;
-import de.piggidragon.elementalrealms.registries.worldgen.features.custom.PortalSpawnFeature;
+import de.piggidragon.elementalrealms.registries.worldgen.features.custom.entities.PortalSpawnFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.neoforged.bus.api.IEventBus;

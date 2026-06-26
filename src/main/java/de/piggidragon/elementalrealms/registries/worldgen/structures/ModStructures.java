@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.registries.worldgen.structures;
 
 import com.mojang.serialization.MapCodec;
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.worldgen.structures.custom.Platform;
+import de.piggidragon.elementalrealms.registries.worldgen.structures.school.SchoolDimensionPlatform;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureType;
@@ -17,8 +17,8 @@ public final class ModStructures {
 
     public static final DeferredRegister<StructureType<?>> STRUCTURE_TYPES =
             DeferredRegister.create(Registries.STRUCTURE_TYPE, ElementalRealms.MODID);
-    public static final DeferredHolder<StructureType<?>, StructureType<Platform>> PLATFORM =
-            STRUCTURE_TYPES.register("platform", () -> explicitStructureTypeTyping(Platform.CODEC));
+    public static final DeferredHolder<StructureType<?>, StructureType<SchoolDimensionPlatform>> PLATFORM =
+            STRUCTURE_TYPES.register("platform", () -> explicitStructureTypeTyping(SchoolDimensionPlatform.CODEC));
 
     private ModStructures() {
     }

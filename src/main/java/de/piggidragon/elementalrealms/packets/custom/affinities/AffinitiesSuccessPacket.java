@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.packets.custom;
+package de.piggidragon.elementalrealms.packets.custom.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
@@ -12,21 +12,21 @@ import net.minecraft.world.item.ItemStack;
 /**
  * Server -> client trigger for the totem pop animation when an affinity stone is consumed.
  */
-public record AffinitySuccessPacket(
+public record AffinitiesSuccessPacket(
         ItemStack itemStack,
         Affinity affinity
 ) implements CustomPacketPayload {
 
-    public static final Type<AffinitySuccessPacket> TYPE =
+    public static final Type<AffinitiesSuccessPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "affinity_success"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, AffinitySuccessPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, AffinitiesSuccessPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ItemStack.STREAM_CODEC,
-                    AffinitySuccessPacket::itemStack,
+                    AffinitiesSuccessPacket::itemStack,
                     ByteBufCodecs.INT.map(i -> Affinity.values()[i], Affinity::ordinal),
-                    AffinitySuccessPacket::affinity,
-                    AffinitySuccessPacket::new
+                    AffinitiesSuccessPacket::affinity,
+                    AffinitiesSuccessPacket::new
             );
 
     @Override

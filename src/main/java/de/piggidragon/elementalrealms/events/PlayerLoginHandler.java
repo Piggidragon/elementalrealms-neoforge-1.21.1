@@ -3,7 +3,7 @@ package de.piggidragon.elementalrealms.events;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import de.piggidragon.elementalrealms.magic.affinities.ModAffinitiesRoll;
+import de.piggidragon.elementalrealms.magic.affinities.helper.AffinitiesRoll;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -23,7 +23,7 @@ public final class PlayerLoginHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!ModAffinities.getAffinities(player).isEmpty()) return;
 
-        for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
+        for (Affinity affinity : AffinitiesRoll.rollAffinities(player).keySet()) {
             if (affinity == Affinity.VOID) continue;
             try {
                 ModAffinities.addAffinity(player, affinity);

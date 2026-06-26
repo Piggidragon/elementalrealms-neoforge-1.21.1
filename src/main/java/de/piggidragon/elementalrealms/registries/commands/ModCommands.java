@@ -6,12 +6,12 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import de.piggidragon.elementalrealms.magic.affinities.ModAffinitiesRoll;
+import de.piggidragon.elementalrealms.magic.affinities.helper.AffinitiesRoll;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
-import de.piggidragon.elementalrealms.util.PortalUtils;
+import de.piggidragon.elementalrealms.util.entities.portal.PortalUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.Registries;
@@ -173,7 +173,7 @@ public final class ModCommands {
                             } catch (IllegalStateException ignored) {
                                 // No affinities yet - roll directly.
                             }
-                            for (Affinity affinity : ModAffinitiesRoll.rollAffinities(player).keySet()) {
+                            for (Affinity affinity : AffinitiesRoll.rollAffinities(player).keySet()) {
                                 if (affinity == Affinity.VOID) continue;
                                 try {
                                     ModAffinities.addAffinity(player, affinity);

@@ -18,7 +18,7 @@ import de.piggidragon.elementalrealms.registries.creativetabs.ModCreativeTabs;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.HandEquipmentItems;
 import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
 import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.ModChunkgen;
 import de.piggidragon.elementalrealms.registries.worldgen.features.ModFeatures;
@@ -63,7 +63,7 @@ public class ElementalRealms {
 
         ModAttachments.register(modEventBus);
         AffinityItems.register(modEventBus);
-        MiscItems.register(modEventBus);
+        HandEquipmentItems.register(modEventBus);
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModCreativeTabs.register(modEventBus);

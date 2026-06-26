@@ -2,8 +2,8 @@ package de.piggidragon.elementalrealms.client.rendering.tasks.tick;
 
 import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.TickTask;
-import de.piggidragon.elementalrealms.packets.custom.LaserBeamDestroyBlockPacket;
-import de.piggidragon.elementalrealms.packets.custom.LaserBeamHitEntityPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamDestroyBlockPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamHitEntityPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -199,7 +199,7 @@ public class LaserBeamTask implements TickTask {
         hitEntities.addAll(searchEntityBoxHit(level, entity, new AABB(endPos, endPos).inflate(BUBBLE_AABB_INFLATE)));
 
         for (Entity e : hitEntities) {
-            PacketDistributor.sendToServer(new LaserBeamHitEntityPacket(e.getId(), damageAmount));
+            PacketDistributor.sendToServer(new EnderDragonLaserBeamHitEntityPacket(e.getId(), damageAmount));
         }
 
         currentTick++;
@@ -214,6 +214,6 @@ public class LaserBeamTask implements TickTask {
     }
 
     private void requestBlockDestruction(Vec3 pos, float radius) {
-        PacketDistributor.sendToServer(new LaserBeamDestroyBlockPacket(pos, radius));
+        PacketDistributor.sendToServer(new EnderDragonLaserBeamDestroyBlockPacket(pos, radius));
     }
 }

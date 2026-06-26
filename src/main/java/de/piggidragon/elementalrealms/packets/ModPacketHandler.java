@@ -5,7 +5,11 @@ import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.tick.LaserBeamTask;
 import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.packets.custom.*;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesSuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesOpenBookPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamHitEntityPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamDestroyBlockPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import net.minecraft.client.Minecraft;
@@ -59,33 +63,33 @@ public final class ModPacketHandler {
         var registrar = event.registrar(ElementalRealms.MODID);
 
         registrar.playToClient(
-                AffinitySuccessPacket.TYPE,
-                AffinitySuccessPacket.STREAM_CODEC,
+                AffinitiesSuccessPacket.TYPE,
+                AffinitiesSuccessPacket.STREAM_CODEC,
                 ModPacketHandler::handleAffinitySuccess
         );
         registrar.playToServer(
-                OpenAffinityBookPacket.TYPE,
-                OpenAffinityBookPacket.STREAM_CODEC,
+                AffinitiesOpenBookPacket.TYPE,
+                AffinitiesOpenBookPacket.STREAM_CODEC,
                 ModPacketHandler::handleOpenAffinityBook
         );
         registrar.playToServer(
-                LaserBeamHitEntityPacket.TYPE,
-                LaserBeamHitEntityPacket.STREAM_CODEC,
+                EnderDragonLaserBeamHitEntityPacket.TYPE,
+                EnderDragonLaserBeamHitEntityPacket.STREAM_CODEC,
                 ModPacketHandler::handleLaserBeamHitEntity
         );
         registrar.playToClient(
-                DragonLaserBeamPacket.TYPE,
-                DragonLaserBeamPacket.STREAM_CODEC,
+                EnderDragonLaserBeamPacket.TYPE,
+                EnderDragonLaserBeamPacket.STREAM_CODEC,
                 ModPacketHandler::handleDragonLaserBeam
         );
         registrar.playToServer(
-                LaserBeamDestroyBlockPacket.TYPE,
-                LaserBeamDestroyBlockPacket.STREAM_CODEC,
+                EnderDragonLaserBeamDestroyBlockPacket.TYPE,
+                EnderDragonLaserBeamDestroyBlockPacket.STREAM_CODEC,
                 ModPacketHandler::handleLaserBeamDestroyBlock
         );
     }
 
-    private static void handleLaserBeamHitEntity(LaserBeamHitEntityPacket packet, IPayloadContext context) {
+    private static void handleLaserBeamHitEntity(EnderDragonLaserBeamHitEntityPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
@@ -101,7 +105,7 @@ public final class ModPacketHandler {
         });
     }
 
-    private static void handleAffinitySuccess(AffinitySuccessPacket packet, IPayloadContext context) {
+    private static void handleAffinitySuccess(AffinitiesSuccessPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (FMLEnvironment.dist != Dist.CLIENT) return;
             Minecraft minecraft = Minecraft.getInstance();
@@ -112,7 +116,7 @@ public final class ModPacketHandler {
         });
     }
 
-    private static void handleOpenAffinityBook(OpenAffinityBookPacket packet, IPayloadContext context) {
+    private static void handleOpenAffinityBook(AffinitiesOpenBookPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
@@ -136,7 +140,7 @@ public final class ModPacketHandler {
         });
     }
 
-    private static void handleDragonLaserBeam(DragonLaserBeamPacket packet, IPayloadContext context) {
+    private static void handleDragonLaserBeam(EnderDragonLaserBeamPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (FMLEnvironment.dist != Dist.CLIENT) return;
             Minecraft minecraft = Minecraft.getInstance();
@@ -161,7 +165,7 @@ public final class ModPacketHandler {
         });
     }
 
-    private static void handleLaserBeamDestroyBlock(LaserBeamDestroyBlockPacket packet, IPayloadContext context) {
+    private static void handleLaserBeamDestroyBlock(EnderDragonLaserBeamDestroyBlockPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player().level() instanceof ServerLevel serverLevel)) return;
 

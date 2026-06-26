@@ -12,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * bosses, and spells. All in-game strings that reference content types flow through
  * here so that modpack authors can re-theme the mod without touching code.
  * <p>
- * Defaults are intentionally generic fantasy terms — NOT from TBATE (see
- * project-constraints §3). Boss names get designed when Phase 5 hits; for now we
- * carry placeholders that match the pattern the user will eventually use.
+ * Defaults are intentionally generic fantasy terms. Boss names get designed
+ * when Phase 5 hits; for now we carry placeholders that match the pattern the
+ * user will eventually use.
  * <p>
  * Lookup is case-insensitive for the {@code String} overloads. Affinity values are
  * mapped 1:1 by enum name. Custom entries (from JSON) win over defaults.

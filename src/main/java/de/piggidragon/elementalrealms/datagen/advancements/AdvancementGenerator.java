@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.datagen.advancements;
 
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.HandEquipmentItems;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
@@ -47,7 +47,7 @@ public class AdvancementGenerator implements AdvancementSubProvider {
         Advancement.Builder.advancement()
                 .parent(rootAdvancement)
                 .display(
-                        new ItemStack(MiscItems.DIMENSION_STAFF.get()),
+                        new ItemStack(HandEquipmentItems.DIMENSION_STAFF.get()),
                         Component.translatable("advancements.elementalrealms.get_staff.title"),
                         Component.translatable("advancements.elementalrealms.get_staff.description"),
                         null,
@@ -57,7 +57,7 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                         false
                 )
                 .addCriterion("has_staff",
-                        InventoryChangeTrigger.TriggerInstance.hasItems(MiscItems.DIMENSION_STAFF.get())
+                        InventoryChangeTrigger.TriggerInstance.hasItems(HandEquipmentItems.DIMENSION_STAFF.get())
                 )
                 .save(consumer, "elementalrealms:get_staff");
     }
