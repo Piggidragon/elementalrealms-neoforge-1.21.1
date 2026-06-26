@@ -3,9 +3,9 @@
 > **Status:** Phase 0 — locked in for all NEW content (Phase 1+).
 > **Audience:** everyone writing code, lang files, configs, or asset briefs for `elementalrealms`.
 > **Replaces:** ad-hoc naming decisions that used to live in chat.
-> **TBATE guardrail:** no character, place, creature, or plot point from *The Beginning After The End* (Arthur Leywin, Tessia, Virion, Xyrus, Dicathe, Alacrya, Elderwood, Asuras, Djinn, …). Generic fantasy-academy tone only.
+> **Lore-safety guardrail:** no characters, places, creatures, or plot points from any existing fictional work. Generic fantasy-academy tone only — never derivative.
 
-When in doubt: pick the boring, generic option. A spell called "Fire Bolt" is fine; "Asclepius' Final Verdict" is not.
+When in doubt: pick the boring, generic option. A spell called "Fire Bolt" is fine; anything that sounds like it belongs to a specific franchise is not.
 
 ---
 
@@ -233,7 +233,7 @@ When creating a new issue that introduces a content item (item, block, entity, d
 - [ ] Item / entity / dimension ID follows §2.1 / §2.2
 - [ ] Class names follow §3 (no `Manager` / `Helper` / `Util`)
 - [ ] If a display name is reused in ≥2 systems, registered in `NamingRegistry` (§5)
-- [ ] No TBATE references (guardrail at top)
+- [ ] No references to characters, places, creatures, or plot points from any existing fictional work (lore-safety guardrail at top)
 
 Reviewers will bounce issues that don't answer these.
 
@@ -243,8 +243,8 @@ Reviewers will bounce issues that don't answer these.
 
 | Bad | Why | Good |
 |-----|-----|------|
-| `ArthurFireSpell` | TBATE character name | `FireBoltSpell` |
-| `The_Xyrus_Tower` | TBATE place name | `ArcaneSpire` |
+| `HeroicFireSpell` | "Heroic" sounds trademarked | `FireBoltSpell` |
+| `The_Mystic_Tower` | "Mystic Tower" is a stock franchise name | `ArcaneSpire` |
 | `TideSovereignEntity_Boss` | redundant `Boss` suffix | `BossWaterEntity` |
 | `ManaUtil` | vague | `ManaCalculator` |
 | `spell_FireBolt` | camelCase in id, leading `spell_` ok but value should be snake_case | `spell_fire_bolt` |
