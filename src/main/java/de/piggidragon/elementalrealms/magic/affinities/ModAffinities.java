@@ -142,6 +142,19 @@ public final class ModAffinities {
 
         // Tier validation: skip for completion=0 (removal is always allowed).
         if (completion > 0) {
+            // Eternal affinities can't be set to partial: the spec defines them as
+            // all-or-nothing (one per player, granted only via stones / events). The
+            // debug `affinities set <aff> 50` command for an Eternal is rejected with a
+            // clear hint instead of silently creating an inconsistent state where a
+            // different Eternal-add would then get blocked by hasEternalAffinity.
+            if (affinity.getType() == AffinityType.ETERNAL && completion < 100) {
+                throw new IllegalArgumentException(
+                        "Eternal affinities cannot be set to partial completion (got " + completion + "%). "
+                                + "Use '/elementalrealms affinities set " + affinity.name().toLowerCase()
+                                + " 100' or '/elementalrealms affinities set " + affinity.name().toLowerCase()
+                                + " 0' to clear."
+                );
+            }
             validateCanAdd(affinity, current);
         }
 
@@ -194,8 +207,12 @@ public final class ModAffinities {
     }
 
     private static boolean hasEternalAffinity(Map<Affinity, Integer> affinities) {
-        return affinities.keySet().stream()
-                .anyMatch(a -> a.getType() == AffinityType.ETERNAL);
+        // Eternal must be at 100% (committed) to count as "the player's eternal" — symmetric
+        // with hasBaseAffinity for DEVIANT. Partial entries (e.g. force-set via debug
+        // command) don't block a different Eternal affinity from being granted.
+        return affinities.entrySet().stream()
+                .anyMatch(entry ->
+                        entry.getKey().getType() == AffinityType.ETERNAL && entry.getValue() >= 100);
     }
 
     private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
