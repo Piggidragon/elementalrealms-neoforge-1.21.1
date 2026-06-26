@@ -5,7 +5,7 @@
       "name": "ELEMENTALREALMS_LEGENDARY",
       "constructor": "(ILjava/lang/String;Ljava/util/function/UnaryOperator;)V",
       "parameters": {
-        "class": "de/piggidragon/elementalrealms/util/ModRarities",
+        "class": "de/piggidragon/elementalrealms/registries/rarities/ModRarities",
         "field": "LEGENDARY"
       }
     },
@@ -14,7 +14,7 @@
       "name": "ELEMENTALREALMS_MYTHIC",
       "constructor": "(ILjava/lang/String;Ljava/util/function/UnaryOperator;)V",
       "parameters": {
-        "class": "de/piggidragon/elementalrealms/util/ModRarities",
+        "class": "de/piggidragon/elementalrealms/registries/rarities/ModRarities",
         "field": "MYTHIC"
       }
     }

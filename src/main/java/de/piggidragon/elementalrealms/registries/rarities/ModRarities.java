@@ -9,7 +9,18 @@ import java.util.function.UnaryOperator;
 
 /**
  * Custom rarity tiers that sit above vanilla EPIC.
- * Registered through NeoForge's enum extension system.
+ *
+ * <p>Registered through NeoForge's enum extension system (see
+ * {@code META-INF/enumextensions.json}). The {@link EnumProxy} constants are the
+ * recipe; the actual {@link Rarity} instances are injected into the {@code Rarity}
+ * enum at runtime by the FML loader. Use {@link #legendary()} and {@link #mythic()}
+ * to obtain the live instances — those wrappers centralise the lazy lookup so any
+ * "Enum not initialized" error points at one place.</p>
+ *
+ * <p>Resolution is safe at item-registration time: by then the FML loader has
+ * already injected the constants, so {@link EnumProxy#getValue()} returns the
+ * real instance. Do not call {@code getValue()} from a {@code static {}} block
+ * that runs before FML bootstrap — it will throw.</p>
  */
 public final class ModRarities {
 
@@ -27,5 +38,13 @@ public final class ModRarities {
     );
 
     private ModRarities() {
+    }
+
+    public static Rarity legendary() {
+        return LEGENDARY.getValue();
+    }
+
+    public static Rarity mythic() {
+        return MYTHIC.getValue();
     }
 }
