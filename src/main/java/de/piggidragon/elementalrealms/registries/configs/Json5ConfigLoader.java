@@ -76,7 +76,19 @@ public final class Json5ConfigLoader {
         if (actual != expectedVersion) {
             ElementalRealms.LOGGER.warn("JSON5 config schemaVersion mismatch: file={}, expected={}",
                     actual, expectedVersion);
-            int behavior = ModConfigs.COMMON.schemaMismatchBehavior.get();
+            // schemaMismatchBehavior lives in the TOML ModConfig, which is not
+            // loaded yet during early static-init (e.g. when Json5Reloadable
+            // singletons trigger their first reload() from a `static {}` block).
+            // Reading the ConfigValue before load throws IllegalStateException;
+            // default to behavior 0 (warn + use in-memory defaults) in that
+            // window. After TOML loads the real value is consulted on subsequent
+            // reload() calls fired by ModConfigEvent.Reloading.
+            int behavior = 0;
+            try {
+                behavior = ModConfigs.COMMON.schemaMismatchBehavior.get();
+            } catch (IllegalStateException ignored) {
+                // ModConfig not loaded yet - default behaviour applies.
+            }
             return behavior == 0;
         }
         return true;
