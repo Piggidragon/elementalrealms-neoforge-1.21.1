@@ -1,190 +1,237 @@
 # Elemental Realms — Master Plan
 
-> **For Piggidragon:** Live document. Iterated as we go.
+> **Plan version:** v12
 >
-> **Status:** in development. Breaking changes expected. English only. No timeline pressure — we hack phase by phase at whatever pace feels right. Performance: lean and sensible, not potato-PC (MC is bad at that anyway; users can opt into Sodium/Embeddium).
+> **For Piggidragon:** Live document. Part A is the feature overview, Part B is the technical build plan, Part C is the live working area + idea scratchpad.
 
-**Goal:** Transform the current skeleton into a full progression mod — Overworld → Nether → End journey, combat, 12 affinities in 3 tiers, 12 pocket dimensions with bosses/spells/structures. Generic fantasy-academy world, TBATE = loose reference only.
+**Credits:** Inspired by "The Beginning After the End" by TurtleMe (general fantasy-academy setting, elemental magic, staged progression). No characters, names, or plot points from the source material are used.
 
-**Architecture:** NeoForge 1.21.1, Parchment mappings, Infiniverse for dynamic dimensions, BoundedChunkGenerator as pocket base. Affinities as player attachment. Lodestone for VFX only. Pocket dimensions share an affinity ring layout via Jigsaw. **Every tunable exposed as data so modpack authors can rebalance without recompiling.**
+**Status:** in development. No timeline pressure. Performance: lean and sensible.
 
-**Tech Stack:** Java 21, NeoForge 21.1.214, Infiniverse 2.0.1.0, Lodestone 1.7.0 (VFX only), Curios 9.5.1, Jigsaw, DeferredRegister, payload networking, codec-based saved data, NeoForge ModConfigSpec + custom JSON5 loaders + datapacks.
+**Goal:** Generic fantasy-academy progression mod. Player kills a hard Ender Dragon → unlocks a School dimension + 11 elemental pocket dimensions with bosses, spells, custom mobs.
 
-**Versioning:** SemVer-ish. `0.X.0` = major (breaking for players or modpack authors — config schema breaking, removed content, save-invalidating mechanics, renames). `0.0.X` = minor (additive content, balance tweaks, internal refactors that don't break saves/configs). `main` <- `dev` only on release.
+**Architecture:** NeoForge 1.21.1, Infiniverse for dynamic dimensions, Lodestone for VFX only, all tunables as config data, all display names through one registry.
+
+**Versioning:** SemVer-ish. `0.X.0` = major (breaking for players or modpack authors). `0.0.X` = minor (additive).
 
 ---
 
 ## 0. Glossary
 
-- **Affinity** — elemental alignment a player holds. 12 total + Void.
+- **Affinity** — elemental alignment a player holds. 12 + Void.
 - **Tier** — affinity category: NONE / ELEMENTAL / DEVIANT / ETERNAL.
-- **Deviant** — advanced affinity, requires base at 100%.
-- **Eternal** — ultimate, mutually exclusive (one per player).
+- **Deviant** — advanced affinity; requires its base at 100% (FIRE → LIGHTNING).
+- **Eternal** — ultimate; mutually exclusive, one per player.
 - **Void** — "no affinity" state. Clears all.
-- **Pocket** — small isolated 1000×1000 world per affinity entry, via portal.
-- **Ring** — concentric zone inside a pocket (Ring 0 = center boss arena, Ring 4 = boundary wall).
-- **Boss** — per-affinity pocket boss with phases, vanilla HP bar, drops.
-- **Spell** — castable magical action tied to an affinity (e.g. Fire-Bolt). Costs mana + cooldown.
-- **Stone / Shard** — items that grant (+100%) or increment (+5%) an affinity. Consumed.
-- **Scroll of Awakening** — School item that reveals hidden affinities to the player.
-- **Reveal** — the moment a player transitions from "unknown affinities" to "known affinities".
-- **Mana Core** — Curios slot item holding player's mana pool.
+- **Pocket** — small isolated world per affinity, via portal.
+- **Ring** — concentric zone inside a pocket (outer ring = spawn, center = boss arena).
+- **Boss** — per-affinity pocket boss.
+- **Spell** — castable magical action. Costs mana + cooldown.
+- **Stone / Shard** — items granting +100% / +5% of an affinity. Consumed.
+- **Crystal Orb of Awakening** — School item revealing hidden affinities.
+- **Reveal** — transition from "unknown affinities" to "known affinities".
+- **Mana Core** — central place for mana pool (TBD: menu / inventory / etc.).
 - **Roll** — first-login random assignment of affinities.
+- **Mage / Warrior / Bow** — spell archetypes (Mage first, Warrior/Bow later).
 - **NamingRegistry** — single source for boss / spell / dimension display names.
-- **Configuration / Config** — external data files driving tunable values. Three layers: ModConfigSpec TOML (simple), custom JSON5 (complex tables), datapacks (content).
-- **JSON5** — JSON superset with comments and trailing commas. Used for `config/*.json`.
-- **Lodestone** — third-party VFX library. Particles, screen-shake, projectile rendering, screens. NOT HP bars.
-- **Infiniverse** — library for per-portal dynamic dimensions.
-- **Curios** — library for extra equipment slots (Mana Core).
-- **SavedData** — persistent world-attached data (we use for `GenerationCenterData`).
-- **BoundedChunkGenerator** — custom chunk gen producing noise terrain only inside configurable radius; outside = air-void.
-- **Jigsaw** — Minecraft structure-piece system.
-- **DeferredRegister** — NeoForge registration pattern.
-- **Attachment** — NeoForge per-entity persistent data (player affinities, portal target level, return position).
-- **Codec / StreamCodec / Packet** — serialization / networking primitives.
-- **VFX** — visual effects. Anything particle/screen-shake-related.
-- **Lean perf** — "as many particles as needed, as few as sensible". Don't over-optimize.
+- **Affinity mob** — vanilla mob with an affinity tag + particles. Drops shards only.
+- **Modded mob** — fully custom entity. Drops affinity-specific loot.
+- **Barrier stage** — progression marker (Dragon killed / Elemental boss killed / Deviant boss killed) that unlocks new content tiers.
+
+# PART A — FEATURES & GAMEPLAY
 
 ---
 
 ## 1. Vision & Setting
 
-**TBATE is a rough reference only, NOT a faithful adaptation.** Borrow: fantasy-academy vibe, magic-to-elements, staged progression, "post-Dragon gateway to a larger world". Don't borrow: character names, plot points, creature names, story beats.
+Generic fantasy-academy world. The player enters a School dimension after the Dragon fight, learns about affinities, explores 11 elemental pocket dimensions, and grows stronger through spellcasting, boss kills, and progressive mastery.
 
-**Boss name placeholders** (final names decided during Phase 0):
-- FIRE: Lord of Embers
-- WATER: Tidal Sovereign
-- EARTH: The Stoneheart
-- WIND: Stormwing Roc
-- LIGHTNING: Stormcaller
-- ICE: The Frostbound King
-- SOUND: The Resonant Wraith
-- GRAVITY: The Singularity
-- LIFE: World-Tree Avatar
-- SPACE: The Void-Walker
-- TIME: Chrono-Warden
-
-Names live in `NamingRegistry`. Renaming later = one config edit.
+Everything user-facing flows through `NamingRegistry` so anyone can re-theme freely.
 
 ---
 
-## 2. Current Code State
-
-### 2.1 Affinity system ✓
-- `magic/affinities/{Affinity, AffinityType, ModAffinities, ModAffinitiesRoll}.java`
-- `events/PlayerLoginHandler.java`
-- `registries/attachments/ModAttachments.java` + `sync/AffinityAttachmentSyncHandler.java`
-- `packets/custom/AffinitySuccessPacket.java`
-
-### 2.2 Affinity items ✓
-- `registries/items/magic/affinities/AffinityItems.java`
-- `registries/items/magic/affinities/custom/{AffinityStone, AffinityShard}.java`
-- `util/ModRarities.java` — LEGENDARY + MYTHIC enum extensions registered but currently unused.
-
-### 2.3 School dimension ✓ (half)
-- `data/elementalrealms/dimension/school.json`, `dimension_type/school.json`
-- `data/elementalrealms/structure/{anchor,wood,nether,end,grass}.nbt`
-- `registries/level/ModLevel.java`, `events/DragonDeathHandler.java`
-- `registries/items/magic/misc/custom/SchoolStaff.java`
-
-### 2.4 Ender Dragon buff (partial) ✓
-- `mixin/EnderDragonMixin.java` (laser)
-- `packets/custom/DragonLaserBeamPacket.java`
-- `registries/sounds/ModSounds.java`
-- `client/particles/vanilla/{PortalParticles, DimensionStaffParticles}.java`
-
-### 2.5 Dynamic Realms (stub) ⚠
-- `registries/level/DynamicDimensionHandler.java` — static counter bug, ring scan math not aligned with BoundedChunkGenerator radius.
-- `saveddata/GenerationCenterData.java` — persists generation centers.
-- `registries/worldgen/chunkgen/custom/BoundedChunkGenerator.java` — RADIUS=10 = 336×336 blocks; user wants 1000×1000.
-- `registries/entities/custom/PortalEntity.java` — "I couldn't get the seed to change" — per-portal random seed via Infiniverse.
-
-### 2.6 Particles / packets / commands / datagen ✓
-- 5 packets, vanilla particles, RenderManager task queue.
-- `/affinities list|set|clear|reroll` (OP 2).
-- Datagen: advancements, loot, tags, sounds, models, recipes.
-
-### 2.7 Saved-code skeletons ⚠
-- `src/main/saved_code/` — Affinity GUI / hotbar + laser beam renderer prior work, not yet integrated.
-
-### 2.8 Hardcoded values that must move to config (Phase 0 backlog)
-
-`ModAffinitiesRoll.ROLL_CHANCES`, `DEVIANT_CHANCE_PERCENT`, `ModAffinities.MAX_COMPLETION`, `BoundedChunkGenerator.RADIUS`, `DynamicDimensionHandler.MAX_LAYERS`, `PortalEntity` constants, `EnderDragonMixin` constants, `AffinityItems` rarity assignments, `SchoolStaff` constants — all currently Java `static final`.
-
----
-
-## 3. Outstanding Ideas / Stubs
-
-From user + IDEAS.md:
-
-- [ ] Dragon buff extension (HP + AoE)
-- [ ] **Enchantment nerf** — Protection/Sharpness less game-changing *(Phase 0.5)*
-- [ ] Ominous-Potion-Scaling like Trial Chambers
-- [ ] School content (rooms, books, Scroll of Awakening)
-- [ ] Pocket dimensions for ALL 11 boss affinities (4 OW / 4 Nether / 3 End)
-- [ ] Boss per pocket
-- [ ] Custom mobs in Overworld AND pockets
-- [ ] Structure-rooms diversity
-- [ ] Spells per affinity (3 each, 36 total)
-- [ ] Spell API skeleton
-- [ ] Affinity reveal mechanic
-- [ ] Portal distribution worldwide (Nether + End)
-- [ ] Affinity GUI integration (tweak visuals)
-- [ ] Portal idle/teleport sound + rift shader
-- [ ] Advancements as progression guide
-- [ ] Force chunkload fix
-- [ ] Timer difficulty / corrupted world (endgame)
-- [ ] Spawn rarity per affinity stone
-- [ ] ModRarities LEGENDARY/MYTHIC in use
-- [ ] Modpack config exposure (every magic number reachable, hot-reloadable)
-
----
-
-## 4. Consolidated Game Mechanics
-
-### 4.1 Player lifecycle
+## 2. Player Lifecycle
 
 | Step | Where | What happens |
 |---|---|---|
-| 0. Login | Overworld | Roll 1–4 ELEMENTAL affinities (100% each, falling) + 25% deviant bonus. Affinities **client-invisible**. Rates from `affinities.json.roll`. |
-| 1. Early progression | Overworld | Shards build to 100%; stones instant. Order unknown because player doesn't know affinity. |
-| 2. Dragon buff | End | 2× HP, 3 phases, laser + per-phase AoE + crystal-buff blocking. Numbers from `dragon.json`. |
-| 3. Dragon kill | End | Permanent School-dimension portal at Overworld spawn. Broadcast. |
-| 4. School entry | Staff or portal | Hogwarts-style hubs. Teacher books. Scroll of Awakening reveals affinities. |
-| 5. First pocket | Overworld | Wind portal → pocket_dim_wind_<id>. Ring layout, boss in center. Win → drops stone + spell scroll. |
-| 6. Deviant phase | Nether | Nether pockets (Sound/Gravity/Lightning/Ice). Requires deviant affinity. |
-| 7. Eternal phase | End | End pockets (Life/Space/Time). Requires eternal affinity (extremely rare). |
-| 8. Endgame | ? | Optional timer difficulty, corrupted world, generic endgame boss. |
+| **0. Login** | Overworld | One ELEMENTAL affinity auto-assigned at 100%. Other affinities (incl. deviants) get small partial rolls. Affinities **client-invisible**. |
+| **1. Early progression** | Overworld | Player finds **rare** affinity shards from vanilla structures (and custom structures distributed across vanilla dimensions) and very rarely from affinity mobs. Item name tells the player which affinity each shard helps ("Affinity Shard of Fire"). Builds toward stronger affinity completion. |
+| **2. Dragon fight** | End | Hard dragon, maxed Netherite + skill required (see §3). |
+| **3. Dragon kill** | End | A custom structure spawns at Overworld spawn with a permanent portal to the School. Broadcast message. Pocket dimensions become technically accessible but barriere-gated (see §6). |
+| **4. School entry** | Staff or portal | Staff lets the player reach the School from anywhere in vanilla dimensions (no need to walk back to spawn). Fantasy-academy hub with the Crystal Orb of Awakening, which reveals affinities. |
+| **5. First pocket** | Anywhere in vanilla | Player chooses which pocket to enter; no designated "first pocket." Once inside, exiting is hard — survival is the cost of entry. No guarantee which pocket it is, only which tier is active. Boss kill may or may not drop an affinity stone (stone is the ultimate reward, not guaranteed). |
+| **6. Deviant stage** | After Elemental boss kill | Deviant mobs start spawning in vanilla dimensions. Deviant pocket dimensions accessible. |
+| **7. Eternal stage** | After Deviant boss kill | Eternal mobs start spawning in End. Eternal pocket dimensions accessible (still very hard). |
+| **8. Endgame** | optional | Corrupted-world timer difficulty, generic endgame boss. |
 
-### 4.2 Affinity acquisition
+When a boss of a specific affinity dies, the matching portal disappears from vanilla dimensions (forces the player to seek other content instead of farming the same portal).
 
-| Method | Probability | Where | Config |
-|---|---|---|---|
-| Login roll | 100/25/20/20% + 25% deviant bonus | automatic | `affinities.json.roll` |
-| Affinity stone | rare | boss drops | `bosses.json` |
-| Affinity shard | common | mob drops, structures | `mobs.json`, datapack loot |
-| Void stone | manual reset | player-crafted or endgame | recipe in datapack |
+---
 
-### 4.3 Affinity tier visibility
-- **Current:** client sees `Map<Affinity, Integer>` directly.
-- **User requirement:** player does NOT know them at first.
-- **Q (open):** see §11 — when exactly can spells be cast relative to reveal?
+## 3. Dragon Rework (TrueEnd-inspired)
 
-### 4.4 Pocket dimension spec
+The Ender Dragon is the **gate to the School dimension** — the warden of the dimension barrier. Killing it cracks the barrier. It must be hard enough that maxed Netherite + skill is the baseline, not overkill.
 
-- **Size:** 1000×1000 blocks ≈ 63 chunk radius (currently 336×336). Radius from `dimensions.json.pocket.radiusChunks`.
-- **Layout:**
-  - Ring 0 (0–50 blocks, center): boss arena, custom NBT structure.
-  - Ring 1 (50–250): hub — player spawn, NPC hint, safe zone.
-  - Ring 2 (250–500): trap rooms + mini-bosses.
-  - Ring 3 (500–750): resource farm (custom spawner, custom ores).
-  - Ring 4 (750–1000): boundary wall (bedrock variant).
-- **Mob spawn:** affinity-specific in rings 2+3. From `mobs.json`.
-- **Seed:** per affinity, deterministic per portal-id. Same affinity = same style, different portal = different layout.
+**Core mechanics** (full list in IDEAS.md):
 
-### 4.5 Spells
+- Significant HP multiplier
+- Multiple phases escalating aggression and attacks
+- Dragon breath / meteor shower / exploding fireballs
+- Aggressive AI that actively targets players (not just orbit)
+- Perch knockback + damage waves in every direction
+- Stand-still punishment attack (1-hit kill for staying put)
+- Summon adds in later phases (custom mobs)
+- End Crystals as enemies — attack players, self-regenerate, destroying them spawns mobs
+- Climatic finish with strong visual moment
 
-3 per affinity = 36 total. All values from `spells.json`.
+**Reference:** inspired by TrueEnd datapack (similar overhaul).
+
+---
+
+## 4. School Dimension
+
+A fantasy-academy hub the player enters after killing the Dragon.
+
+**Contents:**
+- **Crystal Orb of Awakening** — reveals all affinities. Without it, the player only sees "X unknown powers slumber within you."
+- **Lore library** — written-book items about affinities, the 12 worlds, the boss lineage
+- **Lecture halls** — one per Elemental affinity + Deviant halls
+- **Common room** — cross-affinity lore bookshelves
+
+**Access:**
+- Permanent portal at Overworld spawn (in a custom structure that spawns with the portal after Dragon kill)
+- **Dimension Staff** — reaches the School from anywhere in vanilla dimensions (uses count TBD)
+
+---
+
+## 5. Affinity System
+
+### 5.1 The 12 affinities
+
+| Tier | Affinities |
+|---|---|
+| ELEMENTAL | Fire, Water, Wind, Earth |
+| DEVIANT | Lightning (←Fire), Ice (←Water), Sound (←Wind), Gravity (←Earth) |
+| ETERNAL | Life, Space, Time |
+| NONE | Void |
+
+### 5.2 Login roll
+
+One ELEMENTAL affinity at 100%, plus partial percentages on others (incl. deviants). Distribution skewed: higher percentages rarer, more affinities held at once rarer, deviants rarer than elementals, eternals not given at login.
+
+### 5.3 Learning more affinities
+
+- **Affinity shard** — +5% of one specific affinity. Item name identifies the affinity.
+- **Affinity stone** — instant 100% of one affinity. The ultimate reward; only the boss can drop it (or specific endgame content).
+- **Void stone** — clears all affinities.
+
+Affinity items are **never revealed** — players always know which shard helps what.
+
+### 5.4 Tier visibility
+
+After login: player sees only "X unknown powers slumber within you." The Crystal Orb of Awakening reveals everything.
+
+### 5.5 Affinity scaling & vanilla effects
+
+Affinities scale at any percentage — even 5% gives small benefits, 100% gives strong effects. At high completion, affinities grant **vanilla MC effects** (e.g. Fire 100% = permanent fire immunity, Water 100% = water breathing + dolphin grace, etc.). Full list TBD in IDEAS.md. Building affinity is useful even without using spells.
+
+### 5.6 Boss-name placeholders
+
+Names live in `NamingRegistry`. Boss walkstyle, behavior, and mechanics not yet decided.
+
+| Affinity | Boss placeholder |
+|---|---|
+| FIRE | Lord of Embers |
+| WATER | Tidal Sovereign |
+| EARTH | The Stoneheart |
+| WIND | Stormwing Roc |
+| LIGHTNING | Stormcaller |
+| ICE | The Frostbound King |
+| SOUND | The Resonant Wraith |
+| GRAVITY | The Singularity |
+| LIFE | World-Tree Avatar |
+| SPACE | The Void-Walker |
+| TIME | Chrono-Warden |
+
+### 5.7 Eternal affinities
+
+Eternal affinities are absolute mysteries. There are **no eternal shards** — only the boss stone. All-or-nothing. Only one per player, because holding more than one would tear them apart. The three eternals together are the foundation of existence.
+
+---
+
+## 6. Pocket Dimensions
+
+### 6.1 Layout
+
+3 concentric rings, player spawns at the **outer ring** and fights inward.
+
+| Ring | Contents |
+|---|---|
+| **Outer (spawn)** | Vanilla + affinity mobs, small structures, semi-safe start |
+| **Intermediate (largest)** | Modded mobs only, larger structures, mini-bosses, traps |
+| **Center** | Boss arena, themed by affinity |
+
+Outside the outer ring = air void. Pocket sizes vary per affinity — balance decided during Phase 4 build.
+
+### 6.2 Per-affinity theme
+
+Each pocket has a unique environmental theme matching its affinity (Fire = volcano, Water = ocean trench, Wind = floating islands, Earth = underground cavern, Lightning = charged storm, Ice = frozen peak, Sound = echo cavern, Gravity = inverted/floating shards, Life = overgrown ruin, Space = void islands, Time = clockwork ruins). Theme is seed-dependent — same Fire pocket looks different per portal-id, but always volcano-centered.
+
+### 6.3 Dimensional effects
+
+Each pocket has **negative passive environmental effects**. The higher the matching affinity the player has, the weaker the effect. At 100% matching affinity, the effects flip to buffs. Players without the matching affinity are punished; players with it are rewarded.
+
+Examples (full list TBD): Fire dim burns you faster; Water dim drowns you faster; Wind dim pushes you around; Earth dim slows movement; etc.
+
+### 6.4 The 11 pockets
+
+| Tier | Pockets | Where portals appear |
+|---|---|---|
+| Overworld | Wind, Fire, Water, Earth | Anywhere in vanilla Overworld |
+| Nether | Sound, Gravity, Lightning, Ice | Anywhere in vanilla Nether |
+| End | Life, Space, Time | Anywhere in vanilla End |
+
+Portals can spawn **anywhere** in the corresponding vanilla dimension.
+
+### 6.5 Boss drops
+
+Boss kill is not guaranteed to drop an affinity stone — stones are the ultimate reward. Other drops: equipment, spells, lore items, etc.
+
+When the boss of an affinity dies, the matching portal **disappears from vanilla dimensions** (encourages variety over farming).
+
+---
+
+## 7. Mobs
+
+### 7.1 Affinity mobs
+
+Affinity mobs are **vanilla mobs with an affinity tag attached**. They spawn rarely across all vanilla dimensions (frequency tier-gated). They emit Lodestone particles so their affinity is visible. They drop affinity shards **only** — never stones.
+
+| Tier | Where they spawn |
+|---|---|
+| Elemental | Overworld + Nether + End |
+| Deviant | Nether + End (unlocked after first Elemental boss kill) |
+| Eternal | End only (unlocked after first Deviant boss kill) |
+
+### 7.2 Modded mobs
+
+Fully custom entities. Spawn in pocket dimensions only (densely, affinity-specific). Drop affinity-specific loot including high-tier equipment, scrolls, and lore. Stronger than affinity mobs; tuned for pocket content.
+
+---
+
+## 8. Spells
+
+### 8.1 Three spell archetypes
+
+| Archetype | Trigger | Scope |
+|---|---|---|
+| **Mage** | Hotbar / spell-book, projectiles & AoEs | Phase 3 first |
+| **Warrior** | Off-hand held, melee/buffs | Later |
+| **Bow** | Bow enchantment-mods | Later |
+
+### 8.2 Mage spells (Phase 3)
+
+12 sample mage spells (3 per ELEMENTAL affinity):
 
 | Affinity | Basic | Utility | Ultimate |
 |---|---|---|---|
@@ -192,104 +239,202 @@ From user + IDEAS.md:
 | WATER | Water Bolt | Tidal Wave | Healing Rain |
 | WIND | Wind Slash | Dash | Tornado |
 | EARTH | Rock Throw | Earthen Wall | Quake |
-| LIGHTNING | Lightning Bolt | Chain Lightning | Storm Call |
-| ICE | Ice Spike | Frost Nova | Blizzard |
-| SOUND | Sonic Blast | Silence Zone | Resonant Roar |
-| GRAVITY | Gravity Crush | Float | Singularity |
-| LIFE | Heal | Regen Aura | Resurrection |
-| SPACE | Blink | Phase Shift | Pocket Dimension |
-| TIME | Slow | Haste | Stasis |
-| VOID | Purge | — | — |
+
+Deviant + Eternal mage spells come later. Per-archetype counts per affinity are not fixed.
+
+### 8.3 Combo spells
+
+Spells can combine affinities (Wind + Lightning = Storm, Water + Ice = Blizzard, etc.). Exact combinations and effects TBD in IDEAS.md.
+
+### 8.4 Mana
+
+Mana is a **separate resource** (like hunger). Held in a central **mana system** — implementation TBD (menu, inventory slot, or skills-tree UI). The core upgrades over time (more mana, faster regen). Exact upgrade path decided during Phase 3.
+
+### 8.5 Spell costs & scaling
+
+All values configurable per spell in `config/elementalrealms/spells.json`. Damage scaling: fixed + affinity-completion bonus.
 
 ---
 
-## 5. System Architecture
+## 9. Bosses
 
-### 5.1 Lodestone scope
+11 bosses (one per affinity, Void has none). Each in a pocket's center arena, themed to the affinity.
 
-VFX only. NOT HP bars, NOT general entity rendering.
+**Mechanics:**
+- Vanilla HP bar above head
+- Phases with new attack patterns + Lodestone VFX cues
+- Resists own affinity, weak to deviant/base counter
+- AoE attacks per phase
+- Lodestone transition FX (full-screen shake + radial particle burst + screen flash on phase change)
 
-| Use | Lodestone API |
-|---|---|
-| Spell VFX | `WorldParticleManager.spawnParticleBatch(...)` |
-| Boss phase transition | `LodestoneScreenAPI.addWorldEvent(...)` |
-| Portal idle | `WorldParticleManager` rotating glyph ring |
-| Portal rift | `LodestoneShaderRegistry` |
-| Meteor/Blizzard/Tornado | Lodestone `ProjectileRenderer` |
-| Laser (Dragon + Lightning) | `WorldParticleRenderer` line-of-sight beam |
-| Spell Book GUI | `LodestoneScreen` |
-| Corrupted World | `LodestoneScreenAPI` vignette + tint |
+**Boss walking / behavior specifics are not yet decided.**
 
-NOT Lodestone: boss HP bars (vanilla `BossEvent`), Ender Dragon HP bar (already vanilla), general entity rendering, simple HUD elements (vanilla `GuiGraphics`).
-
-### 5.2 Configuration-first
-
-**Every magic number is data, never a Java constant.**
-
-Three layers:
-1. **NeoForge `ModConfigSpec` (TOML)** — `config/elementalrealms-{common,server,client}.toml`. Binary toggles, simple multipliers, audio sliders.
-2. **Custom JSON5 files** in `config/elementalrealms/` — complex tables.
-3. **Datapacks** in `data/elementalrealms/` — recipes, loot, structures, mob spawns.
-
-```
-config/elementalrealms/
-├── common.toml, server.toml, client.toml
-├── affinities.json, dimensions.json, spells.json, bosses.json
-├── mobs.json, portal.json, dragon.json, school.json
-├── enchantments.json, timer.json
-```
-
-**Reload model:** server configs hot-reload via `/reload` or `ModConfigEvent.Reloading`. Lazy-apply: new entities read new values, existing entities keep snapshot until despawn. Loader warns if a changed field only takes effect on next generation. Client configs hot-reload via ModConfigScreen. Datapacks via `/reload` (F3+T). New `/elementalrealms reload` command via `ConfigReloadListener`.
-
-**Schema versioning:** every JSON carries `"schemaVersion": 1`. Strict by default with `common.toml.allowSchemaMismatch` toggle for dev. New fields default to safe fallbacks (forward-compat).
-
-### 5.3 Module tree
-
-```
-registries/
-├── items/magic/
-│   ├── affinities/         [✓ — re-review in Phase 0]
-│   ├── misc/               [✓ — SchoolStaff]
-│   ├── spells/             [NEW] Spell items
-│   └── affinitytools/      [NEW] Scroll of Awakening
-├── worldgen/
-│   ├── structures/pockets/ [NEW] 11 ring layouts
-│   ├── structures/bosses/  [NEW] 11 boss-arena NBTs
-│   └── features/pocketmobs/[NEW]
-├── entities/custom/
-│   ├── bosses/             [NEW] 11 boss entities
-│   └── elementals/         [NEW] Custom mobs
-├── level/PocketRegistry.java
-├── configs/
-│   ├── ModConfigs.java, ConfigReloadListener.java, NamingRegistry.java
-│   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,Dragon,School,Enchantments,Timer}Config.java
-└── commands/ModCommands.java [/pocket list|tp|heal + /elementalrealms reload]
-magic/
-├── affinities/             [✓]
-├── spells/
-│   ├── Spell.java, SpellRegistry.java, SpellCasting.java
-│   ├── SpellBookScreen.java (Lodestone)
-│   ├── SpellHotkeyHandler.java
-│   └── impl/{FireSpells, WaterSpells, ...}.java
-└── mana/{ManaCapability, ManaHudOverlay}.java
-client/
-├── lodestone/              [NEW]
-│   ├── AffinityParticles.java (REWORK → Lodestone)
-│   ├── PortalRiftRenderer.java
-│   ├── LaserBeamRenderer.java (PROMOTE from saved_code)
-│   └── ScreenShakeHook.java
-events/
-├── DragonDeathHandler.java [✓]
-├── PlayerLoginHandler.java [✓]
-├── ServerTickHandler.java  [✓ — extend]
-└── PocketDimensionBuilder.java [NEW]
-```
+**Drops (always):** spell scrolls, equipment, lore items. **Affinity stone is NOT guaranteed** — it's the ultimate reward, possibly the rarest drop in the game.
 
 ---
 
-## 6. Phase 0 — Full Consolidation Pass
+## 10. Balance Changes
 
-Runs **before any new feature**. Existing code reviewed, rewritten where needed, config-driven.
+### 10.1 Enchantment nerf
+
+Protection, Sharpness, Sweeping, Smite, Bane of Arthropods all scaled back. Reason: vanilla top-tier enchantments are too game-changing — this is a general MC balance issue, not just for spell users. Multipliers per enchantment in `enchantments.json` (configurable).
+
+### 10.2 Ominous-Potion-Scaling
+
+Potion effects scale with difficulty / location, Trial-Chamber-style. Configuration in `enchantments.json` or its own file.
+
+---
+
+## 11. Progression & Advancements
+
+One advancement tree per phase. Milestones include first-login, first shard, Dragon kill, Awakening, first pocket entry, first boss kill, tier completions, no-laser / no-death Dragon clears, combo spells learned, etc. Full tree built during each phase.
+
+---
+
+## 12. UI / GUI
+
+- **Affinity Book** (Lodestone ScreenAPI) — shows affinities with completion %, picks active spells, toggles VFX density.
+- **Mana UI** — exact placement TBD (skills-tree UI is one option).
+- **Portal rift shader** — Lodestone distortion around active portal frames.
+
+---
+
+## 13. Performance Philosophy
+
+Lean perf: as many particles as needed, as few as sensible. Spell VFX LOD-aware (full density close, half mid, minimal far). Boss transitions temporary. Pocket gen caps to bounded ring. We do not target potato-PC — users opt into Sodium/Embeddium separately.
+
+---
+
+## 14. Multiplayer Behavior
+
+Multiplayer-safe for single-pocket scenarios (boss kill sync, return position per-player). Multi-player edge cases (simultaneous pocket entry, boss kill sync) handled per-phase. Single-player testing is the main gate.
+
+---
+
+## 15. Controversial Design Decisions
+
+### 15.1 The Ender Dragon is the hard gate
+Hard dragon, maxed Netherite + skill required. Lore: warden of dimension barrier, killing it cracks the barrier.
+
+### 15.2 Enchantments nerfed globally
+Reduced for all players (not just spell users). Reason: vanilla enchantments are too game-changing — general MC balance issue.
+
+### 15.3 Pockets are gated by barrier-progression, not by affinity
+After Dragon kill, all pockets technically accessible. But new tiers (Deviant, Eternal) unlock only after the previous tier's boss kill. Tier-gated mob spawns follow the same pattern.
+
+### 15.4 Pockets don't require affinity to enter
+No hard requirement. Players without the matching affinity are punished by dimensional effects; with the affinity, they're rewarded. Soft gate.
+
+### 15.5 Affinity state hidden until Reveal
+Mystery, drives shard collection, makes Reveal a moment. Item names still tell you which affinity a shard helps.
+
+### 15.6 Boss stone drop is not guaranteed
+Affinity stones are the ultimate reward. Other drops (equipment, spells, lore) are reliable. The stone is rare even from the boss.
+
+### 15.7 Boss death removes the matching portal
+Once a boss is killed, the matching affinity's vanilla portal disappears. Encourages exploration over farming.
+
+### 15.8 Pocket dimensions are persistent
+Boss killed = stays killed. Saved world. Modpack-configurable to regenerate.
+
+### 15.9 Eternal affinities are mystery + all-or-nothing
+No eternal shards — only boss stones. Mutually exclusive. The three together are the foundation of existence.
+
+### 15.10 PvP balance is not a design goal
+Spells designed for PvE only. PvP mods exist separately.
+
+---
+
+# PART B — TECHNICAL BUILD PLAN
+
+---
+
+## 16. Phased Rollout Plan
+
+Each phase: code PR (Draft) → user game-test → feedback → fix on same branch → sign-off → "Ready for review" → merge to `dev`. Asset tasks can begin after code PR approval.
+
+### Phase 0 — Full Consolidation Pass
+
+See §17.
+
+### Phase 1 — Dragon Rework
+TrueEnd-inspired overhaul. HP multiplier, phases, breath/meteor/fireball attacks, perch knockback waves, stand-still punishment, summon adds, crystal aggression + regen, climatic finish, aggressive AI sweep.
+
+### Phase 2 — School + Crystal Orb of Awakening
+- Crystal Orb item
+- School dimension content (lecture halls, library, common room)
+- Custom structure at Overworld spawn with portal (spawns together with portal after Dragon kill)
+- Affinity reveal mechanic — `revealed: boolean` attachment field
+- Dimension Staff (use count TBD)
+- Affinity Book GUI foundation
+
+### Phase 3 — Spell API + 12 mage sample spells
+- `Spell` interface — values from `spells.json`
+- `SpellRegistry` (Affinity → List<Spell>)
+- Mana bar (vanilla GuiGraphics)
+- Mana system TBD (menu / inventory slot / skills-tree UI)
+- SpellBookScreen on Lodestone
+- Spell hotkey + cast burst via Lodestone
+- 12 sample spells end-to-end
+
+### Phase 4 — Pocket Dimensions + Layouts
+- Pocket ring layout (reusable Jigsaw templates: outer spawn, intermediate, center boss arena)
+- 11 pocket-dimension JSONs with per-affinity themes
+- Variable pocket size (balanced during build)
+- `BoundedChunkGenerator` extension
+- `PocketRegistry` (Affinity → ResourceKey<Level>)
+- Portal logic: portal with `affinity_target` tag resolves to correct pocket
+- Negative dimensional effects per pocket; flips to buffs at 100% matching affinity
+- Boss death removes matching vanilla portal
+
+### Phase 5 — 11 Bosses
+- Boss entity base (vanilla boss bar, phases, AoE, resistances)
+- BossArenaStructure Jigsaw system
+- 11 bosses (boss names from `NamingRegistry`)
+- Boss drops: equipment, spells, lore items (always); affinity stone (rare)
+- Lodestone phase-transition VFX + screen shake
+
+### Phase 6 — Custom Mobs (Affinity + Modded)
+- Affinity mobs (vanilla mobs + affinity tag + particles) spawning rarely across vanilla dimensions
+- Tier-gating: Elemental everywhere; Deviant unlocked after first Elemental boss kill; Eternal unlocked after first Deviant boss kill
+- Affinity mobs drop shards only (no stones)
+- Modded mobs in pockets only — fully custom, density tuned, high-tier drops
+
+### Phase 7 — GUI + Polish
+- Affinity Book full implementation on Lodestone
+- Mana UI finalized
+- Portal idle/teleport sound + rift shader (Lodestone)
+- Advancement tree per phase
+- Force-chunkload fix
+- Lodestone VFX pass
+
+### Phase 8 — Endgame
+- Corrupted-world timer difficulty
+- Generic-themed endgame boss
+- Multiplayer tooling
+- Wiki content at first public release (player guide, config reference, modpack guide)
+
+### Phase 9+ — Spell archetype expansion
+1. Deviant mage spells
+2. Eternal mage spells
+3. Combo spells (Wind+Lightning, Water+Ice, etc.)
+4. Warrior archetype
+5. Bow archetype
+
+### Phase 9+ — Pre-Dragon content additions
+1. Lightweight affinity mobs in vanilla dimensions (always available, small-scale)
+2. Shard-glow visual hint on player's hand
+3. "Monster manual" hint item
+
+### Phase 9+ — Idea-park (interesting but not scheduled)
+- Overworld raids from pocket dimensions (mobs + mini-bosses spill into vanilla worlds)
+- Corrupted-world scaling (depends on Warrior/Bow existing)
+
+---
+
+## 17. Phase 0 — Full Consolidation Pass
+
+Runs before any new feature. Existing code reviewed, rewritten where needed, config-driven.
 
 ### Phase 0.1 — Code review & rewrite
 - Re-read every active class. Document inconsistencies.
@@ -307,188 +452,201 @@ Runs **before any new feature**. Existing code reviewed, rewritten where needed,
 - `NamingRegistry` for display names.
 - **Exit:** edit `affinities.json.roll.slotChances` in-game, run reload, behavior changes.
 
-### Phase 0.3 — Drain §2.8 hardcoded backlog
-- One issue per file / file group. Each PR replaces Java constants with config calls.
+### Phase 0.3 — Drain hardcoded backlog
+- Replace Java constants with config calls.
 - **Exit:** `grep -R "static final.*=.*[0-9]" src/main/java/de/piggidragon/elementalrealms/` returns no balance numbers in gameplay paths.
 
-### Phase 0.4 — Naming pass (TBATE cleanup)
-- Search all `lang/*.json` + code strings for TBATE references.
+### Phase 0.4 — Naming pass
+- Search `lang/*.json` + code strings for any external references.
 - Replace with generic fantasy-academy terms.
 - **Exit:** `grep -R -i "turtleme\|arthur.*leywin\|tessia\|virion\|xerus\|dicate\|alacrya" src/` returns nothing relevant.
 
-### Phase 0.5 — Enchantment nerf (HIGH PRIORITY)
+### Phase 0.5 — Enchantment nerf
 - Mixin into `EnchantmentProtection` and `EnchantmentSharpness`.
-- Per-level multiplier from `enchantments.json` (default: Protection N → × 0.7; Sharpness N → × 0.6).
+- Per-level multiplier from `enchantments.json`.
 - Optionally extend to Sweeping, Smite, Bane.
 - Advancement "Old Enchantments Weakened".
-- **Exit:** in-game, full Protection IV armor reduces damage visibly less than vanilla; Sharpness V sword bonus visibly less.
 
 ### Phase 0.6 — Affinity bugfix pass
 - Assign LEGENDARY/MYTHIC per `affinities.json.rarities`.
 - Improve tier-validation error messages.
-- Make `PlayerLoginHandler` defensive on tier-validation errors (log + skip, don't block login).
-- Decide on Eternal shards (see §11).
-- **Exit:** fresh-game / mid-game / endgame save game-tests all green.
+- Make `PlayerLoginHandler` defensive on tier-validation errors.
+- Rewrite roll logic: one 100% + partial percentages for rest, rarity-skewed (see §5.2).
 
 ### Phase 0.7 — Consolidation summary + sign-off
 - `docs/PHASE-0-DECISIONS.md`, `docs/PHASE-0-SUMMARY.md`, `docs/ASSET-MODELS.md`, `docs/ASSET-TEXTURES.md`, `docs/ASSET-SOUNDS.md`.
-- `AGENTS.md` + `.github/agents/docs-agent.md` review — keep / disable / rewrite.
-- Optional: `.github/PULL_REQUEST_TEMPLATE.md` + `.github/ISSUE_TEMPLATE/{bug,feat}.yml`.
-- User game-tests in-game and signs off before Phase 1 begins.
+- `AGENTS.md` + `.github/agents/docs-agent.md` review.
+- User game-tests and signs off before Phase 1.
 
 ---
 
-## 7. Phased Rollout Plan
+## 18. System Architecture
 
-Each phase: code PR (Draft) → user game-test → feedback → fix on same branch → sign-off → "Ready for review" → merge to `dev`. Asset tasks for the phase can begin after code PR is approved.
+### 18.1 Lodestone scope
 
-### Phase 1 — Dragon buff (1 week)
-1. Ender Dragon 2× HP, mid-phase AoE. `dragon.json`.
-2. Dragon phase 3 destroys obsidian pillars. `dragon.json`.
-3. Dragon-AoE scaling by player count. `common.toml`.
-4. Advancements "Dragonslayer", "Survivor".
+VFX only. NOT HP bars, NOT general entity rendering.
 
-### Phase 2 — School dimension content (2 weeks)
-1. Affinity reveal mechanic — `revealed: boolean` attachment field.
-2. Scroll of Awakening item.
-3. School layout: 8 teacher books (common room), 6 lecture halls (one per Elemental), library.
-4. Lore books (written-book items, generic fantasy-academy lore).
-5. "First Awakening" advancement.
-6. Lodestone ambient particles in School halls. Density from `client.toml`.
+| Use | Lodestone API |
+|---|---|
+| Spell VFX | `WorldParticleManager.spawnParticleBatch(...)` |
+| Boss phase transition | `LodestoneScreenAPI.addWorldEvent(...)` |
+| Portal idle | `WorldParticleManager` rotating glyph ring |
+| Portal rift | `LodestoneShaderRegistry` |
+| Meteor/Blizzard/Tornado | Lodestone `ProjectileRenderer` |
+| Laser (Dragon + Lightning) | `WorldParticleRenderer` line-of-sight beam |
+| Spell Book GUI | `LodestoneScreen` |
+| Corrupted World | `LodestoneScreenAPI` vignette + tint |
 
-### Phase 3 — Spell API skeleton (2 weeks)
-1. `Spell` interface (cast, cooldown, manaCost, targetType, VFX hooks) — all values from `spells.json`.
-2. `SpellRegistry` (Affinity → List<Spell>).
-3. `ManaCapability` (Curios "Mana Core" slot).
-4. Spell cooldown tick in `ServerTickHandler`.
-5. `SpellBookScreen` on Lodestone.
-6. Spell hotkey + cast burst via Lodestone.
-7. 1 sample spell per ELEMENTAL affinity works end-to-end.
+NOT Lodestone: boss HP bars (vanilla `BossEvent`), Ender Dragon HP bar (vanilla), general entity rendering, mana bar / simple HUD (vanilla `GuiGraphics`).
 
-### Phase 4 — Pocket dimensions + layouts (3 weeks)
-1. Pocket ring layout (reusable Jigsaw templates: boss arena, hub, trap rooms, boundary wall).
-2. 11 pocket-dimension JSONs.
-3. `BoundedChunkGenerator` extended to RADIUS=31. Radius from `dimensions.json`.
-4. `PocketRegistry` (Affinity → ResourceKey<Level>).
-5. Portal logic rework: portal with `affinity_target` tag resolves to correct pocket.
-6. Custom mob spawns in pockets. `mobs.json`.
-7. Lodestone per-pocket ambient particles.
+### 18.2 Configuration-first
 
-### Phase 5 — 11 bosses (3 weeks)
-1. Boss entity base (vanilla boss bar, NOT Lodestone; phases, AoE, resistances). All stats from `bosses.json`.
-2. BossArenaStructure Jigsaw system.
-3. 11 bosses (1–2 days each). Names from `NamingRegistry`.
-4. Boss drops (affinity stone + spell scroll + lore). Chances from `bosses.json.<affinity>.drops`.
-5. Lodestone phase-transition VFX + screen shake. Intensity from `bosses.json`.
+Every magic number is data, never a Java constant. Three layers:
 
-### Phase 6 — Custom mobs Overworld + Nether + End (2 weeks)
-1. Spawn rules for 8–10 custom mobs per biome group. `mobs.json`.
-2. Loot tables (shards common, stones very rare). `mobs.json.<mob>.loot`.
-3. Mob drops integrated.
-4. Lodestone aura particles per mob type.
+1. **NeoForge `ModConfigSpec` (TOML)** — `config/elementalrealms-{common,server,client}.toml`. Binary toggles, simple multipliers, audio sliders.
+2. **Custom JSON5 files** in `config/elementalrealms/` — complex tables.
+3. **Datapacks** in `data/elementalrealms/` — recipes, loot, structures, mob spawns.
 
-### Phase 7 — GUI + polish (1–2 weeks)
-1. Affinity GUI integration (saved_code), vanilla + Lodestone `ScreenAPI`.
-2. Portal idle/teleport sound + rift shader (Lodestone). `portal.json`.
-3. Advancement tree (one per phase).
-4. Force-chunkload fix. Timeout from `common.toml`.
-5. Structures-rooms diversity. Pool from datapack + structure variant list from `dimensions.json`.
-6. Lodestone VFX pass — remove vanilla particle leftovers.
+```
+config/elementalrealms/
+├── common.toml, server.toml, client.toml
+├── affinities.json, dimensions.json, spells.json, bosses.json
+├── mobs.json, portal.json, dragon.json, school.json
+├── enchantments.json, timer.json
+```
 
-### Phase 8 — Optional endgame
-1. Timer difficulty / corrupted world. `timer.json`. Lodestone corruption VFX.
-2. Generic-themed endgame boss.
-3. Multiplayer tooling: /pocket share, /pocket list.
-4. **Wiki content drafting** — player guide, config reference, modpack author guide. Goes live on GitHub Wiki at first release.
+Hot-reload via `/reload` or `ModConfigEvent.Reloading`. Lazy-apply: new entities read new values, existing entities keep snapshot. New `/elementalrealms reload` command via `ConfigReloadListener`. `"schemaVersion": 1` per JSON. Strict by default with `common.toml.allowSchemaMismatch` toggle.
+
+### 18.3 Module tree
+
+```
+registries/
+├── items/magic/
+│   ├── affinities/         [✓ — re-review in Phase 0]
+│   ├── misc/               [✓ — SchoolStaff]
+│   ├── spells/             [NEW]
+│   └── affinitytools/      [NEW — Crystal Orb]
+├── worldgen/
+│   ├── structures/pockets/ [NEW]
+│   ├── structures/bosses/  [NEW]
+│   ├── structures/spawn/   [NEW — Overworld spawn structure for School portal]
+│   └── features/pocketmobs/[NEW]
+├── entities/custom/
+│   ├── bosses/             [NEW]
+│   └── elementals/         [NEW — modded mobs]
+├── level/PocketRegistry.java
+├── configs/
+│   ├── ModConfigs.java, ConfigReloadListener.java, NamingRegistry.java
+│   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,Dragon,School,Enchantments,Timer}Config.java
+└── commands/ModCommands.java
+magic/
+├── affinities/             [✓ — roll logic rewrite in 0.6]
+├── spells/
+│   ├── Spell.java, SpellRegistry.java, SpellCasting.java
+│   ├── SpellBookScreen.java (Lodestone)
+│   └── impl/{FireSpells, WaterSpells, ...}.java
+└── mana/                    [NEW — implementation TBD: menu / inventory slot / skills-tree UI]
+client/
+├── lodestone/              [NEW]
+│   ├── AffinityParticles.java, PortalRiftRenderer.java
+│   ├── LaserBeamRenderer.java (PROMOTE from saved_code)
+│   └── ScreenShakeHook.java
+events/
+├── DragonDeathHandler.java [✓ — overhaul in Phase 1; spawns School structure + portal]
+├── PlayerLoginHandler.java [✓ — rewrite roll in 0.6]
+├── ServerTickHandler.java
+└── PocketDimensionBuilder.java [NEW]
+```
 
 ---
 
-## 8. Asset Pipeline
+## 19. Configuration Subsystem
+
+| File | What's in it |
+|---|---|
+| `common.toml` | Toggles, multipliers, audio sliders |
+| `server.toml` | Server-only tunables |
+| `client.toml` | Client-only (HUD, particles, audio) |
+| `affinities.json` | Roll chances, deviant mapping, rarities, vanilla-effect thresholds |
+| `dimensions.json` | Pocket size, ring layout, affinity → pocket map, dimensional effects, affinity-buff thresholds |
+| `spells.json` | Spell definitions (damage, cooldown, mana, VFX hooks, combo rules) |
+| `bosses.json` | Boss stats per affinity |
+| `mobs.json` | Affinity mob spawn rules + tier-gating; modded mob spawn rules for pockets |
+| `portal.json` | Portal config |
+| `dragon.json` | HP multiplier, phase transitions, attack configs |
+| `school.json` | School + Crystal Orb + Dimension Staff config |
+| `enchantments.json` | Protection/sharpness nerf multipliers + potion scaling |
+| `timer.json` | Corrupted-world timer difficulty |
+
+---
+
+## 20. Asset Pipeline
 
 Three categories, three workflows. No asset work begins before Phase 0.7 sign-off.
 
-### 8.1 Models (you build)
+### 20.1 Models (you build)
 **Owner:** Piggidragon. Blockbench.
 
 Tracked in `docs/ASSET-MODELS.md`:
-- Affinity Stones (12+1), Shards (8), Void Stone, Scroll of Awakening
-- Spell Scrolls (36 items, 1 base mesh + 36 textures)
-- Mana Core (Curio), School Staff (model check), Affinity Book (closed + open)
-- Portal Entity frame
+- Affinity Stones (12+1), Shards (8), Void Stone, Crystal Orb of Awakening
+- Spell Scrolls
+- Mana Core / Skills-tree UI element (TBD)
+- School Staff, Affinity Book, Portal Entity frame
 - 11 boss entity models
-- 8–10 custom mob models
-- Mana Core Curios slot icon
+- Modded mob models (pocket content)
 
-My deliverable per model: spec block in the issue (Blockbench dimensions, bone hierarchy, attachment points, animation set, 1–2 reference mood-board links).
-
-### 8.2 Textures (external artist)
+### 20.2 Textures (external artist)
 **Owner:** TBD external. Briefs per phase, not upfront.
 
-Tracked in `docs/ASSET-TEXTURES.md`:
-- Item textures (stones/shards/scrolls/staff/mana core)
-- Block textures (per-pocket ores, decorative blocks)
-- Entity textures (11 bosses, 8–10 mobs, portal, mana core)
-- GUI textures (affinity book, spell book, mana HUD, scroll)
-- Particle sprites (12 affinity-themed sprite sheets)
-- Sky / dimension textures (3 pocket-sky gradients)
-
-My deliverable: per-phase brief — list, palette hex codes, mood-board links, must-include / must-avoid.
-
-### 8.3 Sounds (you source: online + DIY)
+### 20.3 Sounds (you source: online + DIY)
 **Owner:** Piggidragon. Mix of freesound.org + DIY.
 
-Tracked in `docs/ASSET-SOUNDS.md`:
-- Affinity use (fire crackle, water splash, etc.)
-- Spell cast (each spell 2–3s loop)
-- Boss themes (30–90s loops) + hit/death/phase-change stingers
-- Portal idle + teleport
-- Dragon laser (extend existing)
-- UI stings
-
-My deliverable: per-sound spec — duration, mood, loop seamlessness, peak loudness reference.
-
-### 8.4 Asset workflow rules
-- No asset work begins before Phase 0.7 sign-off.
-- Each phase's PR lists "asset deps".
-- Asset missing → code uses placeholder (purple-black cube / missing-texture sound), ships anyway.
-- Tracker files live in `docs/`, git-tracked.
+### 20.4 Asset workflow rules
+- No asset work before Phase 0.7 sign-off.
+- Each PR lists "asset deps".
+- Asset missing → placeholder, ship anyway.
 
 ---
 
-## 9. Collaboration & Game-Testing Workflow
+## 21. GitHub Workflow
 
-### 9.1 Per-issue flow
-1. **Plan** — issue spec updated here + GitHub.
-2. **Branch** — issue-first, off `dev`.
-3. **Code** — implement, run `mcp_intellij_build_project` until green.
-4. **Push + Draft PR** — push branch, open **Draft PR** on GitHub.
-5. **Test** — user game-tests from `run/saves/<test-world>`.
-6. **Feedback** — bugs reported in plain text or PR comments. Each bug = fix commit on same branch.
-7. **Sign-off** — user says "fine"/"good"/"ready" → I mark Draft PR "Ready for review".
-8. **Merge** — user squash-merges to `dev`.
+### 21.1 Branch protection (do once in GitHub UI)
+- `main`: protected, no direct push, requires PR + review.
+- `dev`: open for direct push (mini fixes).
 
-### 9.2 Testing gate
-- **Build before push:** yes, always. Cheap. `mcp_intellij_build_project`.
-- **Game test before merge:** yes, the real gate. User runs `./gradlew runClient`, plays, reports.
-- **Game test before push:** not required.
+### 21.2 Labels (create in GitHub UI — Settings → Labels)
 
-### 9.3 Test worlds
-You maintain test worlds in `run/saves/` (gitignored):
-- `Test-FreshAffinities` — fresh survival; login roll, shard/stone use, reveal flow.
-- `Test-DragonFight` — creative with End portal + dragon summoner; dragon buff tests.
-- `Test-Pockets` — creative with pre-given affinity stones; pocket enter/exit + boss spawn.
-- `Test-ConfigTuning` — fresh world; verify `/elementalrealms reload` applies config edits.
+**area/\*** (color `#c5def5`):
+`area/config`, `area/worldgen`, `area/magic`, `area/spells`, `area/bosses`, `area/mobs`, `area/gui`, `area/portal`, `area/lodestone`, `area/enchantment`, `area/assets`, `area/dragon`, `area/school`, `area/affinity`, `area/multiplayer`
 
-### 9.4 PR review + merge
-- PR review by user on GitHub.
-- User squash-merges to `dev`. I do not merge for you.
-- `dev` → `main` only on release; you decide when.
+### 21.3 Draft PRs
+
+Every PR created as `draft: true` via MCP. When you say "fine" → I mark it Ready for Review → you merge.
+
+### 21.4 Templates
+Skill `elementalrealms-workflow` is canonical. Optional belt-and-suspenders: `.github/PULL_REQUEST_TEMPLATE.md` + `.github/ISSUE_TEMPLATE/{bug,feat}.yml`.
+
+### 21.5 Milestones
+Not used. Sequential work, blocking deps tracked in head.
 
 ---
 
-## 10. Issue Proposals (grouped by phase)
+## 22. Test Worlds
 
-Will be created via GitHub MCP once user says "go". Branch names derived from issue titles. **Every feature issue with `area/config` MUST include a config write step in its PR.**
+You maintain in `run/saves/` (gitignored):
+
+| World | Purpose |
+|---|---|
+| `Test-FreshAffinities` | Fresh survival; login roll, shard use, reveal flow |
+| `Test-DragonFight` | Creative + End portal + dragon summoner; dragon buff tests |
+| `Test-Pockets` | Creative + pre-given affinity stones; pocket enter/exit + boss spawn |
+| `Test-ConfigTuning` | Fresh world; verify `/elementalrealms reload` applies config edits |
+
+---
+
+## 23. Issue Proposals
+
+Branch names derived from issue titles.
 
 ### Phase 0
 - `chore/phase0-code-review-and-rewrite`
@@ -496,7 +654,7 @@ Will be created via GitHub MCP once user says "go". Branch names derived from is
 - `chore/config-add-config-reload-listener-and-reload-command`
 - `chore/naming-introduce-naming-registry`
 - `chore/phase0-drain-hardcoded-backlog-into-config-loaders`
-- `chore/phase0-naming-pass-remove-tbate-references`
+- `chore/phase0-naming-pass-remove-external-references`
 - `chore/phase0-review-saved-code-for-promotion`
 - `chore/docs-review-AGENTS-md-and-docs-agent`
 - `feat/enchantment-nerf-protection-and-sharpness`
@@ -508,176 +666,221 @@ Will be created via GitHub MCP once user says "go". Branch names derived from is
 - `docs/assets-initialize-asset-trackers`
 - (optional) `chore/github-add-pr-and-issue-templates`
 
-### Phase 1 (dragon buff)
-- `feat/dragon-buff-hp-and-mid-phase-aoe`
-- `feat/dragon-disable-crystal-regen-in-phase-3`
-- `feat/advancements-add-dragonslayer-and-survivor`
+### Phase 1 (Dragon Rework)
+- `feat/dragon-buff-hp-multiple-phases`
+- `feat/dragon-add-breath-and-meteor-attacks`
+- `feat/dragon-add-perch-knockback-waves`
+- `feat/dragon-add-stand-still-punishment`
+- `feat/dragon-summon-adds-in-phases`
+- `feat/dragon-crystals-attack-and-regenerate`
+- `feat/dragon-climatic-finish`
+- `feat/dragon-aggressive-ai-sweep`
 
-### Phase 2 (school)
-- `feat/school-add-scroll-of-awakening-and-reveal-field`
+### Phase 2 (School)
+- `feat/school-add-crystal-orb-of-awakening-and-reveal-field`
 - `feat/school-build-common-room-with-8-lore-bookshelves`
 - `feat/school-build-6-lecture-halls-one-per-elemental-affinity`
 - `feat/school-build-library-with-fantasy-academy-lore-books`
+- `feat/school-spawn-structure-with-portal-at-overworld-spawn`
+- `feat/items-add-dimension-staff-with-from-anywhere-teleport`
 - `feat/advancements-add-first-awakening`
-- `feat/school-add-lodestone-ambient-particles-to-school-halls`
 
-### Phase 3 (spell API)
+### Phase 3 (Spell API + mage samples)
 - `feat/spells-add-spell-interface-and-spell-registry`
-- `feat/mana-add-mana-capability-bound-to-curios-mana-core-slot`
+- `feat/mana-add-mana-bar-and-mana-core`
 - `feat/events-extend-server-tick-handler-with-spell-cooldown-tick`
 - `feat/gui-build-spell-book-screen-on-lodestone-screenapi`
 - `feat/client-add-spell-hotkey-and-cast-burst-via-lodestone`
 - `feat/spells-add-one-sample-spell-per-elemental-affinity-end-to-end`
 
-### Phase 4 (pockets)
+### Phase 4 (Pockets)
 - `feat/worldgen-add-reusable-pocket-ring-jigsaw-template-set`
 - `feat/worldgen-add-4-overworld-pocket-dimensions`
 - `feat/worldgen-add-4-nether-pocket-dimensions`
 - `feat/worldgen-add-3-end-pocket-dimensions`
-- `feat/chunkgen-expand-bounded-chunk-generator-to-1000x1000-radius`
 - `feat/pockets-add-pocket-registry-and-affinity-aware-portal-routing`
-- `feat/spawns-add-affinity-specific-mob-spawn-rules-in-pocket-dimensions`
-- `feat/pockets-add-per-pocket-lodestone-ambient-particles`
+- `feat/pockets-add-negative-dimensional-effects-per-affinity`
+- `feat/pockets-add-affinity-buff-when-in-matching-dimension`
+- `feat/pockets-remove-portal-on-boss-death`
+- `feat/spawns-add-affinity-specific-modded-mobs-in-pocket-dimensions`
 
-### Phase 5 (bosses)
+### Phase 5 (Bosses)
 - `feat/boss-add-boss-entity-base-class-with-vanilla-boss-bar-phases-aoe`
 - `feat/boss-add-boss-arena-structure-jigsaw-system`
-- 11× `feat/boss-<affinity>-implement-<boss-name>` (boss names from `NamingRegistry`)
-- `feat/loot-add-boss-drops-loot-table`
+- 11× `feat/boss-<affinity>-implement-<boss-name>` (names from `NamingRegistry`)
+- `feat/loot-add-boss-drops-loot-table-with-stone-as-rare`
 - `feat/boss-add-lodestone-phase-transition-vfx-and-screen-shake`
 
-### Phase 6 (custom mobs)
-- `feat/mobs-add-overworld-elemental-mobs-with-biome-spawn-rules`
-- `feat/loot-add-affinity-shard-drops-to-custom-mob-loot-tables`
-- `feat/mobs-add-lodestone-aura-particles-per-custom-mob-type`
+### Phase 6 (Mobs)
+- `feat/mobs-add-affinity-mobs-tier-gated-across-vanilla-dimensions`
+- `feat/mobs-add-affinity-mob-particle-aura`
+- `feat/mobs-affinity-mobs-drop-shards-only`
+- `feat/loot-add-affinity-shard-drops-from-affinity-mobs`
 
 ### Phase 7 (GUI + polish)
 - `feat/gui-integrate-affinity-book-screen-and-hud-overlay`
 - `feat/portal-add-idle-and-teleport-sounds-and-rift-shader`
 - `feat/advancements-add-progression-advancement-tree-covering-all-phases`
 - `fix/chunkload-centralize-chunk-force-api-for-boss-arenas`
-- `feat/worldgen-add-random-variant-pool-for-trap-rooms`
 - `feat/client-full-lodestone-vfx-pass`
 
-### Phase 8 (optional endgame)
+### Phase 8 (endgame)
 - `feat/endgame-add-corrupted-world-timer-difficulty`
 - `feat/endgame-add-generic-themed-endgame-boss`
 - `feat/multiplayer-add-pocket-share-and-pocket-list-commands`
 - `docs/wiki-draft-player-guide-config-reference-modpack-guide`
 
+### Phase 9+ (expansion)
+- `feat/spells-add-devious-mage-spells`
+- `feat/spells-add-eternal-mage-spells`
+- `feat/spells-add-combo-spells`
+- `feat/spells-add-warrior-archetype`
+- `feat/spells-add-bow-archetype`
+- `feat/pre-dragon-add-lightweight-affinity-mobs`
+- `feat/pre-dragon-add-shard-glow-hint-on-player-hand`
+- `feat/pre-dragon-add-monster-manual-hint-item`
+- `feat/idea-park-overworld-raids-from-dimensions`
+- `feat/idea-park-corrupted-world-scaling`
+
 ---
 
-## 11. Open Design Questions
+# PART C — LIVE WORKING AREA + IDEAS
 
-Status legend: `[ ]` unanswered, `[x]` answered, `[?]` superseded.
+---
 
-We add new questions as they come up. When you answer, I update the relevant sections of the plan and link your decision back here.
+## 24. Open Design Questions
 
-### Phase 0 critical (answer before Phase 0 starts)
+Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 
-- [ ] **Config format?** — TOML only / JSON only / hybrid TOML+JSON?
-- [ ] **JSON5 or plain JSON for `config/*.json`?**
-- [ ] **Hot-reload scope?** — full hot-reload / lazy / warn-and-restart-required?
-- [ ] **Reveal mechanic timing?** — when can spells be cast relative to reveal? Before, after, both?
-- [ ] **NamingRegistry scope?** — boss names + spell names + dimension names + advancement titles? Just bosses?
-- [ ] **Boss names final?** — use §1 placeholders, swap in your own, or wait?
-- [ ] **Saved_code triage?** — for each file, promote / archive / discard?
-- [ ] **Enchantment nerf defaults?** — multipliers for Protection / Sharpness / Sweeping / Smite / Bane?
-- [ ] **Eternal shards?** — should they exist, or are Eternal stones the only way?
+### Phase 0 critical
+- [ ] Config format (TOML / JSON / hybrid)
+- [ ] JSON5 or plain JSON
+- [ ] Hot-reload scope
+- [ ] Reveal mechanic timing (when can spells be cast relative to reveal)
+- [ ] NamingRegistry scope
+- [ ] Boss names final
+- [ ] Saved_code triage (per file: promote / archive / discard)
+- [ ] Enchantment nerf defaults (multipliers per enchantment)
+- [ ] Roll-logic specifics (exact partial-percentage distribution)
 
-### Phase 0 nice-to-have (during Phase 0)
+### Phase 1 (Dragon)
+- [ ] HP multiplier exact default
+- [ ] Number of phases (3? 4?)
+- [ ] Phase-transition thresholds
+- [ ] Add-spawn rate per phase
+- [ ] Crystal aggression level
 
-- [ ] **AGENTS.md + docs-agent fate?** — keep / disable / rewrite?
+### Phase 2 (School)
+- [ ] Crystal Orb visual design
+- [ ] Affinity Book layout
+- [ ] Dimension Staff use count
 
-### Phase 1 (dragon buff)
+### Phase 3 (Spells)
+- [ ] Mana system implementation (menu / inventory slot / skills-tree UI)
+- [ ] Combo spell list exact
+- [ ] Spell-Book GUI vs hotbar
 
-- [ ] **Dragon HP multiplier default?** — 2× / 2.5× / 3×?
-- [ ] **Dragon-AoE by player count?** — linear / exponential / off?
-- [ ] **Obsidian-pillar destruction in phase 3?** — destroy all / nearest / config-driven?
+### Phase 4 (Pockets)
+- [ ] Pocket size exact per affinity
+- [ ] Dimensional effects list exact
+- [ ] Affinity-buff specifics when inside matching dim
 
-### Phase 2 (school)
+### Phase 5 (Bosses)
+- [ ] Boss HP scaling by player count
+- [ ] Boss walking / behavior
+- [ ] Boss theme / names final
 
-- [ ] **Affinity-reveal UI?** — what does player see between login and reveal? Just count? Vague flavor?
-- [ ] **Scroll of Awakening loot source?** — chest in School library / NPC drop / crafted?
-- [ ] **Lecture hall behavior?** — decorative only / functional (right-click for lore book)?
+### Phase 6 (Mobs)
+- [ ] Affinity mob spawn rate per tier
+- [ ] Modded mob count
 
-### Phase 3 (spell API)
+### Phase 7 (Polish)
+- [ ] Advancement tree depth
+- [ ] Force-chunkload timeout
 
-- [ ] **Spells as items or hotbar slots?** — items / Curios / Spell-Book GUI / combination?
-- [ ] **Mana Curio?** — starter item / crafted-only / both?
-- [ ] **Spell damage scaling?** — fixed / per-level / per-mana / fixed+affinity bonus?
-
-### Phase 4 (pockets)
-
-- [ ] **Pocket layout per affinity deterministic?** — same layout, different seed per portal-id?
-- [ ] **Pocket size?** — 1000×1000 fixed / config-driven?
-- [ ] **Pocket persistence?** — saved world / regenerate on portal re-enter / configurable?
-
-### Phase 5 (bosses)
-
-- [ ] **Boss HP scaling by player count?** — yes / no / config-driven?
-- [ ] **Boss drop chances?** — fixed default / config-driven per-boss?
-- [ ] **Boss theme / names?** — use §1 placeholders / user-supplied names?
-
-### Phase 6 (mobs)
-
-- [ ] **Overworld mob spawn rate?** — 5–10% / config-driven / per-mob?
-- [ ] **Custom mob count?** — 8–10 / different number / per-affinity?
-
-### Phase 7 (polish)
-
-- [ ] **Advancement tree depth?** — one per phase / one big tree / minimal?
-- [ ] **Force-chunkload timeout default?**
-
-### Phase 8 (endgame)
-
-- [ ] **Endgame boss required?** — yes / optional / only via config?
-- [ ] **Corrupted-world mechanic scope?** — world modifier / dimension / arena?
+### Phase 8 (Endgame)
+- [ ] Endgame boss required
+- [ ] Corrupted-world mechanic scope
 
 ### Cross-phase
-
-- [ ] **Lodestone coverage?** — new spells/mobs/bosses use Lodestone (VFX only); existing particles stay vanilla. OK?
-- [ ] **Boss-HP-bar visibility?** — always within 64 blocks + LoS / always / on-damage only?
-- [ ] **Multiplayer edge cases** — 2+ players enter same pocket, boss kill sync, return-position race?
-- [ ] **Modpack vs datapack priority?** — when both exist, who wins for shared fields?
-- [ ] **Client config sync?** — strictly per-player (no server push)?
-- [ ] **Schema versioning strictness?** — strict by default with dev-toggle / always strict / always lenient?
+- [ ] Lodestone coverage
+- [ ] Boss-HP-bar visibility
+- [ ] Modpack vs datapack priority
+- [ ] Client config sync (per-player)
+- [ ] Schema versioning strictness
 
 ---
 
-## 12. GitHub Workflow
+## 25. IDEAS.md (scratchpad)
 
-### 12.1 Branch protection (do once in GitHub UI)
-- `main`: protected, no direct push, requires PR + review.
-- `dev`: open for direct push (mini fixes).
+> New ideas land here. They graduate to Part A/B when they mature.
 
-### 12.2 Labels (create in GitHub UI — Settings → Labels)
+### Dragon Rework
+- HP multiplier TBD, start with 2× vanilla and tune
+- Phases escalating aggression, new attacks each phase
+- Dragon breath / meteor shower / exploding fireballs
+- Aggressive AI sweep (not just orbit)
+- Perch knockback + damage waves in all directions
+- Stand-still punishment attack
+- Summon adds in later phases
+- Crystals as enemies: attack players, self-regenerate, destroying spawns mobs
+- Climatic finish with strong visual moment
+- Lore: Dragon = warden of dimension barrier
 
-**area/\*** (color `#c5def5` light blue):
-`area/config`, `area/worldgen`, `area/magic`, `area/spells`, `area/bosses`, `area/mobs`, `area/gui`, `area/portal`, `area/lodestone`, `area/enchantment`, `area/assets`, `area/dragon`, `area/school`, `area/affinity`, `area/multiplayer`
+### Affinity ideas
+- Crystal Orb of Awakening (not a scroll) — sits somewhere in School
+- Affinity-Items show their affinity in name (Shard of Fire etc.)
+- Tier-scaling: 5% gives small benefits, 100% gives strong effects
+- Vanilla-MC effects at high affinity completion (full list TBD)
+- Login roll: one 100% + partial % for rest, rarity-skewed
+- Eternal affinities: no shards, only stones, all-or-nothing, mutually exclusive
+- Lore: "the three eternals together are the foundation of existence"
 
-Standard GitHub defaults usually already exist: `bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`.
+### Pocket dimension ideas
+- Variable size per affinity (final size decided during Phase 4)
+- Per-affinity themed environments (see §6.2)
+- Negative dimensional effects; flip to buffs at 100% matching affinity
+- Affinity buff when inside matching dim
+- Boss death removes matching vanilla portal
 
-### 12.3 Draft PRs
+### Mob ideas
+- Affinity mobs = vanilla mobs with affinity tag + particles, shards-only drops
+- Modded mobs = fully custom, in pockets only
+- Tier-gated spawn locations
 
-Every PR is created as `draft: true` via MCP. You see `[Draft]` tag in your PR list, can comment inline, click through to the diff, watch CI status. When you say "fine" → I mark it Ready for Review → you merge.
+### Spell ideas
+- Three archetypes: Mage (Phase 3), Warrior (later), Bow (later)
+- Combo spells (Wind+Lightning, Water+Ice, etc.)
+- 12 sample mage spells first (3 per Elemental affinity)
+- Mana as separate bar; mana system TBD
+- Per-archetype spell counts per affinity: not fixed
 
-### 12.4 Templates
-Skill `elementalrealms-workflow` is the canonical place for issue/PR layouts. Optional belt-and-suspenders: also add `.github/PULL_REQUEST_TEMPLATE.md` and `.github/ISSUE_TEMPLATE/{bug,feat}.yml` as files. Up to you.
+### Lore ideas
+- Dragon = warden of dimension barrier, kills cracks it
+- Pocket dimensions always existed; barrier made them inaccessible
+- Affinities are the building blocks of magic
+- Three eternal affinities are the foundation of existence
+- School built by an ancient magical society
+- Bosses are rulers of their respective pocket worlds
+- Modded mobs are elemental creatures born of affinity
 
-### 12.5 Milestones
-Not using GitHub milestones. Sequential work, blocking deps tracked in head.
+### Feature-park ideas
+- Overworld raids from pocket dimensions (mobs + mini-bosses spill into vanilla worlds)
+- Corrupted-world scaling (depends on Warrior/Bow existing)
+- More combat archetypes beyond Mage/Warrior/Bow
+- Pocket leaderboards / time-trial scoring
+- Affinity-themed music per pocket
 
 ---
 
-## 13. Next Steps
+## 26. Next Steps
 
-1. **User reads this plan**, comments / corrects in reply.
-2. **Go through §11 questions Phase 0 first** — answer the 9 Phase-0-critical ones. We figure out more as we go.
-3. **Branch protection on `main`** (you do, GitHub UI, 30s).
-4. **Create the labels** from §12.2 (you do, GitHub UI, 2 min).
-5. **Phase 0 work begins** with the first agreed-on issue.
-6. **PRs from now on are Draft PRs** until you sign off.
+1. User reads this plan, comments / corrects.
+2. Answer §24 Phase-0 questions.
+3. Branch protection on `main` (you do, GitHub UI).
+4. Create labels from §21.2 (you do, GitHub UI).
+5. Phase 0 work begins.
+6. PRs as Draft PRs until sign-off.
 
 ---
 
