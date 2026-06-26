@@ -28,7 +28,6 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
  */
 public final class DynamicDimensionHandler {
 
-    private static int dimensionCounter = 0;
     private static GenerationCenterData generationCenters;
 
     private DynamicDimensionHandler() {
@@ -39,8 +38,8 @@ public final class DynamicDimensionHandler {
      */
     public static void initialize(MinecraftServer server) {
         generationCenters = GenerationCenterData.get(server);
-        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
-                generationCenters.getGenerationCenterCount());
+        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers (currentMaxIndex={})",
+                generationCenters.getGenerationCenterCount(), generationCenters.getCurrentMaxIndex());
     }
 
     public static GenerationCenterData getGenerationCenterData() {
@@ -65,7 +64,7 @@ public final class DynamicDimensionHandler {
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + dimensionCounter
+                        "realm_" + generationCenters.getCurrentMaxIndex()
                 )
         );
 
@@ -85,7 +84,7 @@ public final class DynamicDimensionHandler {
                 portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
-                dimensionCounter++;
+                generationCenters.recordAssignedIndex(generationCenters.getCurrentMaxIndex() + 1);
                 return dimensionKey;
             }
         } catch (Exception e) {
@@ -118,7 +117,8 @@ public final class DynamicDimensionHandler {
             initialize(server);
         }
 
-        if (dimensionCounter == 0) {
+        // First-ever portal lands at (0, 0); subsequent ones walk the concentric-ring layout.
+        if (generationCenters.getGenerationCenterCount() == 0) {
             return new ChunkPos(0, 0);
         }
 
