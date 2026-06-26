@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.registries.entities.custom.misc;
 
 import de.piggidragon.elementalrealms.client.particles.vanilla.PortalParticles;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.configs.PortalConfig;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
@@ -37,18 +38,6 @@ import java.util.*;
  * despawns after a tick timeout, and removes its dynamically-created dimension on cleanup.
  */
 public class PortalEntity extends Entity {
-
-    public static final double PORTAL_HEIGHT_OFFSET = 5.0;
-    public static final double PORTAL_Z_OFFSET = 2.0;
-    public static final double PORTAL_SEARCH_RADIUS = 128.0;
-
-    private static final int PARTICLE_SPAWN_INTERVAL = 5;
-    private static final int PARTICLE_COUNT = 3;
-    private static final double PARTICLE_RADIUS = 0.8;
-    private static final double PARTICLE_Y_OFFSET = 0.5;
-    private static final float PORTAL_EXPLOSION_POWER = 25.0f;
-    private static final double PORTAL_EXPLOSION_Y_OFFSET = 1.0;
-    private static final double RETURN_OFFSET = 2.0;
 
     private static final String TAG_DESPAWN_TIMER = "DespawnTimer";
     private static final String TAG_DISCARD = "Discard";
@@ -209,7 +198,7 @@ public class PortalEntity extends Entity {
             }
         }
 
-        if (tickCount % PARTICLE_SPAWN_INTERVAL == 0) {
+        if (tickCount % PortalConfig.particleSpawnIntervalTicks() == 0) {
             spawnAmbientParticles();
         }
 
@@ -236,11 +225,14 @@ public class PortalEntity extends Entity {
 
     private void spawnAmbientParticles() {
         ServerLevel serverLevel = (ServerLevel) level();
-        for (int i = 0; i < PARTICLE_COUNT; i++) {
-            double angle = tickCount * 0.1 + i * Math.PI * 2 / PARTICLE_COUNT;
-            double x = getX() + Math.cos(angle) * PARTICLE_RADIUS;
-            double y = getY() + PARTICLE_Y_OFFSET;
-            double z = getZ() + Math.sin(angle) * PARTICLE_RADIUS;
+        int count = PortalConfig.particleCount();
+        double radius = PortalConfig.particleRadius();
+        double yOffset = PortalConfig.particleYOffset();
+        for (int i = 0; i < count; i++) {
+            double angle = tickCount * 0.1 + i * Math.PI * 2 / count;
+            double x = getX() + Math.cos(angle) * radius;
+            double y = getY() + yOffset;
+            double z = getZ() + Math.sin(angle) * radius;
             serverLevel.sendParticles(ParticleTypes.PORTAL, x, y, z, 1, 0.0, 0.0, 0.0, 0.02);
         }
     }
@@ -250,8 +242,8 @@ public class PortalEntity extends Entity {
         Vec3 center = this.position();
         serverLevel.explode(
                 this,
-                center.x, center.y + PORTAL_EXPLOSION_Y_OFFSET, center.z,
-                PORTAL_EXPLOSION_POWER,
+                center.x, center.y + PortalConfig.explosionYOffset(), center.z,
+                PortalConfig.explosionPower(),
                 Level.ExplosionInteraction.BLOCK
         );
     }
@@ -303,14 +295,14 @@ public class PortalEntity extends Entity {
         }
 
         ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
-        PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), PORTAL_SEARCH_RADIUS);
+        PortalEntity existingPortal = PortalUtils.findNearestPortal(destinationLevel, player.position(), PortalConfig.searchRadius());
         if (existingPortal == null) {
             PortalEntity returnPortal = new PortalEntity(
                     ModEntities.PORTAL_ENTITY.get(),
                     destinationLevel,
                     returnLevel
             );
-            returnPortal.setPos(player.position().x, player.position().y + PORTAL_HEIGHT_OFFSET, player.position().z);
+            returnPortal.setPos(player.position().x, player.position().y + PortalConfig.spawnHeightOffset(), player.position().z);
             destinationLevel.addFreshEntity(returnPortal);
         }
     }
@@ -345,7 +337,8 @@ public class PortalEntity extends Entity {
         Vec3 returnPos = returnLevelPos.values().iterator().next();
         ResourceKey<Level> returnLevel = returnLevelPos.keySet().iterator().next();
 
-        player.teleportTo(getLevelFromKey(returnLevel), returnPos.x + RETURN_OFFSET, returnPos.y, returnPos.z + RETURN_OFFSET, relatives, yaw, pitch);
+        double returnOffset = PortalConfig.returnOffset();
+        player.teleportTo(getLevelFromKey(returnLevel), returnPos.x + returnOffset, returnPos.y, returnPos.z + returnOffset, relatives, yaw, pitch);
         player.removeData(ModAttachments.RETURN_LEVEL_POS.get());
         player.setPortalCooldown();
 
