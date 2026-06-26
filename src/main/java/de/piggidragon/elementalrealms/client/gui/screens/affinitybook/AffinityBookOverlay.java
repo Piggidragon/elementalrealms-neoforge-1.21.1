@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.client.gui.screens.affinitybook;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.magic.affinities.AffinityType;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -162,9 +163,5 @@ public class AffinityBookOverlay {
             case SPACE -> 0xFF191970;
             case LIFE -> 0xFF32CD32;
         };
-    }
-
-    private enum AffinityType {
-        ELEMENTAL, DEVIANT, ETERNAL
     }
 }
