@@ -11,7 +11,7 @@ When in doubt: pick the boring, generic option. A spell called "Fire Bolt" is fi
 
 ## 1. Display Names (lang files)
 
-All user-facing strings live in `assets/elementalrealms/lang/en_us.json` (and de_de.json for German). Display names must read like a generic fantasy academy setting — no franchise references, no inside jokes.
+All user-facing strings live in `assets/elementalrealms/lang/en_us.json`. Display names must read like a generic fantasy academy setting — no franchise references, no inside jokes.
 
 ### 1.1 Items
 
