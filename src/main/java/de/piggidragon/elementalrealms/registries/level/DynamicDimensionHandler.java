@@ -55,6 +55,10 @@ public final class DynamicDimensionHandler {
             PortalEntity portal,
             ResourceKey<Level> levelResourceKey
     ) {
+        if (generationCenters == null) {
+            initialize(server);
+        }
+
         ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
         if (portalTargetLevel != Level.OVERWORLD) {
             return portalTargetLevel;
