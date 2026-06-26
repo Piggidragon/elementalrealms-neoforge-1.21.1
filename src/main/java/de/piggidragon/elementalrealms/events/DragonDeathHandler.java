@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.events;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
+import de.piggidragon.elementalrealms.registries.configs.PortalConfig;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
@@ -65,8 +66,8 @@ public final class DragonDeathHandler {
         BlockPos surface = overworld.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, spawn);
         portal.setPos(
                 surface.getX(),
-                surface.getY() + PortalEntity.PORTAL_HEIGHT_OFFSET,
-                surface.getZ() + PortalEntity.PORTAL_Z_OFFSET
+                surface.getY() + PortalConfig.spawnHeightOffset(),
+                surface.getZ() + PortalConfig.spawnZOffset()
         );
 
         Component message = Component.literal("You can feel the dimension barrier cracking...");

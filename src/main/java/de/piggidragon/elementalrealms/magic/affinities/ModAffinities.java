@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.magic.affinities;
 
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.configs.AffinityConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -15,26 +16,25 @@ import java.util.Map;
  */
 public final class ModAffinities {
 
-    private static final int MAX_COMPLETION = 100;
-
     private ModAffinities() {
     }
 
     /**
-     * Adds an affinity at 100% completion. Throws if the player already holds it,
+     * Adds an affinity at full completion. Throws if the player already holds it,
      * already holds an eternal affinity, or is missing the required elemental base.
      */
     public static void addAffinity(ServerPlayer player, Affinity affinity) {
         Map<Affinity, Integer> current = getAffinities(player);
+        int maxCompletion = AffinityConfig.maxCompletionPercent();
 
-        if (current.getOrDefault(affinity, 0) >= MAX_COMPLETION) {
+        if (current.getOrDefault(affinity, 0) >= maxCompletion) {
             throw new IllegalStateException("Player already has affinity: " + affinity);
         }
         validateCanAdd(affinity, current);
 
         Map<Affinity, Integer> next = new HashMap<>(current);
         next.remove(Affinity.VOID);
-        next.put(affinity, MAX_COMPLETION);
+        next.put(affinity, maxCompletion);
 
         player.playNotifySound(playAffinitySound(player, affinity), SoundSource.PLAYERS, 0.5f, 0.5f);
         player.setData(ModAttachments.AFFINITIES.get(), next);
@@ -42,20 +42,21 @@ public final class ModAffinities {
 
     /**
      * Increases completion by {@code increment} percent. Throws if the new total
-     * would exceed 100% or the affinity fails tier validation.
+     * would exceed {@code maxCompletionPercent} or the affinity fails tier validation.
      */
     public static void addIncrementAffinity(ServerPlayer player, Affinity affinity, int increment) {
         Map<Affinity, Integer> current = getAffinities(player);
+        int maxCompletion = AffinityConfig.maxCompletionPercent();
         validateCanAdd(affinity, current);
 
         Map<Affinity, Integer> next = new HashMap<>(current);
         int newCompletion = next.getOrDefault(affinity, 0) + increment;
 
-        if (newCompletion > MAX_COMPLETION) {
+        if (newCompletion > maxCompletion) {
             throw new IllegalStateException("Already completed: " + affinity);
         }
 
-        SoundEvent sound = newCompletion < MAX_COMPLETION
+        SoundEvent sound = newCompletion < maxCompletion
                 ? SoundEvents.PLAYER_LEVELUP
                 : playAffinitySound(player, affinity);
         player.playNotifySound(sound, SoundSource.PLAYERS, 0.5f, 0.5f);
@@ -122,8 +123,9 @@ public final class ModAffinities {
     }
 
     private static boolean hasBaseAffinity(Map<Affinity, Integer> affinities, Affinity deviant) {
+        int maxCompletion = AffinityConfig.maxCompletionPercent();
         return affinities.entrySet().stream()
                 .anyMatch(entry ->
-                        entry.getKey().getDeviant() == deviant && entry.getValue() >= MAX_COMPLETION);
+                        entry.getKey().getDeviant() == deviant && entry.getValue() >= maxCompletion);
     }
 }

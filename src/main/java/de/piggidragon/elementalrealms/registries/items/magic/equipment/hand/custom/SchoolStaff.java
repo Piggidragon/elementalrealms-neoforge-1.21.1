@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.cus
 
 import de.piggidragon.elementalrealms.client.particles.vanilla.DimensionStaffParticles;
 import de.piggidragon.elementalrealms.client.particles.vanilla.PortalParticles;
+import de.piggidragon.elementalrealms.registries.configs.SchoolConfig;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
@@ -30,13 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SchoolStaff extends Item {
 
-    private static final int PORTAL_DESPAWN_TICKS = 200;
-    private static final double PORTAL_SPAWN_DISTANCE = 2.0;
-    private static final double PORTAL_HEIGHT = 0.5;
-    private static final double STAFF_TIP_DISTANCE = 0.8;
-    private static final int PORTAL_SEARCH_RADIUS = 1000;
-    private static final int BEAM_TOTAL_TICKS = 40;
-    private static final int BEAM_TICK_LIMIT = BEAM_TOTAL_TICKS;
+    private static final int BEAM_TICK_LIMIT = SchoolConfig.beamTotalTicks();
 
     /**
      * Active beam animations tracked by player UUID - thread-safe for server tick access.
@@ -59,7 +54,7 @@ public class SchoolStaff extends Item {
                 ModEntities.PORTAL_ENTITY.get(),
                 level,
                 true,
-                PORTAL_DESPAWN_TICKS,
+                SchoolConfig.portalDespawnTicks(),
                 ModLevel.SCHOOL_DIMENSION,
                 player.getUUID()
         );
@@ -71,7 +66,7 @@ public class SchoolStaff extends Item {
     private static void removeOldPortals(Level level, Player player) {
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
-                player.getBoundingBox().inflate(PORTAL_SEARCH_RADIUS),
+                player.getBoundingBox().inflate(SchoolConfig.portalSearchRadius()),
                 portal -> portal.getOwnerUUID() != null && portal.getOwnerUUID().equals(player.getUUID())
         );
 
@@ -98,11 +93,11 @@ public class SchoolStaff extends Item {
         ServerLevel serverLevel = (ServerLevel) level;
         Vec3 look = player.getLookAngle();
 
-        Vec3 staffTip = player.getEyePosition().add(look.scale(STAFF_TIP_DISTANCE));
+        Vec3 staffTip = player.getEyePosition().add(look.scale(SchoolConfig.staffTipDistance()));
         Vec3 targetPos = new Vec3(
-                player.getX() + look.x * PORTAL_SPAWN_DISTANCE,
-                player.getY() + PORTAL_HEIGHT,
-                player.getZ() + look.z * PORTAL_SPAWN_DISTANCE
+                player.getX() + look.x * SchoolConfig.portalSpawnDistance(),
+                player.getY() + SchoolConfig.portalSpawnHeight(),
+                player.getZ() + look.z * SchoolConfig.portalSpawnDistance()
         );
 
         removeOldPortals(level, player);
@@ -147,7 +142,7 @@ public class SchoolStaff extends Item {
             this.startPos = startPos;
             this.targetPos = targetPos;
             this.direction = targetPos.subtract(startPos).normalize();
-            this.stepSize = startPos.distanceTo(targetPos) / BEAM_TOTAL_TICKS;
+            this.stepSize = startPos.distanceTo(targetPos) / SchoolConfig.beamTotalTicks();
         }
 
         boolean tick() {
@@ -173,7 +168,7 @@ public class SchoolStaff extends Item {
                         2, 0.1, 0.1, 0.1, 0.01);
             }
 
-            if (currentTick == BEAM_TOTAL_TICKS) {
+            if (currentTick == SchoolConfig.beamTotalTicks()) {
                 PortalParticles.createPortalArrivalEffect(level, targetPos);
                 level.playSound(null, targetPos.x, targetPos.y, targetPos.z,
                         SoundEvents.CONDUIT_ACTIVATE, SoundSource.PLAYERS, 0.4F, 0.6F);
