@@ -3,6 +3,17 @@ package de.piggidragon.elementalrealms;
 import com.mojang.logging.LogUtils;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
+import de.piggidragon.elementalrealms.registries.configs.AffinityConfig;
+import de.piggidragon.elementalrealms.registries.configs.BossesConfig;
+import de.piggidragon.elementalrealms.registries.configs.DimensionsConfig;
+import de.piggidragon.elementalrealms.registries.configs.DragonConfig;
+import de.piggidragon.elementalrealms.registries.configs.EnchantmentsConfig;
+import de.piggidragon.elementalrealms.registries.configs.MobsConfig;
+import de.piggidragon.elementalrealms.registries.configs.ModConfigs;
+import de.piggidragon.elementalrealms.registries.configs.PortalConfig;
+import de.piggidragon.elementalrealms.registries.configs.SchoolConfig;
+import de.piggidragon.elementalrealms.registries.configs.SpellsConfig;
+import de.piggidragon.elementalrealms.registries.configs.TimerConfig;
 import de.piggidragon.elementalrealms.registries.creativetabs.ModCreativeTabs;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
 import de.piggidragon.elementalrealms.registries.guis.menus.ModMenus;
@@ -33,6 +44,23 @@ public class ElementalRealms {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public ElementalRealms(IEventBus modEventBus, ModContainer modContainer) {
+        // Config registration must happen BEFORE any other registry touches config,
+        // because Json5Reloadable.INSTANCE fields self-load on first class-init.
+        ModConfigs.register(modContainer);
+
+        // Touch every JSON5 config INSTANCE so they self-load (and write defaults if missing).
+        // Order doesn't matter — they're independent files.
+        AffinityConfig.INSTANCE.toString();
+        DimensionsConfig.INSTANCE.toString();
+        BossesConfig.INSTANCE.toString();
+        MobsConfig.INSTANCE.toString();
+        SpellsConfig.INSTANCE.toString();
+        PortalConfig.INSTANCE.toString();
+        DragonConfig.INSTANCE.toString();
+        SchoolConfig.INSTANCE.toString();
+        EnchantmentsConfig.INSTANCE.toString();
+        TimerConfig.INSTANCE.toString();
+
         ModAttachments.register(modEventBus);
         AffinityItems.register(modEventBus);
         MiscItems.register(modEventBus);
