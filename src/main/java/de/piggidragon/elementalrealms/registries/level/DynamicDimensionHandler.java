@@ -28,7 +28,6 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
  */
 public final class DynamicDimensionHandler {
 
-    private static int dimensionCounter = 0;
     private static GenerationCenterData generationCenters;
 
     private DynamicDimensionHandler() {
@@ -39,8 +38,8 @@ public final class DynamicDimensionHandler {
      */
     public static void initialize(MinecraftServer server) {
         generationCenters = GenerationCenterData.get(server);
-        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
-                generationCenters.getGenerationCenterCount());
+        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers (currentMaxIndex={})",
+                generationCenters.getGenerationCenterCount(), generationCenters.getCurrentMaxIndex());
     }
 
     public static GenerationCenterData getGenerationCenterData() {
@@ -56,16 +55,26 @@ public final class DynamicDimensionHandler {
             PortalEntity portal,
             ResourceKey<Level> levelResourceKey
     ) {
-        ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
-        if (portalTargetLevel != Level.OVERWORLD) {
-            return portalTargetLevel;
+        if (generationCenters == null) {
+            initialize(server);
+        }
+
+        // When a portal is passed, it may already have a targetLevel set (e.g. SchoolDimension
+        // stamped on it earlier). Honor that and skip the new-realm-allocation path.
+        // The portal may also be null when callers just want a fresh realm_<n> assigned
+        // (e.g. /portal spawn commands after the PR #40 cleanup) — treat as "no preset".
+        if (portal != null) {
+            ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+            if (portalTargetLevel != Level.OVERWORLD) {
+                return portalTargetLevel;
+            }
         }
 
         ResourceKey<Level> dimensionKey = ResourceKey.create(
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + dimensionCounter
+                        "realm_" + generationCenters.getCurrentMaxIndex()
                 )
         );
 
@@ -82,10 +91,12 @@ public final class DynamicDimensionHandler {
             );
 
             if (newLevel != null) {
-                portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
+                if (portal != null) {
+                    portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
+                }
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
-                dimensionCounter++;
+                generationCenters.recordAssignedIndex(generationCenters.getCurrentMaxIndex() + 1);
                 return dimensionKey;
             }
         } catch (Exception e) {
@@ -118,7 +129,8 @@ public final class DynamicDimensionHandler {
             initialize(server);
         }
 
-        if (dimensionCounter == 0) {
+        // First-ever portal lands at (0, 0); subsequent ones walk the concentric-ring layout.
+        if (generationCenters.getGenerationCenterCount() == 0) {
             return new ChunkPos(0, 0);
         }
 

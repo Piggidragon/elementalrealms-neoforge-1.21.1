@@ -311,9 +311,16 @@ public class PortalEntity extends Entity {
         if (targetLevel == ModLevel.SCHOOL_DIMENSION) {
             return new Vec3(-1.5, 61, 0.5);
         }
+        // Use the registered generation center if we have one. Otherwise fall back to the
+        // chunk at (0, 0) — works for datapack-defined dimensions (test / test2 / ...) that
+        // don't go through DynamicDimensionHandler. Without the fallback, teleportFromVanilla
+        // NPEs on ChunkPos.unbox (issue #21 follow-up: only realm_<n> dimensions registered a center).
         ChunkPos spawnChunk = DynamicDimensionHandler.getGenerationCenterData()
                 .getGenerationCenters()
                 .get(targetLevel);
+        if (spawnChunk == null) {
+            spawnChunk = new ChunkPos(0, 0);
+        }
         destinationLevel.setChunkForced(spawnChunk.x, spawnChunk.z, true);
         try {
             ChunkAccess chunk = destinationLevel.getChunk(spawnChunk.x, spawnChunk.z);

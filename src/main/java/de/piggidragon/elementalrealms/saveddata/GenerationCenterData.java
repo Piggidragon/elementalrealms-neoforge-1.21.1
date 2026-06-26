@@ -35,12 +35,19 @@ public class GenerationCenterData extends SavedData {
             instance.group(
                     Codec.unboundedMap(Level.RESOURCE_KEY_CODEC, CHUNK_POS_CODEC)
                             .fieldOf("generationCenters").forGetter(data -> data.generationCenters),
-                    Codec.INT.fieldOf("layer").forGetter(data -> data.layer)
+                    Codec.INT.fieldOf("layer").forGetter(data -> data.layer),
+                    // Highest dimensionCounter value ever assigned. Persisted so server restarts
+                    // keep allocating realm_<n> with a unique n (issue #21).
+                    // optionalFieldOf with default 0 keeps backward-compat with saves written
+                    // before this field existed.
+                    Codec.INT.optionalFieldOf("currentMaxIndex", 0)
+                            .forGetter(data -> data.currentMaxIndex)
             ).apply(instance, GenerationCenterData::new)
     );
 
     private final Map<ResourceKey<Level>, ChunkPos> generationCenters;
     private int layer = 1;
+    private int currentMaxIndex = 0;
 
     public GenerationCenterData() {
         this.generationCenters = new HashMap<>();
@@ -49,6 +56,16 @@ public class GenerationCenterData extends SavedData {
     private GenerationCenterData(Map<ResourceKey<Level>, ChunkPos> generationCenters, int layer) {
         this.generationCenters = new HashMap<>(generationCenters);
         this.layer = layer;
+    }
+
+    private GenerationCenterData(
+            Map<ResourceKey<Level>, ChunkPos> generationCenters,
+            int layer,
+            int currentMaxIndex
+    ) {
+        this.generationCenters = new HashMap<>(generationCenters);
+        this.layer = layer;
+        this.currentMaxIndex = currentMaxIndex;
     }
 
     public static GenerationCenterData get(MinecraftServer server) {
@@ -86,6 +103,26 @@ public class GenerationCenterData extends SavedData {
     public void incrementLayer() {
         layer++;
         this.setDirty();
+    }
+
+    /**
+     * Highest {@code realm_<n>} index ever assigned by {@code DynamicDimensionHandler}.
+     * Persisted across restarts so the next portal's realm name doesn't collide.
+     */
+    public int getCurrentMaxIndex() {
+        return currentMaxIndex;
+    }
+
+    /**
+     * Bump {@link #currentMaxIndex} to {@code newValue} if higher, and mark the data dirty.
+     * Callers pass the index they just assigned — we never overwrite a higher value with
+     * a lower one (defensive against out-of-order callers).
+     */
+    public void recordAssignedIndex(int newValue) {
+        if (newValue > currentMaxIndex) {
+            currentMaxIndex = newValue;
+            this.setDirty();
+        }
     }
 
     public void addGenerationCenter(ResourceKey<Level> level, ChunkPos center) {

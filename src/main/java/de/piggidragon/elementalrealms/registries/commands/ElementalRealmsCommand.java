@@ -148,9 +148,13 @@ public final class ElementalRealmsCommand {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         ResourceKey<Level> target = DynamicDimensionHandler.createDimensionForPortal(
                 player.level().getServer(),
-                new PortalEntity(ModEntities.PORTAL_ENTITY.get(), player.level(), false, -1, null, player.getUUID()),
+                null,
                 ModLevel.getRandomLevel()
         );
+        if (target == null) {
+            ctx.getSource().sendFailure(Component.literal("Could not create a new realm dimension"));
+            return 0;
+        }
         spawnDebugPortal(player, target);
         return 1;
     }
@@ -167,19 +171,21 @@ public final class ElementalRealmsCommand {
             return 0;
         }
 
-        PortalEntity portal = new PortalEntity(
-                ModEntities.PORTAL_ENTITY.get(),
-                player.level(),
-                false,
-                -1,
-                null,
-                player.getUUID()
-        );
+        ResourceKey<Level> portalTarget;
         if (ModLevel.getLevelsRandomSource().contains(dimensionKey)) {
-            portal.setTargetLevel(DynamicDimensionHandler.createDimensionForPortal(
-                    player.level().getServer(), portal, dimensionKey));
+            // RandomSource dimensions get a freshly-allocated realm_<n> generated for them.
+            ResourceKey<Level> generated = DynamicDimensionHandler.createDimensionForPortal(
+                    player.level().getServer(), null, dimensionKey);
+            if (generated == null) {
+                ctx.getSource().sendFailure(Component.literal("Could not create a new realm dimension"));
+                return 0;
+            }
+            portalTarget = generated;
+        } else {
+            // Existing (test / test2 / school) dimensions route directly to themselves.
+            portalTarget = dimensionKey;
         }
-        spawnDebugPortal(player, null);
+        spawnDebugPortal(player, portalTarget);
         return 1;
     }
 
