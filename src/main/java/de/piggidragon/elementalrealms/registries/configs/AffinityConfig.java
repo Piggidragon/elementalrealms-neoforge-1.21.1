@@ -53,43 +53,24 @@ public final class AffinityConfig implements Json5Reloadable {
         }
 
         JsonObject obj = root.getAsJsonObject();
-        if (obj.has("roll") && obj.get("roll").isJsonObject()) {
-            JsonObject roll = obj.get("roll").getAsJsonObject();
-            if (roll.has("slotChances") && roll.get("slotChances").isJsonArray()) {
-                int[] parsed = new int[roll.get("slotChances").getAsJsonArray().size()];
-                int i = 0;
-                for (JsonElement e : roll.get("slotChances").getAsJsonArray()) {
-                    parsed[i++] = e.getAsInt();
-                }
-                if (parsed.length > 0) slotChances = parsed;
-            }
-            if (roll.has("elementalGuaranteed")) {
-                elementalGuaranteed = roll.get("elementalGuaranteed").getAsBoolean();
-            }
-            if (roll.has("deviantChancePercent")) {
-                deviantChancePercent = roll.get("deviantChancePercent").getAsInt();
-            }
+        if (obj.has("roll")) {
+            JsonObject roll = obj.getAsJsonObject("roll");
+            slotChances = new Json5SectionReader(roll).getIntArray("slotChances", slotChances);
+            elementalGuaranteed = Json5SectionReader.getBoolean(roll, "elementalGuaranteed", elementalGuaranteed);
+            deviantChancePercent = Json5SectionReader.getInt(roll, "deviantChancePercent", deviantChancePercent);
         }
         if (obj.has("completion")) {
-            JsonObject completion = obj.get("completion").getAsJsonObject();
-            if (completion.has("maxCompletionPercent")) {
-                maxCompletionPercent = completion.get("maxCompletionPercent").getAsInt();
-            }
+            JsonObject completion = obj.getAsJsonObject("completion");
+            maxCompletionPercent = Json5SectionReader.getInt(completion, "maxCompletionPercent", maxCompletionPercent);
         }
         if (obj.has("tiers")) {
-            JsonObject tiers = obj.get("tiers").getAsJsonObject();
-            if (tiers.has("deviantRequiresBase")) {
-                deviantRequiresBase = tiers.get("deviantRequiresBase").getAsBoolean();
-            }
-            if (tiers.has("eternalAllOrNothing")) {
-                eternalAllOrNothing = tiers.get("eternalAllOrNothing").getAsBoolean();
-            }
+            JsonObject tiers = obj.getAsJsonObject("tiers");
+            deviantRequiresBase = Json5SectionReader.getBoolean(tiers, "deviantRequiresBase", deviantRequiresBase);
+            eternalAllOrNothing = Json5SectionReader.getBoolean(tiers, "eternalAllOrNothing", eternalAllOrNothing);
         }
         if (obj.has("drops")) {
-            JsonObject drops = obj.get("drops").getAsJsonObject();
-            if (drops.has("eternalStoneRarityPercent")) {
-                eternalStoneRarityPercent = drops.get("eternalStoneRarityPercent").getAsInt();
-            }
+            JsonObject drops = obj.getAsJsonObject("drops");
+            eternalStoneRarityPercent = Json5SectionReader.getInt(drops, "eternalStoneRarityPercent", eternalStoneRarityPercent);
         }
 
         ElementalRealms.LOGGER.debug("affinities.json loaded: slotChances={}, deviantChance={}",

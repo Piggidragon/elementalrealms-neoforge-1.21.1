@@ -53,30 +53,30 @@ public final class PortalConfig implements Json5Reloadable {
         }
 
         JsonObject obj = root.getAsJsonObject();
-        if (obj.has("spawn") && obj.get("spawn").isJsonObject()) {
-            JsonObject spawn = obj.get("spawn").getAsJsonObject();
-            if (spawn.has("heightOffset")) spawnHeightOffset = spawn.get("heightOffset").getAsDouble();
-            if (spawn.has("zOffset")) spawnZOffset = spawn.get("zOffset").getAsDouble();
+        if (obj.has("spawn")) {
+            JsonObject spawn = obj.getAsJsonObject("spawn");
+            spawnHeightOffset = Json5SectionReader.getDouble(spawn, "heightOffset", spawnHeightOffset);
+            spawnZOffset = Json5SectionReader.getDouble(spawn, "zOffset", spawnZOffset);
         }
-        if (obj.has("search") && obj.get("search").isJsonObject()) {
-            JsonObject search = obj.get("search").getAsJsonObject();
-            if (search.has("radius")) searchRadius = search.get("radius").getAsDouble();
+        if (obj.has("search")) {
+            JsonObject search = obj.getAsJsonObject("search");
+            searchRadius = Json5SectionReader.getDouble(search, "radius", searchRadius);
         }
-        if (obj.has("particles") && obj.get("particles").isJsonObject()) {
-            JsonObject particles = obj.get("particles").getAsJsonObject();
-            if (particles.has("spawnIntervalTicks")) particleSpawnIntervalTicks = particles.get("spawnIntervalTicks").getAsInt();
-            if (particles.has("count")) particleCount = particles.get("count").getAsInt();
-            if (particles.has("radius")) particleRadius = particles.get("radius").getAsDouble();
-            if (particles.has("yOffset")) particleYOffset = particles.get("yOffset").getAsDouble();
+        if (obj.has("particles")) {
+            JsonObject particles = obj.getAsJsonObject("particles");
+            particleSpawnIntervalTicks = Json5SectionReader.getInt(particles, "spawnIntervalTicks", particleSpawnIntervalTicks);
+            particleCount = Json5SectionReader.getInt(particles, "count", particleCount);
+            particleRadius = Json5SectionReader.getDouble(particles, "radius", particleRadius);
+            particleYOffset = Json5SectionReader.getDouble(particles, "yOffset", particleYOffset);
         }
-        if (obj.has("explosion") && obj.get("explosion").isJsonObject()) {
-            JsonObject explosion = obj.get("explosion").getAsJsonObject();
-            if (explosion.has("power")) explosionPower = explosion.get("power").getAsFloat();
-            if (explosion.has("yOffset")) explosionYOffset = explosion.get("yOffset").getAsDouble();
+        if (obj.has("explosion")) {
+            JsonObject explosion = obj.getAsJsonObject("explosion");
+            explosionPower = Json5SectionReader.getFloat(explosion, "power", explosionPower);
+            explosionYOffset = Json5SectionReader.getDouble(explosion, "yOffset", explosionYOffset);
         }
-        if (obj.has("teleport") && obj.get("teleport").isJsonObject()) {
-            JsonObject teleport = obj.get("teleport").getAsJsonObject();
-            if (teleport.has("returnOffset")) returnOffset = teleport.get("returnOffset").getAsDouble();
+        if (obj.has("teleport")) {
+            JsonObject teleport = obj.getAsJsonObject("teleport");
+            returnOffset = Json5SectionReader.getDouble(teleport, "returnOffset", returnOffset);
         }
 
         ElementalRealms.LOGGER.debug("portal.json loaded: spawnHeightOffset={}, searchRadius={}, explosionPower={}",

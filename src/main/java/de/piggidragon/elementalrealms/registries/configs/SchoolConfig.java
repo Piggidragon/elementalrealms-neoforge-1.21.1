@@ -49,14 +49,14 @@ public final class SchoolConfig implements Json5Reloadable {
         }
 
         JsonObject obj = root.getAsJsonObject();
-        if (obj.has("dimensionStaff") && obj.get("dimensionStaff").isJsonObject()) {
-            JsonObject staff = obj.get("dimensionStaff").getAsJsonObject();
-            if (staff.has("portalDespawnTicks")) portalDespawnTicks = staff.get("portalDespawnTicks").getAsInt();
-            if (staff.has("portalSpawnDistance")) portalSpawnDistance = staff.get("portalSpawnDistance").getAsDouble();
-            if (staff.has("portalSpawnHeight")) portalSpawnHeight = staff.get("portalSpawnHeight").getAsDouble();
-            if (staff.has("staffTipDistance")) staffTipDistance = staff.get("staffTipDistance").getAsDouble();
-            if (staff.has("portalSearchRadius")) portalSearchRadius = staff.get("portalSearchRadius").getAsInt();
-            if (staff.has("beamTotalTicks")) beamTotalTicks = staff.get("beamTotalTicks").getAsInt();
+        if (obj.has("dimensionStaff")) {
+            JsonObject staff = obj.getAsJsonObject("dimensionStaff");
+            portalDespawnTicks = Json5SectionReader.getInt(staff, "portalDespawnTicks", portalDespawnTicks);
+            portalSpawnDistance = Json5SectionReader.getDouble(staff, "portalSpawnDistance", portalSpawnDistance);
+            portalSpawnHeight = Json5SectionReader.getDouble(staff, "portalSpawnHeight", portalSpawnHeight);
+            staffTipDistance = Json5SectionReader.getDouble(staff, "staffTipDistance", staffTipDistance);
+            portalSearchRadius = Json5SectionReader.getInt(staff, "portalSearchRadius", portalSearchRadius);
+            beamTotalTicks = Json5SectionReader.getInt(staff, "beamTotalTicks", beamTotalTicks);
         }
 
         ElementalRealms.LOGGER.debug("school.json loaded: portalDespawnTicks={}, beamTotalTicks={}",

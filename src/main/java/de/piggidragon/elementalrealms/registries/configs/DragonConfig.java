@@ -49,15 +49,15 @@ public final class DragonConfig implements Json5Reloadable {
         }
 
         JsonObject obj = root.getAsJsonObject();
-        if (obj.has("laser") && obj.get("laser").isJsonObject()) {
-            JsonObject laser = obj.get("laser").getAsJsonObject();
-            if (laser.has("checkIntervalTicks")) laserCheckIntervalTicks = laser.get("checkIntervalTicks").getAsInt();
-            if (laser.has("checkRadius")) laserCheckRadius = laser.get("checkRadius").getAsDouble();
-            if (laser.has("detectionRange")) laserDetectionRange = laser.get("detectionRange").getAsDouble();
-            if (laser.has("cooldownTicks")) laserCooldownTicks = laser.get("cooldownTicks").getAsInt();
-            if (laser.has("soundHearingRange")) laserSoundHearingRange = laser.get("soundHearingRange").getAsDouble();
-            if (laser.has("soundVolume")) laserSoundVolume = laser.get("soundVolume").getAsFloat();
-            if (laser.has("soundPitch")) laserSoundPitch = laser.get("soundPitch").getAsFloat();
+        if (obj.has("laser")) {
+            JsonObject laser = obj.getAsJsonObject("laser");
+            laserCheckIntervalTicks = Json5SectionReader.getInt(laser, "checkIntervalTicks", laserCheckIntervalTicks);
+            laserCheckRadius = Json5SectionReader.getDouble(laser, "checkRadius", laserCheckRadius);
+            laserDetectionRange = Json5SectionReader.getDouble(laser, "detectionRange", laserDetectionRange);
+            laserCooldownTicks = Json5SectionReader.getInt(laser, "cooldownTicks", laserCooldownTicks);
+            laserSoundHearingRange = Json5SectionReader.getDouble(laser, "soundHearingRange", laserSoundHearingRange);
+            laserSoundVolume = Json5SectionReader.getFloat(laser, "soundVolume", laserSoundVolume);
+            laserSoundPitch = Json5SectionReader.getFloat(laser, "soundPitch", laserSoundPitch);
         }
 
         ElementalRealms.LOGGER.debug("dragon.json loaded: laserCheckIntervalTicks={}, laserDetectionRange={}",

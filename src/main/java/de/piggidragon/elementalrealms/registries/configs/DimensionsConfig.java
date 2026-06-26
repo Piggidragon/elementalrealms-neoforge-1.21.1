@@ -56,31 +56,31 @@ public final class DimensionsConfig implements Json5Reloadable {
         }
 
         JsonObject obj = root.getAsJsonObject();
-        if (obj.has("pocket") && obj.get("pocket").isJsonObject()) {
-            JsonObject pocket = obj.get("pocket").getAsJsonObject();
-            if (pocket.has("outerRingRadius")) pocketOuterRingRadius = pocket.get("outerRingRadius").getAsInt();
-            if (pocket.has("intermediateRingRadius")) pocketIntermediateRingRadius = pocket.get("intermediateRingRadius").getAsInt();
-            if (pocket.has("centerRadius")) pocketCenterRadius = pocket.get("centerRadius").getAsInt();
-            if (pocket.has("boundedChunkRadius")) boundedChunkRadius = pocket.get("boundedChunkRadius").getAsInt();
+        if (obj.has("pocket")) {
+            JsonObject pocket = obj.getAsJsonObject("pocket");
+            pocketOuterRingRadius = Json5SectionReader.getInt(pocket, "outerRingRadius", pocketOuterRingRadius);
+            pocketIntermediateRingRadius = Json5SectionReader.getInt(pocket, "intermediateRingRadius", pocketIntermediateRingRadius);
+            pocketCenterRadius = Json5SectionReader.getInt(pocket, "centerRadius", pocketCenterRadius);
+            boundedChunkRadius = Json5SectionReader.getInt(pocket, "boundedChunkRadius", boundedChunkRadius);
         }
-        if (obj.has("school") && obj.get("school").isJsonObject()) {
-            JsonObject school = obj.get("school").getAsJsonObject();
-            if (school.has("dimensionRadius")) schoolDimensionRadius = school.get("dimensionRadius").getAsInt();
+        if (obj.has("school")) {
+            JsonObject school = obj.getAsJsonObject("school");
+            schoolDimensionRadius = Json5SectionReader.getInt(school, "dimensionRadius", schoolDimensionRadius);
         }
-        if (obj.has("generation") && obj.get("generation").isJsonObject()) {
-            JsonObject generation = obj.get("generation").getAsJsonObject();
-            if (generation.has("maxLayers")) maxLayers = generation.get("maxLayers").getAsInt();
-            if (generation.has("maxGenerationAttempts")) maxGenerationAttempts = generation.get("maxGenerationAttempts").getAsInt();
+        if (obj.has("generation")) {
+            JsonObject generation = obj.getAsJsonObject("generation");
+            maxLayers = Json5SectionReader.getInt(generation, "maxLayers", maxLayers);
+            maxGenerationAttempts = Json5SectionReader.getInt(generation, "maxGenerationAttempts", maxGenerationAttempts);
         }
-        if (obj.has("behaviour") && obj.get("behaviour").isJsonObject()) {
-            JsonObject behaviour = obj.get("behaviour").getAsJsonObject();
-            if (behaviour.has("bossDeathRemovesVanillaPortal")) bossDeathRemovesVanillaPortal = behaviour.get("bossDeathRemovesVanillaPortal").getAsBoolean();
-            if (behaviour.has("pocketsPersistent")) pocketsPersistent = behaviour.get("pocketsPersistent").getAsBoolean();
+        if (obj.has("behaviour")) {
+            JsonObject behaviour = obj.getAsJsonObject("behaviour");
+            bossDeathRemovesVanillaPortal = Json5SectionReader.getBoolean(behaviour, "bossDeathRemovesVanillaPortal", bossDeathRemovesVanillaPortal);
+            pocketsPersistent = Json5SectionReader.getBoolean(behaviour, "pocketsPersistent", pocketsPersistent);
         }
-        if (obj.has("effects") && obj.get("effects").isJsonObject()) {
-            JsonObject effects = obj.get("effects").getAsJsonObject();
-            if (effects.has("dimensionalEffectStrengthPercent")) dimensionalEffectStrengthPercent = effects.get("dimensionalEffectStrengthPercent").getAsInt();
-            if (effects.has("affinityBuffThresholdPercent")) affinityBuffThresholdPercent = effects.get("affinityBuffThresholdPercent").getAsInt();
+        if (obj.has("effects")) {
+            JsonObject effects = obj.getAsJsonObject("effects");
+            dimensionalEffectStrengthPercent = Json5SectionReader.getInt(effects, "dimensionalEffectStrengthPercent", dimensionalEffectStrengthPercent);
+            affinityBuffThresholdPercent = Json5SectionReader.getInt(effects, "affinityBuffThresholdPercent", affinityBuffThresholdPercent);
         }
 
         ElementalRealms.LOGGER.debug("dimensions.json loaded: boundedChunkRadius={}, maxLayers={}, maxGenerationAttempts={}",
