@@ -1,19 +1,25 @@
 package de.piggidragon.elementalrealms.registries.configs;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.config.ModConfigEvent;
 
 import java.util.List;
 
 /**
- * Listens for NeoForge's TOML reload events and the mod's own JSON5 reload trigger
- * ({@code /elementalrealms reload}). Re-reads all JSON5 config files and broadcasts
- * changes so dependent systems can refresh.
+ * Listens for NeoForge's TOML config events and re-reads the JSON5 layer on each
+ * load/reload. The TOML spec values themselves are live on read (NeoForge handles
+ * the reload automatically), so we only need this hook to refresh the JSON5 files
+ * in lockstep.
  * <p>
  * Lazy-apply semantics: existing entities / live data keep their snapshot. New
  * reads go through the freshly loaded config. This avoids mid-tick mutation bugs
  * when the reload happens during gameplay (see PLANS.md §18.2).
+ * <p>
+ * Also exposed as a public method {@link #reloadAllJson5()} that the
+ * {@code /elementalrealms reload} command invokes directly for an in-game test
+ * path that doesn't require touching a TOML file.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
 public final class ConfigReloadListener {
@@ -21,26 +27,29 @@ public final class ConfigReloadListener {
     private ConfigReloadListener() {
     }
 
-    public static void register(IEventBus modBus) {
-        // Already subscribed via @EventBusSubscriber — this method exists so the caller
-        // explicitly opts in. We just verify the bus is non-null and log.
-        ElementalRealms.LOGGER.debug("ConfigReloadListener subscribed on mod bus: {}", modBus);
+    /**
+     * Fired by NeoForge when a TOML config first loads. We trigger a full
+     * JSON5 reload so the two layers are in sync from the start.
+     */
+    @SubscribeEvent
+    public static void onLoad(final ModConfigEvent.Loading configEvent) {
+        ElementalRealms.LOGGER.debug("TOML config loaded: {}", configEvent.getConfig().getFileName());
+        reloadAllJson5();
+    }
+
+    /**
+     * Fired by NeoForge when a TOML config is edited on disk. Re-reads the JSON5
+     * layer so all config-backed systems pick up the latest values.
+     */
+    @SubscribeEvent
+    public static void onFileChange(final ModConfigEvent.Reloading configEvent) {
+        ElementalRealms.LOGGER.info("TOML config reloaded: {}", configEvent.getConfig().getFileName());
+        reloadAllJson5();
     }
 
     /**
      * Called by the reload command. Re-reads every JSON5 config file from disk
      * and refreshes the static holders. Safe to call repeatedly.
-     *
-     * <p>Note on TOML hot-reload: NeoForge fires {@code ModConfigEvent.Reloading}
-     * automatically when a TOML file changes on disk; the {@code ModConfigSpec}
-     * values we hold already reflect the new content after that event fires, so
-     * we don't need to subscribe explicitly. If we ever need a hook (e.g. to push
-     * TOML changes into a non-spec-backed consumer), add a {@code @SubscribeEvent}
-     * handler here that subscribes to {@code net.neoforged.fml.config.ModConfigEvent}
-     * via the mod bus. (Class symbol resolution for {@code ModConfigEvent} depends
-     * on the NeoForge merged JAR being on the classpath at compile time — if the
-     * symbol is unavailable in the build env, the reload command still works; only
-     * the auto-fire-on-TOML-edit hook would be missing.)</p>
      */
     public static void reloadAllJson5() {
         ElementalRealms.LOGGER.info("Reloading JSON5 config layer...");

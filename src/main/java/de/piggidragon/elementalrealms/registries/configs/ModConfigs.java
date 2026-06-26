@@ -71,10 +71,13 @@ public final class ModConfigs {
 
     /**
      * Subscribes the config-reload listener to the given event bus.
-     * Split from {@link #register(ModContainer)} because the listener is a
-     * {@code @SubscribeEvent} handler on the mod event bus, not on the container.
+     * Currently a no-op because {@link ConfigReloadListener} uses
+     * {@code @EventBusSubscriber} on the mod bus, which NeoForge wires up
+     * automatically when the mod class loads. Kept for symmetry with the
+     * {@link #register(ModContainer)} call site so future manual registration
+     * (e.g. for a GameTest-only bus) has an obvious hook.
      */
     public static void subscribeReloadListener(IEventBus modBus) {
-        ConfigReloadListener.register(modBus);
+        ElementalRealms.LOGGER.debug("ConfigReloadListener auto-subscribed via @EventBusSubscriber on bus: {}", modBus);
     }
 }
