@@ -183,6 +183,26 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+// Devtools test sources (gitignored). Compiled into a sibling dir for ad-hoc runs.
+sourceSets.create('devtools') {
+    java {
+        srcDir 'run/devtools'
+    }
+    compileClasspath += sourceSets.main.output
+    compileClasspath += configurations.compileClasspath
+    runtimeClasspath += sourceSets.main.output
+    runtimeClasspath += configurations.runtimeClasspath
+}
+
+// Convenience task: run the JSON5 comment-stripping smoke test from run/devtools/.
+// Usage: ./gradlew runDevtoolsSmokeTest
+tasks.register('runDevtoolsSmokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the JSON5 smoke test from run/devtools/.'
+    classpath = sourceSets.devtools.runtimeClasspath
+    mainClass = 'run.devtools.Json5SmokeTest'
+}
+
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {
