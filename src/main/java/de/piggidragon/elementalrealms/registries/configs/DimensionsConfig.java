@@ -1,6 +1,7 @@
 package de.piggidragon.elementalrealms.registries.configs;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import de.piggidragon.elementalrealms.ElementalRealms;
 
 import java.nio.file.Path;
@@ -22,6 +23,9 @@ public final class DimensionsConfig implements Json5Reloadable {
     private static int pocketIntermediateRingRadius = 128;
     private static int pocketCenterRadius = 32;
     private static int schoolDimensionRadius = 96;
+    private static int boundedChunkRadius = 10;
+    private static int maxLayers = 100;
+    private static int maxGenerationAttempts = 10000;
     private static boolean bossDeathRemovesVanillaPortal = true;
     private static boolean pocketsPersistent = true;
     private static int dimensionalEffectStrengthPercent = 50;
@@ -51,8 +55,36 @@ public final class DimensionsConfig implements Json5Reloadable {
             return;
         }
 
-        // Concrete fields get filled in by Phase 4. For now we just confirm the file parses.
-        ElementalRealms.LOGGER.debug("dimensions.json loaded (no fields applied in Phase 0).");
+        JsonObject obj = root.getAsJsonObject();
+        if (obj.has("pocket") && obj.get("pocket").isJsonObject()) {
+            JsonObject pocket = obj.get("pocket").getAsJsonObject();
+            if (pocket.has("outerRingRadius")) pocketOuterRingRadius = pocket.get("outerRingRadius").getAsInt();
+            if (pocket.has("intermediateRingRadius")) pocketIntermediateRingRadius = pocket.get("intermediateRingRadius").getAsInt();
+            if (pocket.has("centerRadius")) pocketCenterRadius = pocket.get("centerRadius").getAsInt();
+            if (pocket.has("boundedChunkRadius")) boundedChunkRadius = pocket.get("boundedChunkRadius").getAsInt();
+        }
+        if (obj.has("school") && obj.get("school").isJsonObject()) {
+            JsonObject school = obj.get("school").getAsJsonObject();
+            if (school.has("dimensionRadius")) schoolDimensionRadius = school.get("dimensionRadius").getAsInt();
+        }
+        if (obj.has("generation") && obj.get("generation").isJsonObject()) {
+            JsonObject generation = obj.get("generation").getAsJsonObject();
+            if (generation.has("maxLayers")) maxLayers = generation.get("maxLayers").getAsInt();
+            if (generation.has("maxGenerationAttempts")) maxGenerationAttempts = generation.get("maxGenerationAttempts").getAsInt();
+        }
+        if (obj.has("behaviour") && obj.get("behaviour").isJsonObject()) {
+            JsonObject behaviour = obj.get("behaviour").getAsJsonObject();
+            if (behaviour.has("bossDeathRemovesVanillaPortal")) bossDeathRemovesVanillaPortal = behaviour.get("bossDeathRemovesVanillaPortal").getAsBoolean();
+            if (behaviour.has("pocketsPersistent")) pocketsPersistent = behaviour.get("pocketsPersistent").getAsBoolean();
+        }
+        if (obj.has("effects") && obj.get("effects").isJsonObject()) {
+            JsonObject effects = obj.get("effects").getAsJsonObject();
+            if (effects.has("dimensionalEffectStrengthPercent")) dimensionalEffectStrengthPercent = effects.get("dimensionalEffectStrengthPercent").getAsInt();
+            if (effects.has("affinityBuffThresholdPercent")) affinityBuffThresholdPercent = effects.get("affinityBuffThresholdPercent").getAsInt();
+        }
+
+        ElementalRealms.LOGGER.debug("dimensions.json loaded: boundedChunkRadius={}, maxLayers={}, maxGenerationAttempts={}",
+                boundedChunkRadius, maxLayers, maxGenerationAttempts);
     }
 
     private static void writeDefaultIfMissing(Path file) {
@@ -68,11 +100,23 @@ public final class DimensionsConfig implements Json5Reloadable {
                     // Player spawns at outer, fights inward to the center boss arena.
                     "outerRingRadius": 64,
                     "intermediateRingRadius": 128,
-                    "centerRadius": 32
+                    "centerRadius": 32,
+                    // Chunk radius each pocket's BoundedChunkGenerator keeps generated. Past this,
+                    // chunks are air-filled (void). Used by both BoundedChunkGenerator + ring layout.
+                    "boundedChunkRadius": 10
                   },
 
                   "school": {
                     "dimensionRadius": 96
+                  },
+
+                  "generation": {
+                    // Max number of concentric rings DynamicDimensionHandler will scan for a free
+                    // generation center before giving up with an IllegalStateException.
+                    "maxLayers": 100,
+                    // Cap on generation-center placement attempts; reached -> bail with the error
+                    // message above. Effectively a safety net around the ring-walk loop.
+                    "maxGenerationAttempts": 10000
                   },
 
                   "behaviour": {
@@ -97,6 +141,9 @@ public final class DimensionsConfig implements Json5Reloadable {
     public static int pocketIntermediateRingRadius() { return pocketIntermediateRingRadius; }
     public static int pocketCenterRadius() { return pocketCenterRadius; }
     public static int schoolDimensionRadius() { return schoolDimensionRadius; }
+    public static int boundedChunkRadius() { return boundedChunkRadius; }
+    public static int maxLayers() { return maxLayers; }
+    public static int maxGenerationAttempts() { return maxGenerationAttempts; }
     public static boolean bossDeathRemovesVanillaPortal() { return bossDeathRemovesVanillaPortal; }
     public static boolean pocketsPersistent() { return pocketsPersistent; }
     public static int dimensionalEffectStrengthPercent() { return dimensionalEffectStrengthPercent; }

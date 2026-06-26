@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.registries.worldgen.chunkgen.custom;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import de.piggidragon.elementalrealms.registries.configs.DimensionsConfig;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -29,11 +30,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
 
-    /**
-     * Max chunk radius from the generation center.
-     */
-    public static final int RADIUS = 10;
-
     public static final MapCodec<BoundedChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("biome_source").forGetter(ChunkGenerator::getBiomeSource),
@@ -56,8 +52,13 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         this.level = level;
     }
 
+    /**
+     * Radius (in chunks) of the square that gets noise-generated. Past this, chunks
+     * are air-filled. Backed by {@code DimensionsConfig.boundedChunkRadius()} so
+     * dimension scale is tweakable on disk.
+     */
     public static int getRadius() {
-        return RADIUS;
+        return DimensionsConfig.boundedChunkRadius();
     }
 
     @Override
@@ -125,7 +126,7 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
 
     @Override
     public void addDebugScreenInfo(List<String> info, RandomState randomState, BlockPos pos) {
-        info.add("Bounds: " + (-RADIUS) + " to " + RADIUS + " chunks");
+        info.add("Bounds: " + (-getRadius()) + " to " + getRadius() + " chunks");
         super.addDebugScreenInfo(info, randomState, pos);
     }
 
@@ -133,10 +134,11 @@ public class BoundedChunkGenerator extends NoiseBasedChunkGenerator {
         ChunkPos center = DynamicDimensionHandler.getGenerationCenterData()
                 .getGenerationCenters()
                 .get(level);
-        return pos.x >= -RADIUS + center.x
-                && pos.x <= RADIUS + center.x
-                && pos.z >= -RADIUS + center.z
-                && pos.z <= RADIUS + center.z;
+        int radius = getRadius();
+        return pos.x >= -radius + center.x
+                && pos.x <= radius + center.x
+                && pos.z >= -radius + center.z
+                && pos.z <= radius + center.z;
     }
 
     private void generateVoidChunk(ChunkAccess chunk) {

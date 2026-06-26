@@ -2,6 +2,7 @@ package de.piggidragon.elementalrealms.registries.level;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
+import de.piggidragon.elementalrealms.registries.configs.DimensionsConfig;
 import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
@@ -26,9 +27,6 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
  * only generates terrain inside a bounded square around the generation center.
  */
 public final class DynamicDimensionHandler {
-
-    private static final int MAX_GENERATION_ATTEMPTS = 10000;
-    private static final int MAX_LAYERS = 100;
 
     private static int dimensionCounter = 0;
     private static GenerationCenterData generationCenters;
@@ -126,8 +124,9 @@ public final class DynamicDimensionHandler {
 
         int radius = BoundedChunkGenerator.getRadius() * 2 + 1;
         int currentLayer = generationCenters.getCurrentLayer();
+        int maxLayers = DimensionsConfig.maxLayers();
 
-        while (currentLayer < MAX_LAYERS) {
+        while (currentLayer < maxLayers) {
             ChunkPos center = scanRing(currentLayer, radius);
             if (center != null) {
                 return center;
@@ -137,7 +136,7 @@ public final class DynamicDimensionHandler {
         }
 
         throw new IllegalStateException(
-                "Failed to create new generation center after " + MAX_GENERATION_ATTEMPTS + " attempts");
+                "Failed to create new generation center after " + DimensionsConfig.maxGenerationAttempts() + " attempts");
     }
 
     /**
