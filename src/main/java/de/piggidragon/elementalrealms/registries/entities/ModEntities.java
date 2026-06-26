@@ -1,7 +1,7 @@
 package de.piggidragon.elementalrealms.registries.entities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

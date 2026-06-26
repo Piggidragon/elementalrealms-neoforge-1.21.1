@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.packets.custom;
+package de.piggidragon.elementalrealms.packets.custom.enderdragon;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.packets.ModStreamCodecs;
@@ -12,21 +12,21 @@ import net.minecraft.world.phys.Vec3;
 /**
  * Client -> server request to destroy blocks inside the laser impact bubble.
  */
-public record LaserBeamDestroyBlockPacket(
+public record EnderDragonLaserBeamDestroyBlockPacket(
         Vec3 center,
         float radius
 ) implements CustomPacketPayload {
 
-    public static final Type<LaserBeamDestroyBlockPacket> TYPE =
+    public static final Type<EnderDragonLaserBeamDestroyBlockPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "laser_beam_destroy_block"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, LaserBeamDestroyBlockPacket> STREAM_CODEC =
+    public static final StreamCodec<RegistryFriendlyByteBuf, EnderDragonLaserBeamDestroyBlockPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ModStreamCodecs.VEC3_STREAM_CODEC,
-                    LaserBeamDestroyBlockPacket::center,
+                    EnderDragonLaserBeamDestroyBlockPacket::center,
                     ByteBufCodecs.FLOAT,
-                    LaserBeamDestroyBlockPacket::radius,
-                    LaserBeamDestroyBlockPacket::new
+                    EnderDragonLaserBeamDestroyBlockPacket::radius,
+                    EnderDragonLaserBeamDestroyBlockPacket::new
             );
 
     @Override

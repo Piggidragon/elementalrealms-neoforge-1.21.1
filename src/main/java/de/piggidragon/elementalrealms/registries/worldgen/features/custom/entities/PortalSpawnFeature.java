@@ -1,12 +1,12 @@
-package de.piggidragon.elementalrealms.registries.worldgen.features.custom;
+package de.piggidragon.elementalrealms.registries.worldgen.features.custom.entities;
 
 import com.mojang.serialization.Codec;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.DynamicDimensionHandler;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import de.piggidragon.elementalrealms.registries.worldgen.features.config.PortalConfiguration;
-import de.piggidragon.elementalrealms.util.PortalUtils;
+import de.piggidragon.elementalrealms.util.entities.portal.PortalUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RandomSource;

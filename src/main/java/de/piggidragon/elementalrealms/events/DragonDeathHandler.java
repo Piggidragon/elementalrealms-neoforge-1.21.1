@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.events;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;

@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.util;
+package de.piggidragon.elementalrealms.registries.rarities;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;

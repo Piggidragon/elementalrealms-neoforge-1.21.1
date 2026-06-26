@@ -1,7 +1,7 @@
-package de.piggidragon.elementalrealms.registries.items.magic.misc;
+package de.piggidragon.elementalrealms.registries.items.magic.equipment.hand;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.custom.SchoolStaff;
+import de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.custom.SchoolStaff;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
@@ -11,7 +11,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 /**
  * Deferred items that don't fit into affinity or material categories.
  */
-public final class MiscItems {
+public final class HandEquipmentItems {
 
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(ElementalRealms.MODID);
@@ -23,7 +23,7 @@ public final class MiscItems {
             props -> new SchoolStaff(props.durability(16).rarity(Rarity.UNCOMMON))
     );
 
-    private MiscItems() {
+    private HandEquipmentItems() {
     }
 
     public static void register(IEventBus bus) {

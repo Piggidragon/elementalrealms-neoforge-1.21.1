@@ -1,5 +1,7 @@
-package de.piggidragon.elementalrealms.magic.affinities;
+package de.piggidragon.elementalrealms.magic.affinities.helper;
 
+import de.piggidragon.elementalrealms.magic.affinities.Affinity;
+import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 
@@ -10,7 +12,7 @@ import java.util.Map;
 /**
  * Weighted random affinity assignment for new players.
  */
-public final class ModAffinitiesRoll {
+public final class AffinitiesRoll {
 
     /**
      * Roll probabilities for each of the four pick slots.
@@ -22,7 +24,7 @@ public final class ModAffinitiesRoll {
      */
     private static final int DEVIANT_CHANCE_PERCENT = 25;
 
-    private ModAffinitiesRoll() {
+    private AffinitiesRoll() {
     }
 
     /**

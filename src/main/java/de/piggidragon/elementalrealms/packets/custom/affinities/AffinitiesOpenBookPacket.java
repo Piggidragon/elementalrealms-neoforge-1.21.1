@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.packets.custom;
+package de.piggidragon.elementalrealms.packets.custom.affinities;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import io.netty.buffer.ByteBuf;
@@ -9,13 +9,13 @@ import net.minecraft.resources.ResourceLocation;
 /**
  * Client -> server request to open the affinity book menu.
  */
-public record OpenAffinityBookPacket() implements CustomPacketPayload {
+public record AffinitiesOpenBookPacket() implements CustomPacketPayload {
 
-    public static final Type<OpenAffinityBookPacket> TYPE =
+    public static final Type<AffinitiesOpenBookPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "open_affinity_book"));
 
-    public static final StreamCodec<ByteBuf, OpenAffinityBookPacket> STREAM_CODEC =
-            StreamCodec.unit(new OpenAffinityBookPacket());
+    public static final StreamCodec<ByteBuf, AffinitiesOpenBookPacket> STREAM_CODEC =
+            StreamCodec.unit(new AffinitiesOpenBookPacket());
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

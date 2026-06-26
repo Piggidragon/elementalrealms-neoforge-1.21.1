@@ -1,157 +1,103 @@
 # Naming Conventions
 
-> **Status:** Phase 0 — locked in for all NEW content (Phase 1+).
-> **Audience:** everyone writing code, lang files, configs, or asset briefs for `elementalrealms`.
-> **Replaces:** ad-hoc naming decisions that used to live in chat.
+> **Status:** Phase 0 — locked in for all NEW code (Phase 1+).
+> **Audience:** everyone writing Java for `elementalrealms`.
+> **Scope:** code style only. Display names live in `lang/en_us.json` or are generated on the fly by the code that uses them — no central naming registry.
 > **Lore-safety guardrail:** no characters, places, creatures, or plot points from any existing fictional work. Generic fantasy-academy tone only — never derivative.
+> **Tone of this doc:** guidelines, not law. Project size and team preference can override. When in doubt, match the closest existing code in the same area of the codebase.
 
-When in doubt: pick the boring, generic option. A spell called "Fire Bolt" is fine; anything that sounds like it belongs to a specific franchise is not.
-
----
-
-## 1. Display Names (lang files)
-
-All user-facing strings live in `assets/elementalrealms/lang/en_us.json`. Display names must read like a generic fantasy academy setting — no franchise references, no inside jokes.
-
-### 1.1 Items
-
-| Category | Pattern | Examples |
-|----------|---------|----------|
-| Affinity Shards | `<Size> Affinity Shard of <Element>` | `Small Affinity Shard of Fire`, `Big Affinity Shard of Lightning` |
-| Affinity Stones | `Affinity Stone of <Element>` | `Affinity Stone of Wind` |
-| Spell tomes | `<Spell Name> Tome` | `Fire Bolt Tome`, `Tidal Wave Tome` |
-| Generic crafting mats | `<Adjective> <Material>` | `Refined Mana Crystal`, `Tarnished Bronze Ingot` |
-
-`<Size>` ∈ { `Small`, `Big`, `Greater`, `Lesser` }. No `Tiny`, no `Massive`, no `Mega`. Stick to the four.
-
-### 1.2 Bosses
-
-Pattern: **Title + Element** (or "the <noun> of <element>").
-
-Examples (canonical):
-- `The Lord of Embers` (fire)
-- `Tidal Sovereign` (water)
-- `Stormcaller` (lightning)
-- `Glacier Warden` (ice)
-
-Boss names must be **registered centrally** in `NamingRegistry` (see §5). No hardcoded `"The Lord of Embers"` literals in entity classes or lang files — code reads `NamingRegistry.bossName(Affinity.FIRE)`.
-
-### 1.3 Spells
-
-Pattern: **Action verb + Element** (or just Action if element-agnostic).
-
-Examples:
-- `Fire Bolt`, `Fireball`, `Ember Lance`
-- `Tidal Wave`, `Ice Shard`, `Frostbite`
-- `Lightning Arc`, `Thunder Strike`
-- `Wind Gust`, `Stone Fist`, `Gravity Well`
-
-Spell names do **not** go through `NamingRegistry` — they're lang-file-only, since spells have no configurable flavour text yet.
-
-### 1.4 Dimensions / Biomes / Structures
-
-Pattern: `<Adjective> <Noun>` or `<Element> <Noun>`.
-
-Examples: `Ember Wastes`, `Tidal Depths`, `Skyreach Spire`, `Void Sanctum`.
-
-### 1.5 Affinity Display Names
-
-| Identifier | Display Name | Notes |
-|------------|--------------|-------|
-| `fire` | `Fire` | |
-| `water` | `Water` | |
-| `wind` | `Wind` | |
-| `earth` | `Earth` | |
-| `lightning` | `Lightning` | |
-| `ice` | `Ice` | |
-| `sound` | `Sound` | |
-| `gravity` | `Gravity` | |
-| `life` | `Life` | |
-| `space` | `Space` | |
-| `time` | `Time` | |
-| `void` | `Void` | |
-
-Display names are *the same as the identifier* except for capitalisation. Modpack authors who want a custom name override `affinities.json → naming.affinities.<id>` (see §5).
+When in doubt, follow Standard Java / Google Java Style. This doc lists the mod-specific rules on top of that.
 
 ---
 
-## 2. Item IDs (Java + ResourceLocation)
+## 1. Java Conventions
 
-Pattern: `lowercase_snake_case`, no plural, no `the_`, no underscores-as-separators in user-facing strings.
+### 1.1 Classes
 
-### 2.1 Prefixes
+- **PascalCase.** One noun per class. No abbreviations.
+- **Main class per topic** uses the `Mod<Thema>` prefix and owns the registry / registration logic for that topic.
+- **Subclasses / values** drop the `Mod` prefix. Enum constants, per-element subclasses, payload records, etc. live under the main class but are not `Mod`-prefixed.
 
-| Subsystem | Prefix | Example |
-|-----------|--------|---------|
-| Affinity shards | `affinity_shard_` | `affinity_shard_small_fire`, `affinity_shard_big_fire` |
-| Affinity stones | `affinity_stone_` | `affinity_stone_lightning` |
-| Boss summon items | `boss_summon_` | `boss_summon_lord_of_embers` |
-| Spells (item form) | `spell_` | `spell_fire_bolt`, `spell_tidal_wave` |
-| Generic crafting mats | no prefix, descriptive | `mana_crystal`, `bronze_ingot` |
+Examples in current code:
 
-### 2.2 Affinity Values (canonical identifiers)
+| Topic | Main class | Subclasses / values |
+|-------|------------|---------------------|
+| Affinities | `ModAffinities` | `Affinity`, `AffinityType`, `AffinitiesRoll` |
+| Items | `ModItems` | `AffinityStone`, `AffinityShard`, `DimensionStaff`, `SchoolStaff`, `HandEquipmentItems` |
+| Blocks | `ModBlocks` | (per-block subclasses) |
+| Configs | `ModConfigs` | `AffinityConfig`, `DimensionsConfig`, `DragonConfig`, … |
+| Creative tabs | `ModCreativeTabs` | (per-tab subclasses) |
+| Sounds | `ModSounds` | (per-sound subclasses) |
+| Commands | `ModCommands` | `ElementalRealmsCommand` |
+| Packets | `ModPacketHandler` | `AffinitiesOpenBookPacket`, `AffinitiesSuccessPacket`, `EnderDragonLaserBeamPacket`, … |
+| Rarities | `ModRarities` | (rarity proxies: `LEGENDARY`, `MYTHIC`) |
 
-These exact strings are used in code, JSON, and NBT. **Do not** introduce `flame`, `fuego`, `blaze`, `pyro`, etc.
+`Mod` is reserved for **main-class-of-a-topic** names. Don't slap `Mod` on utilities, helpers, or one-off subclasses.
 
-```
-fire, water, wind, earth, lightning, ice, sound, gravity, life, space, time, void
-```
+### 1.2 Inheritance
 
-Adding a new element is a separate decision (PLANS.md §A.5). Don't sneak one in under "just a variant".
-
----
-
-## 3. Class Naming (Java)
-
-### 3.1 Capitalisation Rules
-
-| Form | Use for | Example |
-|------|---------|---------|
-| `Affinities` | Enum / collection class | `public enum Affinities { ... }` |
-| `affinity` | Variable / parameter | `Affinity affinity = Affinity.FIRE;` |
-| `affinities.json` | Config file | `config/elementalrealms/affinities.json` |
-| `AffinityConfig` | Loader class for that JSON | `public class AffinityConfig { ... }` |
-
-Avoid `AffinityEnum`, `AffinityManager`, `AffinityHelper` — they're noise. Use the noun (`Affinities`) or the role (`AffinityConfig`).
-
-### 3.2 Inheritance Pattern
-
-Abstract base + per-element subclass:
+- If a class is only ever a base for other classes, **mark it `abstract`**. Don't ship empty concrete parents.
+- Abstract base + per-element subclass is the default for any "family" of similar entities (bosses, spells, custom mobs).
 
 ```
-BossEntity (abstract, in registries/entities/)
-  ├── BossFireEntity       (extends BossEntity)
-  ├── BossWaterEntity      (extends BossEntity)
+BossEntity (abstract)
+  ├── BossFireEntity
+  ├── BossWaterEntity
   └── ...
 ```
 
-If a class is only ever an abstract base, **mark it `abstract`** — don't ship empty concrete parents.
+- Prefer **composition over inheritance** for shared behaviour. Inheritance only when the subclass genuinely *is a* base.
 
-### 3.3 Common Suffixes
+### 1.3 Common Suffixes
 
-| Suffix | Meaning | Example |
-|--------|---------|---------|
-| `Entity` | `Entity` subclass (mob / projectile) | `BossFireEntity`, `SpellProjectileEntity` |
-| `Block` | `Block` subclass | `ManaCoreBlock` |
-| `BlockEntity` | `BlockEntity` subclass | `ManaCoreBlockEntity` |
-| `Item` | `Item` subclass | `AffinityShardItem` |
-| `Config` | JSON5 / TOML loader | `AffinityConfig`, `DimensionsConfig` |
-| `Registry` | Central string / data registry | `NamingRegistry` |
-| `Packet` | Network payload class | `ReloadConfigPacket` |
-| `Command` | Brigadier command | `ReloadConfigCommand` |
+| Suffix | Meaning |
+|--------|---------|
+| `Entity` | `Entity` subclass (mob, projectile) |
+| `Block` | `Block` subclass |
+| `BlockEntity` | `BlockEntity` subclass |
+| `Item` | `Item` subclass |
+| `Config` | JSON5 / TOML loader |
+| `Packet` | Network payload |
+| `Command` | Brigadier command |
+| `Handler` | Event handler / lifecycle hook |
+| `Provider` | Datagen provider |
+| `Codec` | Codec definition (often a `record`) |
 
-Don't mix suffixes: `BossManager`, `FireSpellClass`, `TidalEntityHandler` — pick one convention.
+Pick one suffix per class. Don't mix: no `BossManager`, `FireSpellClass`, `TidalEntityHandler`.
 
-### 3.4 Avoid
+### 1.4 Avoid (as class-name suffixes / prefixes)
 
-- `Util`, `Utils`, `Helper` (too vague)
-- `Base` (already implicit in abstract classes)
-- `Impl` (prefer specific names)
-- `Legacy`, `New`, `Old`, `V2` (rename properly instead)
+These suffixes / prefixes add noise without information when used as class names:
+
+- `Util`, `Utils` — too vague. The class probably does too many things.
+- `Helper` as a **class name** — same problem. A folder called `helper/` is fine (it groups helper code for a topic); a class called `AffinitiesHelper` is not. Use a specific role instead: `AffinitiesRoll`, `AffinitiesCalculator`, etc.
+- `Base` — already implicit in `abstract` classes.
+- `Impl` — prefer specific names.
+- `Legacy`, `New`, `Old`, `V2` — rename properly instead.
+- `Manager` — usually overlaps with the `Mod<Thema>` main class or a `Handler`.
+
+The rule of thumb: if a class needs `Util`/`Helper` to describe itself, name it after its concrete role instead. `AffinitiesRoll` is a good name. `AffinitiesHelper` is not.
+
+### 1.5 Interfaces
+
+- One-method interfaces: verb-object form (`Builder`, `Renderer`, `Codec`).
+- Multi-method interfaces / capability interfaces: noun form (`Spell`, `Affinities`, `CustomMob`).
+- Prefer **functional interfaces** (`@FunctionalInterface`) for single-method contracts.
+
+### 1.6 Records
+
+Use Java `record` for:
+
+- Immutable value types: configs, payload payloads, codec targets.
+- Data carriers between systems: `AffectedPlayer`, `PocketSpawn`, etc.
+
+Use regular classes when:
+
+- The type needs mutation, inheritance, or builder ergonomics.
 
 ---
 
-## 4. Method Naming
+## 2. Method Naming
 
 Standard Java conventions, applied consistently:
 
@@ -159,105 +105,242 @@ Standard Java conventions, applied consistently:
 |---------|-----|
 | `getXxx()` / `setXxx()` | Field accessors |
 | `addXxx()` / `removeXxx()` | Collection mutation |
-| `isXxx()`, `hasXxx()`, `canXxx()` | Boolean predicates (pick `is` for state, `can` for ability, `has` for possession) |
+| `isXxx()`, `hasXxx()`, `canXxx()` | Boolean predicates — `is` for state, `can` for ability, `has` for possession |
 | `matchesXxx()`, `isValidXxx()` | Predicates returning `boolean` |
 | `onXxx()` | Event hooks / lifecycle (`onLoad`, `onReload`, `onDeath`) |
 | `createXxx()`, `buildXxx()` | Factory methods |
 | `registerXxx()` | DeferredRegister / event-bus registration |
+| `loadXxx()`, `saveXxx()` | Persistence entry points |
 
 Avoid Hungarian-style prefixes (`bIsFire`, `iCount`) — IntelliJ inspections flag these.
 
 ---
 
-## 5. NamingRegistry (single source of truth)
+## 3. Variables, Parameters, Fields
 
-`NamingRegistry` lives at `net.piggidragon.elementalrealms.registries.naming.NamingRegistry`. It is the **only** place boss names, dimension names, and affinity display names live at runtime.
-
-### 5.1 What goes through it
-
-- Boss display names (per affinity / per boss id)
-- Dimension display names (per dimension id)
-- Affinity display names (per affinity id)
-- Anything else a modpack author might reasonably want to rename
-
-### 5.2 What does NOT go through it
-
-- Spell names (lang-file-only for now)
-- Generic item names (lang-file-only)
-- Tooltip text (lang-file-only)
-- Log messages (internal)
-
-### 5.3 API sketch
-
-```java
-// In Java code:
-NamingRegistry.bossName(Affinity.FIRE);              // -> "The Lord of Embers" or override
-NamingRegistry.dimensionName("pocket");             // -> "Pocket" or override
-NamingRegistry.affinityName(Affinity.LIGHTNING);    // -> "Lightning" or override
-```
-
-### 5.4 Modpack override
-
-`affinities.json` will gain a `naming` block (deferred to the phase that actually consumes it):
-
-```json5
-{
-  naming: {
-    affinities: {
-      fire: "Flame",
-      lightning: "Storm",
-    },
-    bosses: {
-      lord_of_embers: "The Cinder King",
-    },
-    dimensions: {
-      pocket: "Pocket Realm",
-    },
-  },
-}
-```
-
-Overridden names survive `/elementalrealms reload` (already implemented in #18).
-
-### 5.5 Rule of thumb
-
-**If a display name will appear in more than one place (boss card + kill announcement + lore book), it goes through `NamingRegistry`.** If it only appears once (a single item tooltip), it stays in the lang file.
+- `lowerCamelCase` for variables, parameters, non-static fields.
+- `UPPER_SNAKE_CASE` for `static final` constants. Group constants at the top of the class.
+- `lowerCamelCase` for non-final static fields too — only `static final` gets the UPPER_SNAKE_CASE.
+- Boolean variables use `is`/`has`/`can` prefix in the same way as predicates: `isActive`, `hasMana`, `canCast`.
+- One variable per line. Avoid multi-assign (`a = b = c = 0`).
 
 ---
 
-## 6. Reference Checklist (per issue)
+## 4. Packages and Folder Structure
 
-When creating a new issue that introduces a content item (item, block, entity, dimension, spell), the issue body should answer:
+### 4.1 Top-level layout
 
-- [ ] Display name(s) listed, following §1 patterns
-- [ ] Item / entity / dimension ID follows §2.1 / §2.2
-- [ ] Class names follow §3 (no `Manager` / `Helper` / `Util`)
-- [ ] If a display name is reused in ≥2 systems, registered in `NamingRegistry` (§5)
+```
+de.piggidragon.elementalrealms
+├── ElementalRealms.java          # main mod entry
+├── ElementalRealmsClient.java    # client entry
+├── client/                       # client-only code
+├── datagen/                      # data generation providers
+├── events/                       # Forge event handlers
+├── magic/                        # gameplay mechanics (affinities, spells, mana)
+├── mixin/                        # vanilla mixins
+├── packets/                      # network payloads + handler
+├── registries/                   # registration (items, blocks, entities, configs, …)
+├── saveddata/                    # SavedData / world-attached data
+└── util/                         # topic-layer for code that doesn't fit elsewhere — see §4.5
+```
+
+Layer convention: `client/`, `events/`, `magic/`, `packets/`, `registries/`, `util/` are top-level. Each owns one concern. New topics that don't fit get a new top-level layer (e.g. `mana/`, `quests/`) rather than being squeezed into an existing one.
+
+### 4.2 Subfolders inside a layer
+
+Inside a layer folder, group by **topic** (the thing the code is about), not by Java type (the shape of the file). Topics grow as the mod grows — start flat, split when a topic gets crowded.
+
+Current shape of `registries/`:
+
+```
+registries/
+├── items/
+│   └── magic/
+│       ├── affinities/         # AffinityStone, AffinityShard, etc.
+│       │   └── custom/         # concrete Item subclasses
+│       └── equipment/          # hand-held gear, eventually armor, etc.
+│           └── hand/
+│               └── custom/     # SchoolStaff, etc.
+├── blocks/                     # ModBlocks + per-block subclasses
+├── entities/
+│   ├── client/                 # client-side entity code
+│   │   └── renderer/
+│   │       └── misc/           # PortalEmptyRenderer, etc.
+│   ├── custom/                 # server-side custom entities
+│   │   └── misc/               # PortalEntity, etc.
+│   └── ModEntities.java        # main registration class
+├── configs/                    # one *Config loader per JSON
+├── commands/                   # ModCommands + each Command subclass
+├── level/                      # dimension + dimension-manager code
+├── sounds/                     # ModSounds + per-sound subclasses
+├── worldgen/
+│   ├── chunkgen/
+│   ├── features/
+│   │   └── custom/
+│   │       └── entities/       # PortalSpawnFeature, etc.
+│   └── structures/
+│       └── school/             # SchoolDimensionPlatform, etc.
+├── attachments/                # ModAttachments + sync code
+├── guis/                       # menus, screens
+└── rarities/                   # ModRarities (LEGENDARY, MYTHIC)
+```
+
+Current shape of `packets/`:
+
+```
+packets/
+├── ModPacketHandler.java
+├── ModStreamCodecs.java
+└── custom/
+    ├── affinities/             # AffinitiesOpenBookPacket, AffinitiesSuccessPacket, etc.
+    ├── enderdragon/            # EnderDragonLaserBeamPacket, etc.
+    └── …
+```
+
+Current shape of `magic/`:
+
+```
+magic/
+└── affinities/
+    ├── Affinity.java
+    ├── AffinityType.java
+    ├── ModAffinities.java
+    └── helper/                 # AffinitiesRoll, future AffinitiesCalculator, etc.
+```
+
+The `helper/` folder inside a topic is allowed when a topic accumulates more than one helper class — see §1.4.
+
+### 4.3 Cross-layer code
+
+Code that touches multiple topics goes in the layer that owns the *trigger*, not the topic:
+
+- A boss-kill handler that fires on entity death and updates an attachment: `events/BossDeathHandler.java`, not `registries/entities/`.
+- A client-side GUI for the Affinity Book: `client/gui/AffinityBookScreen.java`, not `magic/affinities/`.
+
+When in doubt: the layer is decided by the *first thing that fires*. Event handlers live in `events/`. Init code lives in `ElementalRealms.java` / `ElementalRealmsClient.java`. Registration code lives in `registries/`.
+
+### 4.4 The `registries/` vs `util/` split
+
+`registries/` is for **registration code** — anything that hooks into NeoForge's `DeferredRegister`, datagen, codecs, packet registration. If a class touches the registry system, it belongs here.
+
+`util/` is for **everything else that doesn't fit a layer** — generic helpers, topic-specific utilities that don't have a natural home. Examples in current code:
+
+- `util/entities/portal/PortalUtils.java` — portal-related helpers that aren't a registry concern.
+- `util/math/` (future), `util/nbt/` (future) — generic mod-helpers if/when they show up.
+
+The rule of thumb: if the class knows about a specific topic (affinities, portals, dragons, …), put it in `util/<topic>/` rather than in the topic's main folder. Keeps the topic folder for the *primary* code (registrations, main classes, subclasses) and pushes helpers one level away.
+
+### 4.5 Folder depth
+
+Don't go deeper than 4 levels without a good reason. Current max is:
+
+```
+registries/items/magic/affinities/custom/  →  5 levels, OK because it's the leaf for item subclasses
+```
+
+If a folder splits into "main" + "custom/", the "custom/" folder is the leaf for subclass files, the parent holds the registration class (`ModItems`, `ModEntities`, …).
+
+If a topic is small enough to fit in one or two files, keep it flat. Split into subfolders when you have ≥3 files on the same concern.
+
+---
+
+## 5. Resource Locations and IDs
+
+All `ResourceLocation` IDs in the mod use the namespace `elementalrealms`.
+
+- **IDs:** `lowercase_snake_case`. Underscores separate words, hyphens are fine for compound concepts (`spell-fire-bolt` is allowed; `spell_fire_bolt` is the preferred form).
+- **No plural in IDs.** `affinity_stone_fire`, not `affinity_stones_fire`.
+- **No article prefixes.** No `the_`, no `a_`, no `an_`.
+- **Affinity values** (used in code, JSON, NBT) are a closed set — see below. Do not introduce `flame`, `fuego`, `blaze`, `pyro` etc. Adding a new affinity is a separate decision.
+
+Canonical affinity identifiers (locked):
+
+```
+fire, water, wind, earth, lightning, ice, sound, gravity, life, space, time, void
+```
+
+### 5.1 Item ID prefixes
+
+| Subsystem | Prefix | Example |
+|-----------|--------|---------|
+| Affinity stones | `affinity_stone_` | `affinity_stone_fire` |
+| Affinity shards | `affinity_shard_` | `affinity_shard_fire` |
+| Affinity essence / misc | `affinity_` | `affinity_essence_fire` |
+| Boss summon items | `boss_summon_` | `boss_summon_lord_of_embers` |
+| Spell items | `spell_` | `spell_fire_bolt` |
+| Generic crafting mats | none, descriptive | `mana_crystal`, `bronze_ingot` |
+
+When a size prefix exists (`small`, `medium`, `big`), put it **before the affinity**: `affinity_shard_small_fire`, not `affinity_shard_fire_small`.
+
+### 5.2 Lang keys
+
+Lang keys mirror the item ID: `item.elementalrealms.affinity_stone_fire`. Display strings live in `src/main/resources/assets/elementalrealms/lang/en_us.json`. English only.
+
+---
+
+## 6. Display Names
+
+There is **no central naming registry**. Display names live in one of two places, depending on what they are:
+
+1. **Static names** (dimension staff, custom items that aren't tied to a system) — hardcoded in `lang/en_us.json`.
+2. **Names derived from system state** (shard names from affinity + size, boss titles from affinity, spell names from spell id) — generated on the fly by the system that uses them. Format string lives next to the code that formats it.
+
+Examples of on-the-fly generation:
+
+```java
+// In ModAffinities or wherever the shard item is built:
+public static String shardName(Affinity affinity, ShardSize size) {
+    return size.label() + " Affinity Shard of " + affinity.displayName();
+}
+
+// In a future BossTitles class (Phase 5):
+public static String titleFor(Affinity affinity) {
+    return switch (affinity) {
+        case FIRE      -> "Lord of Embers";
+        case WATER     -> "Tidal Sovereign";
+        case LIGHTNING -> "Tempest Conductor";
+        ...
+    };
+}
+```
+
+The point: format strings live with the code that emits them. If a format string is used in more than one place, refactor it into a `static final` on the relevant `Mod<Thema>` class (or a small dedicated helper class in the same package) — not into a separate registry.
+
+### 6.1 Lore-safety
+
+Display names follow the same lore-safety guardrail as the rest of the mod:
+
+- Generic fantasy-academy tone only.
+- No references to characters, places, or plot points from any existing fictional work.
+- "Fire Bolt" is fine. Anything that sounds like it belongs to a specific franchise is not.
+
+---
+
+## 7. Reference Checklist (per issue)
+
+When creating a new issue that introduces code, the issue body should answer:
+
+- [ ] Class names follow §1 (PascalCase, `Mod<Thema>` for the topic main class, no `Util`/`Helper` as class names)
+- [ ] Method names follow §2
+- [ ] Folder placement follows §4 (matches the closest existing code in the same area of the codebase)
+- [ ] Item / entity / dimension IDs follow §5 (`lowercase_snake_case`, no article prefixes, canonical affinity values)
+- [ ] Display names follow §6 (lang file or generated on the fly from the code that uses them — no central registry)
 - [ ] No references to characters, places, creatures, or plot points from any existing fictional work (lore-safety guardrail at top)
 
 Reviewers will bounce issues that don't answer these.
 
 ---
 
-## 7. Examples — good vs bad
+## 8. Examples — good vs bad
 
 | Bad | Why | Good |
 |-----|-----|------|
+| `ModFireBossHelper` | mixes `Mod`, `Helper`, topic-in-name | `BossFireEntity extends BossEntity` |
+| `AffinitiesHelper` | `Helper` as class name adds no info | `AffinitiesRoll`, `AffinitiesCalculator` (specific role) |
+| `BossManager` | `Manager` noise; overlaps with `ModBosses` | `ModBosses` + per-boss handlers |
 | `HeroicFireSpell` | "Heroic" sounds trademarked | `FireBoltSpell` |
-| `The_Mystic_Tower` | "Mystic Tower" is a stock franchise name | `ArcaneSpire` |
-| `TideSovereignEntity_Boss` | redundant `Boss` suffix | `BossWaterEntity` |
-| `ManaUtil` | vague | `ManaCalculator` |
-| `spell_FireBolt` | camelCase in id, leading `spell_` ok but value should be snake_case | `spell_fire_bolt` |
-| `fire_shard_small` | wrong order (size before element) | `affinity_shard_small_fire` |
-| `Lord_of_Embers_Boss` | boss suffix already in registry id | `lord_of_embers` |
-| `The Void` | generic but article feels off | `Void` (capitalised identifier) |
-
----
-
-## 8. Open Questions
-
-- [ ] Do spell display names need to go through `NamingRegistry` once modpack-rename support becomes a real feature? (Defer until first modpack request.)
-- [ ] Are dimension subtypes (pocket vs overworld variant) one registry or two? (Defer to Phase 2.)
-- [ ] Pluralisation rule for "Affinities" vs "Affinity" in display text? (Defer to Phase 1 when first UI shows up.)
-
-When a question resolves, update this doc in the same PR that introduces the change.
+| `spell_FireBolt` | camelCase in id | `spell_fire_bolt` |
+| `fire_shard_small` | wrong order (size before affinity) | `affinity_shard_small_fire` |
+| `Lord_of_Embers_Boss` | redundant `Boss` suffix on the id | `lord_of_embers` (or `boss_summon_lord_of_embers` for the item) |
+| `NamingRegistry.bossName(Affinity.FIRE)` | we don't have a central registry anymore | `BossTitles.titleFor(Affinity.FIRE)` next to the boss code |

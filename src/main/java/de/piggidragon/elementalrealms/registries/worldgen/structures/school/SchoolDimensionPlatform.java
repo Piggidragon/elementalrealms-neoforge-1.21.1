@@ -1,4 +1,4 @@
-package de.piggidragon.elementalrealms.registries.worldgen.structures.custom;
+package de.piggidragon.elementalrealms.registries.worldgen.structures.school;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -25,11 +25,11 @@ import java.util.Optional;
 /**
  * Jigsaw-based structure used as the spawn platform for School-like dimensions.
  */
-public class Platform extends Structure {
+public class SchoolDimensionPlatform extends Structure {
 
-    public static final MapCodec<Platform> CODEC = RecordCodecBuilder.mapCodec(instance ->
+    public static final MapCodec<SchoolDimensionPlatform> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    Platform.settingsCodec(instance),
+                    SchoolDimensionPlatform.settingsCodec(instance),
                     StructureTemplatePool.CODEC.fieldOf("start_pool").forGetter(structure -> structure.startPool),
                     ResourceLocation.CODEC.optionalFieldOf("start_jigsaw_name").forGetter(structure -> structure.startJigsawName),
                     Codec.intRange(0, 30).fieldOf("size").forGetter(structure -> structure.size),
@@ -38,7 +38,7 @@ public class Platform extends Structure {
                     Codec.intRange(1, 128).fieldOf("max_distance_from_center").forGetter(structure -> structure.maxDistanceFromCenter),
                     DimensionPadding.CODEC.optionalFieldOf("dimension_padding", JigsawStructure.DEFAULT_DIMENSION_PADDING).forGetter(structure -> structure.dimensionPadding),
                     LiquidSettings.CODEC.optionalFieldOf("liquid_settings", JigsawStructure.DEFAULT_LIQUID_SETTINGS).forGetter(structure -> structure.liquidSettings)
-            ).apply(instance, Platform::new));
+            ).apply(instance, SchoolDimensionPlatform::new));
 
     private final Holder<StructureTemplatePool> startPool;
     private final Optional<ResourceLocation> startJigsawName;
@@ -49,7 +49,7 @@ public class Platform extends Structure {
     private final DimensionPadding dimensionPadding;
     private final LiquidSettings liquidSettings;
 
-    public Platform(
+    public SchoolDimensionPlatform(
             StructureSettings config,
             Holder<StructureTemplatePool> startPool,
             Optional<ResourceLocation> startJigsawName,

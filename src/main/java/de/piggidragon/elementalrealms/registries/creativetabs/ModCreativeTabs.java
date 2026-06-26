@@ -3,7 +3,7 @@ package de.piggidragon.elementalrealms.registries.creativetabs;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.HandEquipmentItems;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -31,10 +31,10 @@ public final class ModCreativeTabs {
     );
     public static final Supplier<CreativeModeTab> ITEM_TAB = CREATIVE_MODE_TABS.register("item_tab",
             () -> CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(MiscItems.DIMENSION_STAFF.get()))
+                    .icon(() -> new ItemStack(HandEquipmentItems.DIMENSION_STAFF.get()))
                     .title(Component.translatable("itemGroup.elementalrealms.item_tab"))
                     .displayItems((params, output) ->
-                            MiscItems.ITEMS.getEntries().forEach(item -> output.accept(item.get())))
+                            HandEquipmentItems.ITEMS.getEntries().forEach(item -> output.accept(item.get())))
                     .build()
     );
     public static final Supplier<CreativeModeTab> BLOCK_TAB = CREATIVE_MODE_TABS.register("block_tab",

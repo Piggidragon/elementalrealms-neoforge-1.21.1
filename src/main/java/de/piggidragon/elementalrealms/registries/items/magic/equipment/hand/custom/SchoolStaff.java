@@ -1,9 +1,9 @@
-package de.piggidragon.elementalrealms.registries.items.magic.misc.custom;
+package de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.custom;
 
 import de.piggidragon.elementalrealms.client.particles.vanilla.DimensionStaffParticles;
 import de.piggidragon.elementalrealms.client.particles.vanilla.PortalParticles;
 import de.piggidragon.elementalrealms.registries.entities.ModEntities;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.level.ModLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;

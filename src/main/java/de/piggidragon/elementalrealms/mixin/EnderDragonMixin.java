@@ -1,6 +1,6 @@
 package de.piggidragon.elementalrealms.mixin;
 
-import de.piggidragon.elementalrealms.packets.custom.DragonLaserBeamPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamPacket;
 import de.piggidragon.elementalrealms.registries.sounds.ModSounds;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -154,7 +154,7 @@ public abstract class EnderDragonMixin extends Mob {
             }
         }
 
-        PacketDistributor.sendToPlayer(target, new DragonLaserBeamPacket(dragon.getId(), startPos, endPos));
+        PacketDistributor.sendToPlayer(target, new EnderDragonLaserBeamPacket(dragon.getId(), startPos, endPos));
 
         level.sendParticles(ParticleTypes.PORTAL, startPos.x, startPos.y, startPos.z,
                 20, 0.5, 0.5, 0.5, 0.1);
