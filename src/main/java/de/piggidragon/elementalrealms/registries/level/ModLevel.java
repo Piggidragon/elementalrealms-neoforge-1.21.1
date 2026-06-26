@@ -4,7 +4,6 @@ import de.piggidragon.elementalrealms.ElementalRealms;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 
@@ -13,6 +12,9 @@ import java.util.Map;
 
 /**
  * Resource keys for custom dimensions. Must match dimension JSON files in the data pack.
+ *
+ * <p>Currently only the School dimension and a single test dimension are registered.
+ * The 11 affinity-specific pocket templates will be added in Phase 4 (pocket dimensions).</p>
  */
 public final class ModLevel {
 
@@ -30,29 +32,13 @@ public final class ModLevel {
             ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test")
     );
 
-    public static final ResourceKey<Level> TEST_DIMENSION2 = ResourceKey.create(
-            Registries.DIMENSION,
-            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test2")
-    );
-    public static final ResourceKey<LevelStem> TEST_DIMENSION2_STEM = ResourceKey.create(
-            Registries.LEVEL_STEM,
-            ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "test2")
-    );
-
     private static final List<ResourceKey<Level>> LEVELS = List.of(
             SCHOOL_DIMENSION,
-            TEST_DIMENSION,
-            TEST_DIMENSION2
-    );
-
-    private static final List<ResourceKey<Level>> LEVEL_RANDOM_SOURCE = List.of(
-            TEST_DIMENSION,
-            TEST_DIMENSION2
+            TEST_DIMENSION
     );
 
     private static final Map<ResourceKey<Level>, ResourceKey<LevelStem>> LEVEL_STEMS = Map.of(
-            TEST_DIMENSION, TEST_DIMENSION_STEM,
-            TEST_DIMENSION2, TEST_DIMENSION2_STEM
+            TEST_DIMENSION, TEST_DIMENSION_STEM
     );
 
     private ModLevel() {
@@ -60,15 +46,6 @@ public final class ModLevel {
 
     public static List<ResourceKey<Level>> getLevels() {
         return LEVELS;
-    }
-
-    public static List<ResourceKey<Level>> getLevelsRandomSource() {
-        return LEVEL_RANDOM_SOURCE;
-    }
-
-    public static ResourceKey<Level> getRandomLevel() {
-        RandomSource random = RandomSource.create();
-        return LEVEL_RANDOM_SOURCE.get(random.nextInt(LEVEL_RANDOM_SOURCE.size()));
     }
 
     public static ResourceKey<LevelStem> getStemForLevel(ResourceKey<Level> level) {
