@@ -7,7 +7,7 @@
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg)](https://minecraft.net)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.214-orange.svg)](https://neoforged.net)
 [![Mod Version](https://img.shields.io/badge/Version-0.3.2-blue.svg)](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/releases)
-[![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](TEMPLATE_LICENSE.txt)
+[![License](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE)
 [![Build](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/actions/workflows/build.yml/badge.svg)](https://github.com/Piggidragon/elementalrealms-neoforge-1-21-1/actions/workflows/build.yml)
 
 ---
@@ -206,7 +206,15 @@ code.
 
 ## 📝 License
 
-All Rights Reserved. See `TEMPLATE_LICENSE.txt` for details.
+This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)**. See [`LICENSE`](LICENSE) for the full text.
+
+**What this means in plain terms:**
+- You can use, modify, and redistribute this mod freely.
+- If you distribute a modified version, you must make the source code of your modifications available under LGPL-3.0 as well.
+- You can include this mod in modpacks (both open-source and proprietary) without the modpack itself having to be LGPL.
+- This mod can dynamically link to other mods without those other mods having to be LGPL.
+
+For the full legal text, see [`LICENSE`](LICENSE).
 
 ---
 
