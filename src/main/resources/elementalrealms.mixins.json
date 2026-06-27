@@ -2,9 +2,7 @@
   "required": true,
   "package": "de.piggidragon.elementalrealms.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-    "EnderDragonMixin"
-  ],
+  "mixins": [],
   "injectors": {
     "defaultRequire": 1
   },

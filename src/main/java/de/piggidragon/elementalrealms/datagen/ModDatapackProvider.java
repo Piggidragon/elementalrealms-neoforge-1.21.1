@@ -10,7 +10,6 @@ import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -29,9 +28,6 @@ import java.util.List;
  */
 public final class ModDatapackProvider {
 
-    public static final ResourceKey<DamageType> LASER =
-            ResourceKey.create(Registries.DAMAGE_TYPE,
-                    ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "laser"));
     public static final ResourceKey<ConfiguredFeature<?, ?>> PORTAL_CONFIGURED =
             ResourceKey.create(Registries.CONFIGURED_FEATURE,
                     ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "portal_configured"));
@@ -51,8 +47,6 @@ public final class ModDatapackProvider {
 
     public static RegistrySetBuilder createBuilder() {
         return new RegistrySetBuilder()
-                .add(Registries.DAMAGE_TYPE, bootstrap -> bootstrap.register(LASER,
-                        new DamageType("laser", 0.0f)))
                 .add(Registries.CONFIGURED_FEATURE, bootstrap ->
                         bootstrap.register(PORTAL_CONFIGURED,
                                 new ConfiguredFeature<>(ModFeatures.PORTAL_FEATURE.get(),
