@@ -1,6 +1,6 @@
 # Elemental Realms — Master Plan
 
-> **Plan version:** v15
+> **Plan version:** v16
 >
 > **For Piggidragon:** Master plan with the big picture. Detailed ideas and brainstorming live in `IDEAS.md` — that file is the workspace. This file is the high-level overview that feedback-givers read first.
 
@@ -342,10 +342,6 @@ Multiplayer-safe for single-pocket scenarios. Edge cases handled per-phase. Sing
 
 Each phase: code PR (Draft) → user game-test → feedback → fix → sign-off → merge to `dev`.
 
-### Phase 0 — Full Consolidation Pass
-
-See §17. Runs before any new feature.
-
 ### Phase 1 — Dragon Rework
 
 TrueEnd-inspired overhaul. HP, phases, breath/meteor/fireballs, perch knockback, stand-still punishment, summon adds, crystal aggression + regen, climatic finish, aggressive AI.
@@ -422,53 +418,6 @@ TrueEnd-inspired overhaul. HP, phases, breath/meteor/fireballs, perch knockback,
 
 ---
 
-## 17. Phase 0 — Full Consolidation Pass
-
-Runs before any new feature. Existing code reviewed, rewritten where needed, config-driven.
-
-### Phase 0.1 — Code review & rewrite
-- Re-read every active class. Document inconsistencies.
-- Resolve `ModLevel.getRandomLevel()` — random pick contradicts affinity-specific requirement.
-- Resolve why `PortalEntity.remove()` excludes SCHOOL from dimension cleanup.
-- Resolve `BoundedChunkGenerator.getRadius()` + `DynamicDimensionHandler.scanRing` math consistency.
-- Decide promotion / archive / discard for each `saved_code/` file.
-- **Exit:** `./gradlew build` green, no functional regressions.
-
-### Phase 0.2 — Config infrastructure
-- Stand up `registries/configs/` package.
-- Register TOML `ModConfigSpec` for `common.toml`, `server.toml`, `client.toml`.
-- Ship default JSON for `affinities.json`, `dimensions.json`, `portal.json`, `dragon.json`, `school.json`.
-- `ConfigReloadListener` + `/elementalrealms reload`.
-- `NamingRegistry` for display names.
-- **Exit:** edit `affinities.json.roll.slotChances` in-game, run reload, behavior changes.
-
-### Phase 0.3 — Drain hardcoded backlog
-- Replace Java constants with config calls.
-- **Exit:** `grep -R "static final.*=.*[0-9]" src/main/java/de/piggidragon/elementalrealms/` returns no balance numbers in gameplay paths.
-
-### Phase 0.4 — Naming pass
-- Search `lang/*.json` + code strings for any external references.
-- Replace with generic fantasy-academy terms.
-
-### Phase 0.5 — Enchantment nerf
-- Mixin into `EnchantmentProtection` and `EnchantmentSharpness`.
-- Per-level multiplier from `enchantments.json`.
-- Extend to Sweeping, Smite, Bane.
-- Advancement "Old Enchantments Weakened".
-
-### Phase 0.6 — Affinity bugfix pass
-- Assign LEGENDARY/MYTHIC per `affinities.json.rarities`.
-- Improve tier-validation error messages.
-- Make `PlayerLoginHandler` defensive on tier-validation errors.
-- Rewrite roll logic: one 100% + partial percentages for rest, rarity-skewed.
-
-### Phase 0.7 — Consolidation summary + sign-off
-- `docs/PHASE-0-DECISIONS.md`, `docs/PHASE-0-SUMMARY.md`, `docs/ASSET-MODELS.md`, `docs/ASSET-TEXTURES.md`, `docs/ASSET-SOUNDS.md`.
-- `AGENTS.md` + `.github/agents/docs-agent.md` review.
-- User game-tests and signs off before Phase 1.
-
----
-
 ## 18. System Architecture
 
 ### 18.1 Lodestone scope
@@ -502,7 +451,7 @@ Hot-reload via `/reload` or `ModConfigEvent.Reloading`. Lazy-apply: new entities
 ```
 registries/
 ├── items/magic/
-│   ├── affinities/         [✓ — re-review in Phase 0]
+│   └── affinities/         [✓]
 │   ├── misc/               [✓ — SchoolStaff]
 │   ├── spells/             [NEW]
 │   └── affinitytools/      [NEW — Crystal Orb]
@@ -520,7 +469,7 @@ registries/
 │   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,Dragon,School,Enchantments,Timer}Config.java
 └── commands/ModCommands.java
 magic/
-├── affinities/             [✓ — roll logic rewrite in 0.6]
+├── affinities/             [✓ — 3-stage roll per §5.2]
 ├── spells/
 │   ├── Spell.java, SpellRegistry.java, SpellCasting.java
 │   ├── SpellBookScreen.java (Lodestone)
@@ -530,7 +479,7 @@ client/
 ├── lodestone/              [NEW]
 └── events/
     ├── DragonDeathHandler.java [✓ — overhaul in Phase 1]
-    ├── PlayerLoginHandler.java [✓ — rewrite roll in 0.6]
+    ├── PlayerLoginHandler.java [✓ — 3-stage roll per §5.2]
     ├── ServerTickHandler.java
     └── PocketDimensionBuilder.java [NEW]
 ```
@@ -559,7 +508,7 @@ client/
 
 ## 20. Asset Pipeline
 
-Three categories, three workflows. No asset work before Phase 0.7.
+Three categories, three workflows. No asset work blocks code PRs.
 
 ### 20.1 Models (you build)
 Tracked in `docs/ASSET-MODELS.md`: Affinity Stones (12+1), Shards (12 affinities × 3 sizes = 36 variants), Void Stone, Crystal Orb of Awakening, Spell Scrolls, Mana element TBD, School Staff, Affinity Book, Portal frame, 11 boss models, modded mob models.
@@ -571,8 +520,7 @@ Per-phase briefs, not upfront.
 Mix of freesound.org + DIY.
 
 ### 20.4 Asset workflow
-- No asset work before Phase 0.7
-- Each PR lists "asset deps"
+- Asset deps are tracked per PR but do not block code PRs
 - Asset missing → placeholder, ship anyway
 
 ---
@@ -629,16 +577,16 @@ Branch names derived from issue titles. Full list lives in this section; not dup
 
 Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 
-### Phase 0 critical
-- [ ] Config format (TOML / JSON / hybrid)
-- [ ] JSON5 or plain JSON
-- [ ] Hot-reload scope
-- [ ] Reveal mechanic timing
-- [ ] NamingRegistry scope
-- [ ] Boss names final
-- [ ] Saved_code triage
-- [ ] Enchantment nerf defaults
-- [ ] Roll-logic specifics
+### Resolved (Phase 0)
+- [x] Config format (TOML + JSON5 hybrid)
+- [x] JSON5 selected
+- [x] Hot-reload scope (TOML via ModConfigEvent, JSON5 via /elementalrealms reload)
+- [x] Reveal mechanic timing (post-Dragon kill, Crystal Orb of Awakening)
+- [x] NamingRegistry scope (display-name helper, not load-bearing)
+- [x] Boss names (generic fantasy-academy, see NamingRegistry)
+- [x] Saved_code triage (#26 — promoted / archived / discarded)
+- [x] Enchantment nerf defaults (0.7 protection, 0.6 sharpness)
+- [x] Roll-logic specifics (3-stage per §5.2)
 
 ### Phase 1 (Dragon)
 - [ ] HP multiplier default
@@ -691,11 +639,10 @@ Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 ## 25. Next Steps
 
 1. User reads this plan, comments / corrects.
-2. Answer §24 Phase-0 questions.
-3. Branch protection on `main` (you do, GitHub UI).
-4. Create labels from §21.2 (you do, GitHub UI).
-5. Phase 0 work begins.
-6. PRs as Draft PRs until sign-off.
+2. Branch protection on `main` (you do, GitHub UI).
+3. Create labels from §21.2 (you do, GitHub UI).
+4. Phase 1 work begins.
+5. PRs as Draft PRs until sign-off.
 
 ---
 
