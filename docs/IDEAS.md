@@ -551,6 +551,63 @@ Examples (TBD tuning):
 - Currently only shard/item usage shows progress
 - Could be visual on character
 
+### XP → Mana + Skill Tree ("Magic Book" brainstorm)
+
+> Big-picture brainstorm, nicht lock-in. Größerer Scope-Shift als §10.1 Enchantment-Nerf — ersetzt Vanilla-XP-System komplett durch Mana + multi-layered Skill Tree.
+
+**Kern-Shape:**
+- XP komplett raus: keine XP-Drops mehr (Mobs, Ores, Smelting, Breeding, Fishing-Treasure-Bücher, Villager-Trades).
+- Mending / Anvil-Combining / Rename-Cost / Enchanted-Book-Repair laufen über Mana statt XP.
+- Bottles o' Enchanting entweder weg oder durch Mana-Potions ersetzt.
+- Villager: keine XP-Voraussetzungen mehr — Unlock-Mechanik für Level-Gated-Trades (z.B. manche Enchanted Books) muss anders gelöst werden (Affinität? Skill-Level? Quest?).
+- Enchanting-Table bleibt visuell, aber **Bookshelf-Scaling raus**. Bookshelves sind Deko oder liefern flaches Max-Level. Enchant-Stärke kommt rein aus Skill-Level.
+
+**Skill Tree — multi-layered, "wirklich was Großes":**
+- Mehrere Kategorien: Combat (Mage/Warrior/Bow-Stats), Magic (Spell-Power, Mana-Pool, Regen, Cooldown), Enchanting (Enchant-Power, Repair-Effizienz, Anvil-Discount), Utility (Mobilität, Harvesting, Defense, Looting, ...).
+- "Multi-layered" = mehrere Tiefen-Ringe (Apprentice → Journeyman → Master → Grandmaster) mit Prerequisites zwischen Skills. Branches pro Archetyp denkbar (Mage-Tree vs Warrior-Tree vs Enchanting-Tree).
+- Skill-Points aus was? Offene Optionen, kein Lock-in:
+  - Strukturell an Milestones gekoppelt (Login-Roll, Dragon-Kill, jeder Boss-Kill, jede Affinität auf 100%)
+  - Mana-Spend-basiert (Schwelle X verbraucht → Skill-Punkt)
+  - Affinitäts-Tier-basiert (Tier-Aufstieg gibt Punkte)
+  - Vanilla-XP-gespiegelte zweite Bar (würde Vanilla nur ersetzen statt rethinken — wahrscheinlich nicht die Idee)
+- Respec: Void Stone räumt Affinitäten (§18, §5.3) — Skill-Punkte analog oder perm?
+
+**Magic Book (vormals Affinity Book):**
+- Tabs: **Affinitäten | Skill Tree | Mana Core**
+- Mana-Core-Tab: Pool-Anzeige, Regen-Rate, evtl. Mana-Potion-Slot, evtl. Config zu beidem.
+- §8.4 "Mana Core als Item (Curios-Slot)" wird damit vermutlich überflüssig — Mana Core als Tab statt Item. Bestätigung nötig: kommt das Item eh nicht?
+- §4 + §12 müssen Affinity Book → Magic Book umbenennen. Phase 2 betroffen.
+
+**Konsequenzen die ich sehe, du evtl. noch nicht:**
+- **Mending wird potenziell sehr stark** wenn Mana-Payment: kein Anvil-Trip-Druck mehr → ständig vollrepariert. Skill "Repair-Effizienz" als Dämpfer? Oder Mending hinter Skill-Gate?
+- **Infinity (per-arrow Mana-Drain)**: Infinity kostet statt "1 Pfeil im Inventar" eine Mana-Summe pro abgeschossenem Arrow. Macht das Enchantment balanced (kein infinite-Quiver mehr) und gibt Mana eine Combat-Senke jenseits der Spells. Konkreter Mechanik-Vorschlag: z.B. `costPerArrow = config["infinity"].manaPerArrow` (default 1 Mana / Arrow), Player-Cast prüft `player.getMana() >= cost` vor jedem Schuss, sonst Pfeil-Schuss geblockt oder Fallback auf normalen Arrow-Consumption. Tie-Breaker bei leerem Mana: entweder kein Schuss oder Schuss mit vollem Vanilla-Pfeil-Consume (deaktivierbar).
+- **Anvil-Combining-Spirale**: im Vanilla ist 30+ Enchant auf 1 Item XP-Gated. Mit Mana-Gate → wie bounded man das? Exponentielles Mana-Cost-Scaling pro Combine, oder hartes Combine-Cap (z.B. max 3-4 Combines pro Item)?
+- **Player-XP-Bar überm Kopf (Multiplayer)**: Vanilla zeigt XP-Level über jedem Spieler. XP = 0 → "0" oder leer über jedem Kopf? Ersatz: Affinitäts-Master-Level? Mana-Pool in %? Nichts?
+- **Beacons**: Bezahlung ist XP. Behalten mit Mana-Bezahlung, oder ersatzlos raus?
+- **Vanilla-Advancements mit XP-Bedingungen** (z.B. "Cover me in debris", Monster-Hunter-XP-Counts) → entweder weg oder umschreiben.
+- **Enchanted Books aus Loot-Tables** (z.B. End-City, Dungeons, Fishing) droppen weiter — nur das Enchanting-Table-Use fällt weg bzw. wird durch Skill-Gate geregelt. Spieler können also Bücher finden aber nicht nutzen ohne Enchanting-Skill-Level.
+
+**Skill-Tree-Scope "alle möglichen Bereiche" — was das konkret heißen könnte:**
+- Combat: Nahkampf-Schaden, Bogen-Schaden, Spell-Power, Crit-Chance
+- Magic: Mana-Pool, Mana-Regen-Rate, Cast-Speed, Cooldown-Reduction
+- Enchanting: Enchant-Power-Level, Repair-Efficiency, Anvil-Discount (Mana-Cost)
+- Mobility: Sprint-Speed, Jump-Height, Fall-Damage-Reduction
+- Utility: Looting-Bonus, Harvesting-Speed, Hunger-Decay-Reduction
+- Defense: Armor-Toughness-Bonus, Resistance-Duration, Status-Effect-Resist
+- Progression-Gated: Pocket-Effect-Reduction (weniger Dimensional-Effects), Boss-Damage-Bonus
+- Strukturierungsvorschlag, nicht vollständig, nicht Lock-in.
+
+**Offene Fragen vor allem anderen:**
+1. Skill-Points-Quelle: Milestone-strukturell / Mana-Spent / Tier-Up / Mix?
+2. Skill-Tree-Struktur: kategorische Tabs oder ein großer Graph mit Prerequisites?
+3. Beacons: behalten + Mana-Zahlung, oder ersatzlos raus?
+4. Bottles o' Enchanting: komplett raus oder Mana-Potion-Pendant (Trank der sofort Mana füllt)?
+
+**Phase-Einordnung (sehr grob):**
+- Mana-System + Magic-Book-Grundgerüst + Enchanting-Table-Rewire → Phase 3 (Spells)
+- Skill-Tree-Vollsystem → Phase 3 oder eigene Phase 3.5
+- XP-Code-Path-Entfernung → muss quer durch alle Phasen mitgepatcht werden, kein einzelner Issue
+
 ---
 
 ## 19. Decisions Log (locked-in design choices)
