@@ -2,7 +2,7 @@ package de.piggidragon.elementalrealms.datagen.advancements;
 
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.registries.items.magic.affinities.AffinityItems;
-import de.piggidragon.elementalrealms.registries.items.magic.misc.MiscItems;
+import de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.HandEquipmentItems;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementType;
@@ -20,16 +20,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * Generates progression advancements for the mod.
+ * Generates the mod's advancement tree.
  */
 public class AdvancementGenerator implements AdvancementSubProvider {
 
-    /**
-     * Generates all advancements for the mod.
-     */
     @Override
     public void generate(HolderLookup.Provider provider, Consumer<AdvancementHolder> consumer) {
-        // Root: Kill Ender Dragon
         AdvancementHolder rootAdvancement = Advancement.Builder.advancement()
                 .display(
                         new ItemStack(AffinityItems.AFFINITY_STONES.get(Affinity.SPACE).get()),
@@ -43,19 +39,15 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                 )
                 .addCriterion("killed_dragon",
                         KilledTrigger.TriggerInstance.playerKilledEntity(
-                                Optional.of(
-                                        EntityPredicate.Builder.entity()
-                                                .of(EntityType.ENDER_DRAGON)
-                                                .build()
-                                )
+                                Optional.of(EntityPredicate.Builder.entity().of(EntityType.ENDER_DRAGON).build())
                         )
                 )
                 .save(consumer, "elementalrealms:root");
-        // Get Dimension Staff
+
         Advancement.Builder.advancement()
                 .parent(rootAdvancement)
                 .display(
-                        new ItemStack(MiscItems.DIMENSION_STAFF.get()),
+                        new ItemStack(HandEquipmentItems.DIMENSION_STAFF.get()),
                         Component.translatable("advancements.elementalrealms.get_staff.title"),
                         Component.translatable("advancements.elementalrealms.get_staff.description"),
                         null,
@@ -65,7 +57,7 @@ public class AdvancementGenerator implements AdvancementSubProvider {
                         false
                 )
                 .addCriterion("has_staff",
-                        InventoryChangeTrigger.TriggerInstance.hasItems(MiscItems.DIMENSION_STAFF.get())
+                        InventoryChangeTrigger.TriggerInstance.hasItems(HandEquipmentItems.DIMENSION_STAFF.get())
                 )
                 .save(consumer, "elementalrealms:get_staff");
     }

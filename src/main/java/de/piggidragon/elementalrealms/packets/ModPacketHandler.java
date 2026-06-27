@@ -5,7 +5,11 @@ import de.piggidragon.elementalrealms.client.rendering.tasks.RenderManager;
 import de.piggidragon.elementalrealms.client.rendering.tasks.tick.LaserBeamTask;
 import de.piggidragon.elementalrealms.datagen.ModDatapackProvider;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
-import de.piggidragon.elementalrealms.packets.custom.*;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesSuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesOpenBookPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamHitEntityPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamPacket;
+import de.piggidragon.elementalrealms.packets.custom.enderdragon.EnderDragonLaserBeamDestroyBlockPacket;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
 import de.piggidragon.elementalrealms.registries.guis.menus.custom.AffinityBookMenu;
 import net.minecraft.client.Minecraft;
@@ -19,7 +23,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.player.Player;
@@ -38,229 +41,179 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Registers and handles custom network packets.
- * All packet handlers must enqueue work on main thread for thread safety.
+ * Registers mod network payloads and implements their handlers.
  */
 @EventBusSubscriber(modid = ElementalRealms.MODID)
-public class ModPacketHandler {
+public final class ModPacketHandler {
 
-    /**
-     * Registers all mod packets with network system.
-     */
+    private static final int AFFINITY_BOOK_PARTICLE_COUNT = 10;
+    private static final double AFFINITY_BOOK_PARTICLE_SPREAD = 1.0;
+    private static final double AFFINITY_BOOK_PARTICLE_Y_OFFSET = 0.8;
+    private static final double AFFINITY_BOOK_PARTICLE_Y_BONUS = 1.2;
+    private static final int LASER_BEAM_LIFE_TICKS = 110;
+    private static final int LASER_BEAM_TRAVEL_TICKS = 2;
+    private static final int LASER_BEAM_DENSITY_PER_BLOCK = 10;
+    private static final int LASER_BEAM_HIT_EXPANSION = 2;
+
+    private ModPacketHandler() {
+    }
+
     @SubscribeEvent
     public static void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event) {
-        // Get the registrar for this mod
         var registrar = event.registrar(ElementalRealms.MODID);
 
-        // Register AffinitySuccessPacket (Server -> Client)
         registrar.playToClient(
-                AffinitySuccessPacket.TYPE,
-                AffinitySuccessPacket.STREAM_CODEC,
+                AffinitiesSuccessPacket.TYPE,
+                AffinitiesSuccessPacket.STREAM_CODEC,
                 ModPacketHandler::handleAffinitySuccess
         );
-
-        // Register OpenAffinityBookPacket (Client -> Server)
         registrar.playToServer(
-                OpenAffinityBookPacket.TYPE,
-                OpenAffinityBookPacket.STREAM_CODEC,
+                AffinitiesOpenBookPacket.TYPE,
+                AffinitiesOpenBookPacket.STREAM_CODEC,
                 ModPacketHandler::handleOpenAffinityBook
         );
-
         registrar.playToServer(
-                LaserBeamHitEntityPacket.TYPE,
-                LaserBeamHitEntityPacket.STREAM_CODEC,
-                ModPacketHandler::handleParticleHitEntity
+                EnderDragonLaserBeamHitEntityPacket.TYPE,
+                EnderDragonLaserBeamHitEntityPacket.STREAM_CODEC,
+                ModPacketHandler::handleLaserBeamHitEntity
         );
-
         registrar.playToClient(
-                DragonLaserBeamPacket.TYPE,
-                DragonLaserBeamPacket.STREAM_CODEC,
+                EnderDragonLaserBeamPacket.TYPE,
+                EnderDragonLaserBeamPacket.STREAM_CODEC,
                 ModPacketHandler::handleDragonLaserBeam
         );
-
         registrar.playToServer(
-                LaserBeamDestroyBlockPacket.TYPE,
-                LaserBeamDestroyBlockPacket.STREAM_CODEC,
-                ModPacketHandler::handleDragonLaserBeamDestroyBlock
+                EnderDragonLaserBeamDestroyBlockPacket.TYPE,
+                EnderDragonLaserBeamDestroyBlockPacket.STREAM_CODEC,
+                ModPacketHandler::handleLaserBeamDestroyBlock
         );
     }
 
-    private static void handleParticleHitEntity(LaserBeamHitEntityPacket particleHitEntityPacket, IPayloadContext iPayloadContext) {
-        iPayloadContext.enqueueWork(() -> {
-            if (iPayloadContext.player() instanceof ServerPlayer serverPlayer) {
-                Level level = serverPlayer.level();
-                Entity hitEntity = level.getEntity(particleHitEntityPacket.hitEntityID());
-                if (hitEntity instanceof LivingEntity targetEntity) {
-
-                    Holder<DamageType> damageTypeHolder = serverPlayer.level().registryAccess()
-                            .registryOrThrow(Registries.DAMAGE_TYPE)
-                            .getHolderOrThrow(ModDatapackProvider.LASER);
-
-                    DamageSource damageSource = new DamageSource(damageTypeHolder, null, serverPlayer);
-
-                    targetEntity.hurt(damageSource, particleHitEntityPacket.damageAmount());
-                }
-            }
-        });
-    }
-
-    /**
-     * Handles affinity success packet on client side.
-     * Triggers totem animation and spawns affinity-colored particles.
-     *
-     * @param packet  Received packet with item and affinity data
-     * @param context Network context for thread-safe execution
-     */
-    private static void handleAffinitySuccess(AffinitySuccessPacket packet, IPayloadContext context) {
-        // Execute on main thread to prevent concurrent modification
+    private static void handleLaserBeamHitEntity(EnderDragonLaserBeamHitEntityPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (FMLEnvironment.dist == Dist.CLIENT) {
-                Minecraft minecraft = Minecraft.getInstance();
+            if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
-                if (minecraft.player != null) {
-                    // Show totem pop animation with affinity stone
-                    minecraft.gameRenderer.displayItemActivation(packet.itemStack());
+            Level level = serverPlayer.level();
+            if (!(level.getEntity(packet.hitEntityID()) instanceof LivingEntity target)) return;
 
-                    // Spawn additional particles for visual feedback
-                    showClientParticles(minecraft.level, minecraft.player, packet.affinity());
-                }
-            }
+            Holder<DamageType> damageType = level.registryAccess()
+                    .registryOrThrow(Registries.DAMAGE_TYPE)
+                    .getHolderOrThrow(ModDatapackProvider.LASER);
+            DamageSource source = new DamageSource(damageType, null, serverPlayer);
+
+            target.hurt(source, packet.damageAmount());
         });
     }
 
-    /**
-     * Handles opening the affinity book on server side.
-     * Retrieves player affinity data and opens the menu.
-     *
-     * @param packet  Empty packet (no data needed)
-     * @param context Network context for thread-safe execution
-     */
-    private static void handleOpenAffinityBook(OpenAffinityBookPacket packet, IPayloadContext context) {
-        // Execute on main thread to prevent concurrent modification
+    private static void handleAffinitySuccess(AffinitiesSuccessPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer serverPlayer) {
+            if (FMLEnvironment.dist != Dist.CLIENT) return;
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.player == null) return;
 
-                Map<Affinity, Integer> affinityCompletionMap = serverPlayer.getData(ModAttachments.AFFINITIES.get());
-                List<AffinityBookMenu.AffinityData> affinities = new ArrayList<>();
-
-                for (Map.Entry<Affinity, Integer> entry : affinityCompletionMap.entrySet()) {
-                    affinities.add(new AffinityBookMenu.AffinityData(entry.getKey(), entry.getValue()));
-                }
-
-                // Open the menu
-                serverPlayer.openMenu(new SimpleMenuProvider(
-                        (containerId, playerInventory, player) ->
-                                new AffinityBookMenu(containerId, affinities),
-                        Component.translatable("gui.elementalrealms.affinity_book.title")
-                ), buf -> {
-                    // Write affinity data to buffer for client
-                    buf.writeInt(affinities.size());
-                    for (AffinityBookMenu.AffinityData data : affinities) {
-                        buf.writeEnum(data.affinity());
-                        buf.writeInt(data.completionPercent());
-                    }
-                });
-            }
+            minecraft.gameRenderer.displayItemActivation(packet.itemStack());
+            showClientParticles(minecraft.level, minecraft.player, packet.affinity());
         });
     }
 
-    /**
-     * Spawns client-side particles matching affinity type.
-     * Creates random pattern around player for visual appeal.
-     *
-     * @param level    Client level for particle spawning
-     * @param player   Player at center of effect
-     * @param affinity Affinity determining particle type
-     */
-    private static void showClientParticles(Level level, Player player, Affinity affinity) {
-        for (int i = 0; i < 10; i++) {
-            double offsetX = (level.random.nextDouble() - 0.5);
-            double offsetY = level.random.nextDouble() * 1.2;
-            double offsetZ = (level.random.nextDouble() - 0.5);
+    private static void handleOpenAffinityBook(AffinitiesOpenBookPacket packet, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
-            switch (affinity) {
-                case FIRE -> level.addParticle(ParticleTypes.FLAME,
-                        player.getX() + offsetX,
-                        player.getY() + 0.8 + offsetY,
-                        player.getZ() + offsetZ,
-                        0.0, 0.05, 0.0);
-
-                case ICE -> level.addParticle(ParticleTypes.SNOWFLAKE,
-                        player.getX() + offsetX,
-                        player.getY() + 0.8 + offsetY,
-                        player.getZ() + offsetZ,
-                        offsetX * 0.02, -0.02, offsetZ * 0.02);
-
-                default -> level.addParticle(ParticleTypes.ENCHANT,
-                        player.getX() + offsetX,
-                        player.getY() + 0.8 + offsetY,
-                        player.getZ() + offsetZ,
-                        offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
+            Map<Affinity, Integer> completions = serverPlayer.getData(ModAttachments.AFFINITIES.get());
+            List<AffinityBookMenu.AffinityData> affinities = new ArrayList<>(completions.size());
+            for (Map.Entry<Affinity, Integer> entry : completions.entrySet()) {
+                affinities.add(new AffinityBookMenu.AffinityData(entry.getKey(), entry.getValue()));
             }
-        }
+
+            serverPlayer.openMenu(new SimpleMenuProvider(
+                    (containerId, playerInventory, player) ->
+                            new AffinityBookMenu(containerId, affinities),
+                    Component.translatable("gui.elementalrealms.affinity_book.title")
+            ), buf -> {
+                buf.writeInt(affinities.size());
+                for (AffinityBookMenu.AffinityData data : affinities) {
+                    buf.writeEnum(data.affinity());
+                    buf.writeInt(data.completionPercent());
+                }
+            });
+        });
     }
 
-    private static void handleDragonLaserBeam(DragonLaserBeamPacket packet, IPayloadContext context) {
+    private static void handleDragonLaserBeam(EnderDragonLaserBeamPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (FMLEnvironment.dist != Dist.CLIENT) return;
             Minecraft minecraft = Minecraft.getInstance();
             Level level = minecraft.level;
             if (level == null) return;
-            Entity dragonEntity = level.getEntity(packet.dragonId());
-            if (!(dragonEntity instanceof EnderDragon)) return;
+            if (!(level.getEntity(packet.dragonId()) instanceof EnderDragon)) return;
+
+            Vec3 direction = packet.endPos().subtract(packet.startPos()).normalize();
             double beamRange = packet.startPos().distanceTo(packet.endPos());
 
-            LaserBeamTask laserBeamTask = new LaserBeamTask(
-                    dragonEntity,
+            RenderManager.addTickTask(new LaserBeamTask(
+                    level.getEntity(packet.dragonId()),
                     level,
                     packet.startPos(),
-                    packet.endPos().subtract(packet.startPos()).normalize(),
+                    direction,
                     beamRange,
-                    10,
+                    LASER_BEAM_DENSITY_PER_BLOCK,
                     1f,
-                    110,
-                    2
-            );
-
-            RenderManager.addTickTask(laserBeamTask);
+                    LASER_BEAM_LIFE_TICKS,
+                    LASER_BEAM_TRAVEL_TICKS
+            ));
         });
     }
 
-    /**
-     * Handles the packet on the server side.
-     * Destroys blocks within the specified radius of the center.
-     *
-     * @param context The packet context.
-     */
-    public static void handleDragonLaserBeamDestroyBlock(final LaserBeamDestroyBlockPacket packet, final IPayloadContext context) {
+    private static void handleLaserBeamDestroyBlock(EnderDragonLaserBeamDestroyBlockPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player().level() instanceof ServerLevel serverLevel) {
-                Vec3 center = packet.center();
-                float r = packet.radius();
-                int rCeil = (int) Math.ceil(r);
+            if (!(context.player().level() instanceof ServerLevel serverLevel)) return;
 
-                BlockPos centerPos = BlockPos.containing(center);
+            Vec3 center = packet.center();
+            float radius = packet.radius();
+            int rCeil = (int) Math.ceil(radius);
+            BlockPos centerPos = BlockPos.containing(center);
 
-                // Iterate through all blocks in the bounding box of the radius
-                for (int x = -rCeil; x <= rCeil; x++) {
-                    for (int y = -rCeil; y <= rCeil; y++) {
-                        for (int z = -rCeil; z <= rCeil; z++) {
-                            // Check spherical distance
-                            if (x * x + y * y + z * z <= r * r) {
-                                BlockPos targetPos = centerPos.offset(x, y, z);
-                                BlockState state = serverLevel.getBlockState(targetPos);
+            for (int x = -rCeil; x <= rCeil; x++) {
+                for (int y = -rCeil; y <= rCeil; y++) {
+                    for (int z = -rCeil; z <= rCeil; z++) {
+                        if (x * x + y * y + z * z > radius * radius) continue;
 
-                                // Destroy block if it's not air and not unbreakable (like bedrock)
-                                if (!state.isAir() && state.getDestroySpeed(serverLevel, targetPos) >= 0) {
-                                    // true = drop items, false = no drops (vaporized)
-                                    // Using true for now so loot drops
-                                    serverLevel.destroyBlock(targetPos, true, context.player());
-                                }
-                            }
-                        }
+                        BlockPos targetPos = centerPos.offset(x, y, z);
+                        BlockState state = serverLevel.getBlockState(targetPos);
+                        if (state.isAir() || state.getDestroySpeed(serverLevel, targetPos) < 0) continue;
+
+                        // true = drop items; false = no drops (vaporized). Currently drops loot.
+                        serverLevel.destroyBlock(targetPos, true, context.player());
                     }
                 }
             }
         });
+    }
+
+    private static void showClientParticles(Level level, Player player, Affinity affinity) {
+        for (int i = 0; i < AFFINITY_BOOK_PARTICLE_COUNT; i++) {
+            double offsetX = level.random.nextDouble() - 0.5;
+            double offsetY = level.random.nextDouble() * AFFINITY_BOOK_PARTICLE_Y_BONUS;
+            double offsetZ = level.random.nextDouble() - 0.5;
+
+            switch (affinity) {
+                case FIRE -> level.addParticle(ParticleTypes.FLAME,
+                        player.getX() + offsetX,
+                        player.getY() + AFFINITY_BOOK_PARTICLE_Y_OFFSET + offsetY,
+                        player.getZ() + offsetZ,
+                        0.0, 0.05, 0.0);
+                case ICE -> level.addParticle(ParticleTypes.SNOWFLAKE,
+                        player.getX() + offsetX,
+                        player.getY() + AFFINITY_BOOK_PARTICLE_Y_OFFSET + offsetY,
+                        player.getZ() + offsetZ,
+                        offsetX * 0.02, -0.02, offsetZ * 0.02);
+                default -> level.addParticle(ParticleTypes.ENCHANT,
+                        player.getX() + offsetX,
+                        player.getY() + AFFINITY_BOOK_PARTICLE_Y_OFFSET + offsetY,
+                        player.getZ() + offsetZ,
+                        offsetX * 0.05, offsetY * 0.02, offsetZ * 0.05);
+            }
+        }
     }
 }

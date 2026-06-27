@@ -2,7 +2,8 @@ package de.piggidragon.elementalrealms.registries.level;
 
 import de.piggidragon.elementalrealms.ElementalRealms;
 import de.piggidragon.elementalrealms.registries.attachments.ModAttachments;
-import de.piggidragon.elementalrealms.registries.entities.custom.PortalEntity;
+import de.piggidragon.elementalrealms.registries.configs.DimensionsConfig;
+import de.piggidragon.elementalrealms.registries.entities.custom.misc.PortalEntity;
 import de.piggidragon.elementalrealms.registries.worldgen.chunkgen.custom.BoundedChunkGenerator;
 import de.piggidragon.elementalrealms.saveddata.GenerationCenterData;
 import net.commoble.infiniverse.api.InfiniverseAPI;
@@ -21,58 +22,59 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
 /**
- * Manager for creating and managing portal-specific dimension instances using Infiniverse API.
- * Each portal gets its own actual dimension with custom chunk generator.
+ * Creates unique dimension instances per portal using Infiniverse and tracks their
+ * generation centers. Each portal gets its own {@link BoundedChunkGenerator} that
+ * only generates terrain inside a bounded square around the generation center.
  */
-public class DynamicDimensionHandler {
+public final class DynamicDimensionHandler {
 
-    // Counter for unique dimension IDs
-    private static int dimensionCounter = 0;
     private static GenerationCenterData generationCenters;
 
-    /**
-     * Initialize the handler with the server instance.
-     * MUST be called during ServerStarting/ServerStarted event!
-     *
-     * @param server The Minecraft server instance
-     */
-    public static void initialize(MinecraftServer server) {
-        generationCenters = GenerationCenterData.get(server);
-        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers",
-                generationCenters.getGenerationCenterCount());
+    private DynamicDimensionHandler() {
     }
 
     /**
-     * Gets the generation center data storage.
-     *
-     * @return The generation center data instance
+     * Must be called during {@code ServerStarting} or {@code ServerStarted}.
      */
+    public static void initialize(MinecraftServer server) {
+        generationCenters = GenerationCenterData.get(server);
+        ElementalRealms.LOGGER.info("DynamicDimensionHandler initialized with {} existing generation centers (currentMaxIndex={})",
+                generationCenters.getGenerationCenterCount(), generationCenters.getCurrentMaxIndex());
+    }
+
     public static GenerationCenterData getGenerationCenterData() {
         return generationCenters;
     }
 
     /**
-     * Creates a new dimension instance for a specific portal using Infiniverse API.
-     *
-     * @param server           The server instance
-     * @param portal           The portal entity requesting the dimension
-     * @param levelResourceKey The base level type to use for generation
-     * @return The ResourceKey for the created dimension
+     * Returns the unique dimension key for the portal's destination, creating it
+     * via Infiniverse on first call. Returns null if creation fails.
      */
-    public static ResourceKey<Level> createDimensionForPortal(MinecraftServer server, PortalEntity portal, ResourceKey<Level> levelResourceKey) {
-
-        // Check if portal already has a dimension
-        ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
-        if (portalTargetLevel != Level.OVERWORLD) {
-            return portalTargetLevel;
+    public static ResourceKey<Level> createDimensionForPortal(
+            MinecraftServer server,
+            PortalEntity portal,
+            ResourceKey<Level> levelResourceKey
+    ) {
+        if (generationCenters == null) {
+            initialize(server);
         }
 
-        // Create unique dimension key with variant name
+        // When a portal is passed, it may already have a targetLevel set (e.g. SchoolDimension
+        // stamped on it earlier). Honor that and skip the new-realm-allocation path.
+        // The portal may also be null when callers just want a fresh realm_<n> assigned
+        // (e.g. /portal spawn commands after the PR #40 cleanup) — treat as "no preset".
+        if (portal != null) {
+            ResourceKey<Level> portalTargetLevel = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+            if (portalTargetLevel != Level.OVERWORLD) {
+                return portalTargetLevel;
+            }
+        }
+
         ResourceKey<Level> dimensionKey = ResourceKey.create(
                 Registries.DIMENSION,
                 ResourceLocation.fromNamespaceAndPath(
                         ElementalRealms.MODID,
-                        "realm_" + "_" + dimensionCounter
+                        "realm_" + generationCenters.getCurrentMaxIndex()
                 )
         );
 
@@ -82,7 +84,6 @@ public class DynamicDimensionHandler {
             ChunkPos generationCenter = getOrCreateGenerationCenter(server);
             generationCenters.addGenerationCenter(dimensionKey, generationCenter);
 
-            // Use Infiniverse to create dimension with custom chunk generator
             ServerLevel newLevel = InfiniverseAPI.get().getOrCreateLevel(
                     server,
                     dimensionKey,
@@ -90,11 +91,12 @@ public class DynamicDimensionHandler {
             );
 
             if (newLevel != null) {
-                portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
-
+                if (portal != null) {
+                    portal.setData(ModAttachments.PORTAL_TARGET_LEVEL, dimensionKey);
+                }
                 ElementalRealms.LOGGER.info("Successfully created dimension {} with custom generator",
                         dimensionKey.location());
-                dimensionCounter++;
+                generationCenters.recordAssignedIndex(generationCenters.getCurrentMaxIndex() + 1);
                 return dimensionKey;
             }
         } catch (Exception e) {
@@ -105,16 +107,82 @@ public class DynamicDimensionHandler {
     }
 
     /**
-     * Creates a custom LevelStem with a NEW chunk generator instance.
-     * Each dimension gets its own generator with unique seeding.
-     *
-     * @param server           The server instance
-     * @param levelResourceKey The level type key for template
-     * @param level            The new dimension key for generation center lookup
-     * @return A LevelStem with custom settings
+     * Marks the portal's dynamically-created dimension for unregistration.
      */
-    private static LevelStem createCustomLevelStem(MinecraftServer server, ResourceKey<Level> levelResourceKey, ResourceKey<Level> level) {
+    public static void removeDimensionForPortal(MinecraftServer server, PortalEntity portal) {
+        ResourceKey<Level> dimensionKey = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
+        if (dimensionKey == Level.OVERWORLD) return;
 
+        ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
+        portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
+        InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
+        ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
+    }
+
+    /**
+     * Returns the next free generation center on a concentric ring around origin.
+     * The first portal always uses (0, 0); subsequent ones walk outward in square
+     * rings whose size grows with the current layer.
+     */
+    public static ChunkPos getOrCreateGenerationCenter(MinecraftServer server) {
+        if (generationCenters == null) {
+            initialize(server);
+        }
+
+        // First-ever portal lands at (0, 0); subsequent ones walk the concentric-ring layout.
+        if (generationCenters.getGenerationCenterCount() == 0) {
+            return new ChunkPos(0, 0);
+        }
+
+        int radius = BoundedChunkGenerator.getRadius() * 2 + 1;
+        int currentLayer = generationCenters.getCurrentLayer();
+        int maxLayers = DimensionsConfig.maxLayers();
+
+        while (currentLayer < maxLayers) {
+            ChunkPos center = scanRing(currentLayer, radius);
+            if (center != null) {
+                return center;
+            }
+            generationCenters.incrementLayer();
+            currentLayer = generationCenters.getCurrentLayer();
+        }
+
+        throw new IllegalStateException(
+                "Failed to create new generation center after " + DimensionsConfig.maxGenerationAttempts() + " attempts");
+    }
+
+    /**
+     * Walks the perimeter of the square at {@code layer} and returns the first free center, or null.
+     */
+    private static ChunkPos scanRing(int layer, int radius) {
+        for (int x = -layer; x <= layer; x++) {
+            ChunkPos center = checkSide(layer, radius, x, -layer);
+            if (center != null) return center;
+            center = checkSide(layer, radius, x, layer);
+            if (center != null) return center;
+        }
+        for (int z = -layer + 1; z <= layer - 1; z++) {
+            ChunkPos center = checkSide(layer, radius, -layer, z);
+            if (center != null) return center;
+            center = checkSide(layer, radius, layer, z);
+            if (center != null) return center;
+        }
+        return null;
+    }
+
+    private static ChunkPos checkSide(int layer, int radius, int x, int z) {
+        ChunkPos center = new ChunkPos(x * radius, z * radius);
+        if (generationCenters.getGenerationCenters().containsValue(center)) {
+            return null;
+        }
+        return center;
+    }
+
+    private static LevelStem createCustomLevelStem(
+            MinecraftServer server,
+            ResourceKey<Level> levelResourceKey,
+            ResourceKey<Level> level
+    ) {
         Registry<LevelStem> levelStemRegistry = server.registryAccess()
                 .registry(Registries.LEVEL_STEM)
                 .orElseThrow();
@@ -128,112 +196,8 @@ public class DynamicDimensionHandler {
         BiomeSource biomeSource = templateGenerator.getBiomeSource();
         Holder<NoiseGeneratorSettings> noiseSettings = templateGenerator.generatorSettings();
 
-        BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(
-                biomeSource,
-                noiseSettings,
-                level
-        );
+        BoundedChunkGenerator customGenerator = new BoundedChunkGenerator(biomeSource, noiseSettings, level);
 
-        return new LevelStem(
-                templateStem.type(),
-                customGenerator
-        );
-    }
-
-    /**
-     * Removes the dimension associated with the given portal.
-     *
-     * @param server The server instance
-     * @param portal The portal entity whose dimension to remove
-     */
-    public static void removeDimensionForPortal(MinecraftServer server, PortalEntity portal) {
-
-        ResourceKey<Level> dimensionKey = portal.getData(ModAttachments.PORTAL_TARGET_LEVEL);
-
-        if (dimensionKey != Level.OVERWORLD) {
-            ElementalRealms.LOGGER.info("Removing dimension {} for portal {}", dimensionKey.location(), portal);
-
-            portal.removeData(ModAttachments.PORTAL_TARGET_LEVEL);
-
-            InfiniverseAPI.get().markDimensionForUnregistration(server, dimensionKey);
-
-            ElementalRealms.LOGGER.info("Dimension {} marked for unregistration", dimensionKey.location());
-        }
-    }
-
-    /**
-     * Creates a new generation center in ring form around the origin.
-     * Automatically saves to persistent storage.
-     *
-     * @param server The server instance
-     * @return The newly created generation center position
-     * @throws IllegalStateException if unable to create a new center after maximum attempts
-     */
-    public static ChunkPos getOrCreateGenerationCenter(MinecraftServer server) throws IllegalStateException {
-
-        if (generationCenters == null) {
-            initialize(server);
-        }
-
-        ChunkPos generationCenter;
-
-        // First center at origin
-        if (dimensionCounter == 0) {
-            generationCenter = new ChunkPos(0, 0);
-            return generationCenter;
-        }
-
-        // Ring generation: iterate over the perimeter of the square at each layer
-        int radius = BoundedChunkGenerator.getRadius() * 2 + 1;
-        int maxAttempts = 10000;
-        int attempts = 0;
-        int currentLayer = generationCenters.getCurrentLayer();
-        int maxLayers = 100; // Prevent infinite layer growth
-
-        while (attempts < maxAttempts && currentLayer < maxLayers) {
-            // Top and bottom sides (x varies, z fixed)
-            for (int x = -currentLayer; x <= currentLayer; x++) {
-                for (int z : new int[]{-currentLayer, currentLayer}) {
-                    generationCenter = new ChunkPos(
-                            x * radius,
-                            z * radius
-                    );
-                    attempts++;
-                    ElementalRealms.LOGGER.info("Tried generation center at: " + generationCenter);
-                    if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
-                        return generationCenter;
-                    }
-                    if (attempts >= maxAttempts) {
-                        break;
-                    }
-                }
-                if (attempts >= maxAttempts) {
-                    break;
-                }
-            }
-            // Left and right sides (z varies, x fixed), skip corners to avoid duplicates
-            for (int z = -currentLayer + 1; z <= currentLayer - 1; z++) {
-                for (int x : new int[]{-currentLayer, currentLayer}) {
-                    generationCenter = new ChunkPos(
-                            x * radius,
-                            z * radius
-                    );
-                    attempts++;
-                    if (!generationCenters.getGenerationCenters().containsValue(generationCenter)) {
-                        return generationCenter;
-                    }
-                    if (attempts >= maxAttempts) {
-                        break;
-                    }
-                }
-                if (attempts >= maxAttempts) {
-                    break;
-                }
-            }
-            generationCenters.incrementLayer();
-            currentLayer = generationCenters.getCurrentLayer();
-        }
-
-        throw new IllegalStateException("Failed to create new generation center after " + attempts + " attempts");
+        return new LevelStem(templateStem.type(), customGenerator);
     }
 }

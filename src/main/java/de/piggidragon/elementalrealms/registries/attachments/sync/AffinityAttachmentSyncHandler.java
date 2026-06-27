@@ -11,66 +11,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Handles synchronization of player affinity data between server and client.
- * Serializes the affinity map to network packets for client-side display.
+ * Synchronizes the player affinity attachment between server and client.
  */
-public class AffinityAttachmentSyncHandler implements AttachmentSyncHandler<Map<Affinity, Integer>> {
+public final class AffinityAttachmentSyncHandler implements AttachmentSyncHandler<Map<Affinity, Integer>> {
 
-    // Always sync affinity data to the target player
     @Override
     public boolean sendToPlayer(IAttachmentHolder holder, ServerPlayer to) {
         return true;
     }
 
-    /**
-     * Serializes affinity data to the network buffer.
-     *
-     * @param registryFriendlyByteBuf Network buffer for writing data
-     * @param affinityIntegerMap      Player's affinity completion map
-     * @param b                       Sync flag (unused)
-     */
     @Override
-    public void write(RegistryFriendlyByteBuf registryFriendlyByteBuf, Map<Affinity, Integer> affinityIntegerMap, boolean b) {
-        // Write map size
-        registryFriendlyByteBuf.writeInt(affinityIntegerMap.size());
-
-        // Write each entry: Affinity (as string) + completion (as int)
-        for (Map.Entry<Affinity, Integer> entry : affinityIntegerMap.entrySet()) {
-            registryFriendlyByteBuf.writeUtf(entry.getKey().name()); // Write affinity name
-            registryFriendlyByteBuf.writeInt(entry.getValue());      // Write completion percentage
+    public void write(RegistryFriendlyByteBuf buf, Map<Affinity, Integer> map, boolean sync) {
+        buf.writeInt(map.size());
+        for (Map.Entry<Affinity, Integer> entry : map.entrySet()) {
+            buf.writeUtf(entry.getKey().name());
+            buf.writeInt(entry.getValue());
         }
     }
 
-    /**
-     * Deserializes affinity data from the network buffer.
-     *
-     * @param iAttachmentHolder       Entity or object holding the attachment
-     * @param registryFriendlyByteBuf Network buffer for reading data
-     * @param affinityIntegerMap      Existing affinity map (unused)
-     * @return Reconstructed affinity map from network data
-     */
     @Override
-    public @Nullable Map<Affinity, Integer> read(IAttachmentHolder iAttachmentHolder, RegistryFriendlyByteBuf registryFriendlyByteBuf, @Nullable Map<Affinity, Integer> affinityIntegerMap) {
-        // Read map size
-        int size = registryFriendlyByteBuf.readInt();
-
-        // Create new map
+    public @Nullable Map<Affinity, Integer> read(IAttachmentHolder holder, RegistryFriendlyByteBuf buf, @Nullable Map<Affinity, Integer> existing) {
+        int size = buf.readInt();
         Map<Affinity, Integer> map = new HashMap<>();
-
-        // Read each entry
         for (int i = 0; i < size; i++) {
-            String affinityName = registryFriendlyByteBuf.readUtf();           // Read affinity name
-            int completion = registryFriendlyByteBuf.readInt();                 // Read completion
-
-            try {
-                Affinity affinity = Affinity.valueOf(affinityName); // Convert string to enum
-                map.put(affinity, completion);
-            } catch (IllegalArgumentException e) {
-                // Skip invalid affinity (shouldn't happen if data is valid)
-                throw new RuntimeException("Unknown affinity: " + affinityName, e);
-            }
+            String name = buf.readUtf();
+            int completion = buf.readInt();
+            map.put(Affinity.valueOf(name), completion);
         }
-
         return map;
     }
 }

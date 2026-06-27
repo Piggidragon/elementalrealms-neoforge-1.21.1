@@ -9,28 +9,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Generates block tags for the mod during data generation.
- * Block tags are used for tool requirements, mineable blocks, and other block groupings.
- * Currently empty as no custom blocks require tags yet.
+ * Block tag generator. Empty by default; populate {@link #addTags} when mod blocks need tags.
  */
 public class ModBlockTagProvider extends BlockTagsProvider {
 
-    public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, String modId, @Nullable ExistingFileHelper existingFileHelper) {
+    public ModBlockTagProvider(
+            PackOutput output,
+            CompletableFuture<HolderLookup.Provider> lookupProvider,
+            String modId,
+            @Nullable ExistingFileHelper existingFileHelper
+    ) {
         super(output, lookupProvider, modId, existingFileHelper);
     }
 
-    /**
-     * Adds blocks to various tags for categorization and behavior.
-     * Examples: mineable_with_pickaxe, needs_iron_tool, fences, walls, etc.
-     *
-     * @param provider Registry lookup provider
-     */
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        // Currently no block tags defined
-        // Future examples:
-        // - Tool requirements (pickaxe, axe, etc.)
-        // - Material tier requirements (iron, diamond, etc.)
-        // - Block groupings (fences, walls, logs, etc.)
+        // No block tags defined yet.
     }
 }

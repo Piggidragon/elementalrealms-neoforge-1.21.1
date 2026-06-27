@@ -9,28 +9,22 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
- * Registry for custom sound events in the mod.
+ * Deferred register for mod sound events.
  */
-public class ModSounds {
+public final class ModSounds {
+
     private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(
             Registries.SOUND_EVENT,
             ElementalRealms.MODID
     );
-
-    /**
-     * Sound effect for dragon laser beam attack.
-     * Variable range sound that attenuates with distance.
-     */
     public static final DeferredHolder<SoundEvent, SoundEvent> LASER_BEAM = SOUND_EVENTS.register(
             "laser_beam",
             () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "laser_beam"))
     );
 
-    /**
-     * Registers all sound events with the mod event bus.
-     *
-     * @param eventBus Mod event bus for registration
-     */
+    private ModSounds() {
+    }
+
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
     }

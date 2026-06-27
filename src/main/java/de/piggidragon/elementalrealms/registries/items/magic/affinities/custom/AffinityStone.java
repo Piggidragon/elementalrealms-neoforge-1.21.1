@@ -3,9 +3,8 @@ package de.piggidragon.elementalrealms.registries.items.magic.affinities.custom;
 import de.piggidragon.elementalrealms.client.particles.vanilla.AffinityParticles;
 import de.piggidragon.elementalrealms.magic.affinities.Affinity;
 import de.piggidragon.elementalrealms.magic.affinities.ModAffinities;
-import de.piggidragon.elementalrealms.packets.custom.AffinitySuccessPacket;
+import de.piggidragon.elementalrealms.packets.custom.affinities.AffinitiesSuccessPacket;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -21,127 +20,79 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.List;
 
 /**
- * Consumable item that grants or removes player affinities.
- * Regular stones add specific affinities, void stone clears all.
+ * Consumable stone that grants an affinity on use. The VOID stone clears all affinities instead.
  */
 public class AffinityStone extends Item {
 
-    // Sound effect constants
     private static final float SOUND_VOLUME = 0.5F;
     private static final float VOID_SOUND_PITCH = 0.8F;
     private static final float BASE_STONE_VOLUME = 0.25F;
     private static final float BASE_STONE_PITCH = 0.25F;
-    private static final float PITCH_INCREMENT = 0.1F; // Pitch increase per affinity ordinal
-    private static final int ERROR_MESSAGE_COLOR = 0xFF0000; // Red color for error messages
+    private static final float PITCH_INCREMENT = 0.1F;
+    private static final int ERROR_MESSAGE_COLOR = 0xFF0000;
 
     private final Affinity affinity;
 
-    /**
-     * Creates a new affinity stone.
-     *
-     * @param properties Item properties including rarity
-     * @param affinity   The affinity this stone grants or manages
-     */
     public AffinityStone(Properties properties, Affinity affinity) {
         super(properties);
         this.affinity = affinity;
     }
 
     /**
-     * Called when the player right-clicks with the item in hand
-     * Handles affinity addition/removal logic
+     * Grants the stone's affinity at full strength (or clears all affinities for the
+     * VOID stone). Plays a per-affinity totem sound and emits affinity-specific
+     * particles on success. The consumed item stack triggers a
+     * {@link AffinitiesSuccessPacket} so the client can mirror the visual feedback.
+     * On failure (tier-validation rejects the grant) the stone is preserved and the
+     * rejection message is shown to the player.
      */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
 
-        // Only execute on server side
         if (level.isClientSide()) {
             return InteractionResultHolder.success(itemStack);
         }
-
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResultHolder.fail(itemStack);
         }
 
-        ItemStack originalItemStack = itemStack.copy();
-        boolean success;
+        ItemStack originalStack = itemStack.copy();
+        boolean consumed;
 
-        // Void stone clears all affinities
-        if (this.affinity == Affinity.VOID) {
-            try {
-                ModAffinities.clearAffinities(serverPlayer);
-                success = true;
-                itemStack.shrink(1);
-            } catch (IllegalStateException e) {
-                serverPlayer.displayClientMessage(
-                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
-                        true
-                );
-                return InteractionResultHolder.fail(itemStack);
-            }
-        } else {
-            // Regular stones add specific affinity
-            try {
-                ModAffinities.addAffinity(serverPlayer, this.affinity);
-                success = true;
-                itemStack.shrink(1);
-            } catch (IllegalStateException e) {
-                serverPlayer.displayClientMessage(
-                        Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
-                        true
-                );
-                return InteractionResultHolder.fail(itemStack);
-            }
-        }
-
-        if (success) {
-            ServerLevel serverLevel = serverPlayer.serverLevel();
-
-            // Spawn colored particles
-            AffinityParticles.createCustomAffinityParticles(serverLevel, serverPlayer, this.affinity);
-
+        try {
             if (affinity == Affinity.VOID) {
-                player.playNotifySound(
-                        SoundEvents.AMETHYST_CLUSTER_BREAK,
-                        SoundSource.PLAYERS,
-                        SOUND_VOLUME,
-                        VOID_SOUND_PITCH
-                );
+                ModAffinities.clearAffinities(serverPlayer);
             } else {
-                float pitch = BASE_STONE_PITCH + (this.affinity.ordinal() * PITCH_INCREMENT);
-                player.playNotifySound(
-                        SoundEvents.TOTEM_USE,
-                        SoundSource.PLAYERS,
-                        BASE_STONE_VOLUME,
-                        pitch
-                );
+                ModAffinities.addAffinity(serverPlayer, affinity);
             }
-
-            // Send packet to client for additional effects
-            PacketDistributor.sendToPlayer(
-                    serverPlayer,
-                    new AffinitySuccessPacket(originalItemStack, this.affinity)
+            consumed = true;
+        } catch (IllegalStateException e) {
+            serverPlayer.displayClientMessage(
+                    Component.literal(e.getMessage()).withStyle(style -> style.withColor(ERROR_MESSAGE_COLOR)),
+                    true
             );
-
-            return InteractionResultHolder.success(itemStack);
+            return InteractionResultHolder.fail(itemStack);
         }
-        return InteractionResultHolder.fail(itemStack);
+
+        itemStack.shrink(1);
+        AffinityParticles.createCustomAffinityParticles(serverPlayer.serverLevel(), serverPlayer, affinity);
+
+        if (affinity == Affinity.VOID) {
+            player.playNotifySound(SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, SOUND_VOLUME, VOID_SOUND_PITCH);
+        } else {
+            float pitch = BASE_STONE_PITCH + affinity.ordinal() * PITCH_INCREMENT;
+            player.playNotifySound(SoundEvents.TOTEM_USE, SoundSource.PLAYERS, BASE_STONE_VOLUME, pitch);
+        }
+
+        PacketDistributor.sendToPlayer(serverPlayer, new AffinitiesSuccessPacket(originalStack, affinity));
+        return consumed ? InteractionResultHolder.success(itemStack) : InteractionResultHolder.fail(itemStack);
     }
 
-    // Adds tooltip showing affinity type and description
     @Override
-    public void appendHoverText(
-            ItemStack stack,
-            TooltipContext context,
-            List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag
-    ) {
-        // Add affinity-specific description
-        String tooltipKey = "itemtooltip.elementalrealms.affinity_stone."
-                + this.affinity.name().toLowerCase();
-        tooltipComponents.add(Component.translatable(tooltipKey));
-
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        String key = "itemtooltip.elementalrealms.affinity_stone." + affinity.name().toLowerCase();
+        tooltipComponents.add(Component.translatable(key));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

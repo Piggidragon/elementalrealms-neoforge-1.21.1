@@ -6,14 +6,14 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 
 /**
- * Custom biome tags for the mod.
+ * Biome tags for the mod.
  */
-public class ModBiomeTags {
+public final class ModBiomeTags {
 
-    /**
-     * Tag for all biomes where portals can spawn.
-     */
     public static final TagKey<Biome> ALL_SPAWNABLE_DIMENSIONS =
             TagKey.create(Registries.BIOME,
                     ResourceLocation.fromNamespaceAndPath("elementalrealms", "all_spawnable_dimensions"));
+
+    private ModBiomeTags() {
+    }
 }
