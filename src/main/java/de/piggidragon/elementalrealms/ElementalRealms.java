@@ -49,7 +49,9 @@ public class ElementalRealms {
         ModConfigs.register(modContainer);
 
         // Touch every JSON5 config INSTANCE so they self-load (and write defaults if missing).
-        // Order doesn't matter — they're independent files.
+        // `toString()` is a no-side-effect way to force class-init from this constructor
+        // (a static method call would also work, but the IDE flags unused-return warnings).
+        // Order doesn't matter — each loader touches an independent file.
         AffinityConfig.INSTANCE.toString();
         DimensionsConfig.INSTANCE.toString();
         BossesConfig.INSTANCE.toString();

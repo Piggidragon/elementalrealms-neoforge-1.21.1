@@ -170,14 +170,28 @@ public final class ModAffinities {
         player.setData(ModAttachments.AFFINITIES.get(), next);
     }
 
+    /**
+     * Reads the player's current affinities map from the {@code AFFINITIES} attachment.
+     * Returns an empty map (never {@code null}) for fresh players or after
+     * {@link #clearAffinities}.
+     */
     public static Map<Affinity, Integer> getAffinities(ServerPlayer player) {
         return player.getData(ModAttachments.AFFINITIES.get());
     }
 
+    /**
+     * Returns whether the player holds the given affinity at any completion (even 0%
+     * via {@link #setAffinity} removal does NOT count — the entry must be present).
+     */
     public static boolean hasAffinity(ServerPlayer player, Affinity affinity) {
         return getAffinities(player).containsKey(affinity);
     }
 
+    /**
+     * Picks the {@link SoundEvent} associated with an affinity grant, one per affinity
+     * (FIRE -&gt; blaze ambient, WATER -&gt; bucket fill, etc.). Used by every add- and set-path
+     * so the same sound plays regardless of how the affinity was acquired.
+     */
     public static SoundEvent playAffinitySound(ServerPlayer player, Affinity affinity) {
         return switch (affinity) {
             case FIRE -> SoundEvents.FIRE_AMBIENT;
@@ -195,6 +209,14 @@ public final class ModAffinities {
         };
     }
 
+    /**
+     * Throws if {@code affinity} can't currently be added:
+     * <ul>
+     *   <li>ETERNAL and the player already holds any eternal at 100%.</li>
+     *   <li>DEVIANT and the player is missing the matching Elemental at 100%.</li>
+     * </ul>
+     * Used by {@link #addAffinity}, {@link #addIncrementAffinity}, and {@link #setAffinity}.
+     */
     private static void validateCanAdd(Affinity affinity, Map<Affinity, Integer> current) {
         if (affinity.getType() == AffinityType.ETERNAL && hasEternalAffinity(current)) {
             throw new IllegalStateException("Player already has an eternal affinity");

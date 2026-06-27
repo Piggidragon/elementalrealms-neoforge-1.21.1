@@ -29,6 +29,11 @@ public class AffinityShard extends Item {
         this.affinity = affinity;
     }
 
+    /**
+     * Adds {@link #AFFINITY_INCREMENT} (5%) to this shard's affinity on the player. The
+     * shard is consumed on success. Failure (already at max, missing base for a Deviant
+     * shard, etc.) is reported via a red action-bar message and the shard is preserved.
+     */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);

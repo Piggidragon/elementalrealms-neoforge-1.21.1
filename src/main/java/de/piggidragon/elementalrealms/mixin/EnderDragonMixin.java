@@ -58,9 +58,13 @@ public abstract class EnderDragonMixin extends Mob {
 
     @Inject(method = "aiStep", at = @At("HEAD"))
     private void elementalRealms$onAiStep(CallbackInfo ci) {
+        // Server-side only: client doesn't have the per-player anchor maps (they live on the
+        // server entity) and shouldn't make decisions that affect gameplay.
         if (this.level().isClientSide) return;
         ServerLevel serverLevel = (ServerLevel) this.level();
 
+        // Pull all config knobs once per aiStep so we don't read the JSON5-backed getters
+        // in a hot loop. dragon.json drives every tunable here.
         double checkRadius = DragonConfig.laserCheckRadius();
         double detectionRange = DragonConfig.laserDetectionRange();
         int checkInterval = DragonConfig.laserCheckIntervalTicks();
@@ -68,6 +72,7 @@ public abstract class EnderDragonMixin extends Mob {
         double checkRadiusSquared = checkRadius * checkRadius;
         int detectionRangeSquared = (int) (detectionRange * detectionRange);
 
+        // Tick down cooldowns so previously-shot players don't get instantly re-shot.
         elementalrealms_neoforge_1_21_1$playerLaserCooldown.replaceAll((uuid, cooldown) -> Math.max(0, cooldown - 1));
 
         List<ServerPlayer> players = serverLevel.getPlayers(player ->
@@ -81,12 +86,16 @@ public abstract class EnderDragonMixin extends Mob {
             UUID playerId = player.getUUID();
             Vec3 currentPos = player.position();
 
+            // First sighting: seed the anchor position so subsequent ticks can compare.
             if (!elementalrealms_neoforge_1_21_1$anchorPositions.containsKey(playerId)) {
                 elementalrealms_neoforge_1_21_1$anchorPositions.put(playerId, currentPos);
                 elementalrealms_neoforge_1_21_1$checkTimer.put(playerId, 0);
                 continue;
             }
 
+            // Player must stay roughly within checkRadius of their anchor for checkInterval
+            // ticks before they're considered "stationary". If they move out, the anchor
+            // resets to their current position (so they have to be still again).
             int timer = elementalrealms_neoforge_1_21_1$checkTimer.getOrDefault(playerId, 0) + 1;
 
             if (timer >= checkInterval) {
@@ -106,6 +115,7 @@ public abstract class EnderDragonMixin extends Mob {
             }
         }
 
+        // Prune maps for players who left the detection range so memory doesn't grow forever.
         List<UUID> trackedIds = players.stream().map(Player::getUUID).collect(Collectors.toList());
         elementalrealms_neoforge_1_21_1$anchorPositions.keySet().retainAll(trackedIds);
         elementalrealms_neoforge_1_21_1$checkTimer.keySet().retainAll(trackedIds);

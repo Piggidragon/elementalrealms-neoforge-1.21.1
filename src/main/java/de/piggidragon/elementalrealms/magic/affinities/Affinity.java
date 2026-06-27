@@ -49,6 +49,10 @@ public enum Affinity {
         this.type = type;
     }
 
+    /**
+     * The four ELEMENTAL affinities (Fire, Water, Wind, Earth). Used by the login roll
+     * (Stage 1 random pick) and as the prerequisite tier for DEVIANT grants.
+     */
     public static List<Affinity> getAllElemental() {
         return Arrays.stream(values())
                 .filter(a -> a.getType() == AffinityType.ELEMENTAL)
@@ -59,10 +63,18 @@ public enum Affinity {
         return type;
     }
 
+    /**
+     * Lowercase enum name (e.g. {@code FIRE} -> {@code "fire"}) for use in item IDs,
+     * lang keys, and config lookups. See NAMING-CONVENTIONS.md §5.
+     */
     public String getName() {
         return name().toLowerCase();
     }
 
+    /**
+     * For ELEMENTAL affinities, returns the matching DEVIANT (FIRE -> LIGHTNING, etc.).
+     * Returns {@link #VOID} for any non-elemental affinity.
+     */
     public Affinity getDeviant() {
         if (getType() != AffinityType.ELEMENTAL) return VOID;
         return switch (this) {
@@ -74,6 +86,10 @@ public enum Affinity {
         };
     }
 
+    /**
+     * For DEVIANT affinities, returns the matching ELEMENTAL base (LIGHTNING -> FIRE, etc.).
+     * Returns {@link #VOID} for any non-deviant affinity.
+     */
     public Affinity getElemental() {
         if (getType() != AffinityType.DEVIANT) return VOID;
         return switch (this) {

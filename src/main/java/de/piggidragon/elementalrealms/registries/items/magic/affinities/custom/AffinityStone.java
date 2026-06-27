@@ -38,6 +38,14 @@ public class AffinityStone extends Item {
         this.affinity = affinity;
     }
 
+    /**
+     * Grants the stone's affinity at full strength (or clears all affinities for the
+     * VOID stone). Plays a per-affinity totem sound and emits affinity-specific
+     * particles on success. The consumed item stack triggers a
+     * {@link AffinitiesSuccessPacket} so the client can mirror the visual feedback.
+     * On failure (tier-validation rejects the grant) the stone is preserved and the
+     * rejection message is shown to the player.
+     */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
