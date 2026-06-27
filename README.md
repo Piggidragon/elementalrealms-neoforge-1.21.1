@@ -68,17 +68,6 @@ A staff with **16 durability** that opens a temporary portal to the **School Dim
 - All affinities grant mastery over different elements (Fire, Water, Earth, Wind, Lightning, Ice, Sound, Gravity, Time,
   Space, Life, Void).
 
-### 🐉 Dragon Laser
-
-The **Ender Dragon** has a new attack! If a player stays still for **3 seconds**, the dragon fires a **piercing laser
-beam** from its head.
-
-- **5-second cooldown** between laser attacks per player.
-- Destroys blocks in the beam's path (drops items).
-- Custom particle effects and a unique `laser_beam.ogg` sound.
-- Sound volume scales with distance from the beam line.
-- Rewards players who keep moving during the fight.
-
 ### 🌍 Dimensions
 
 #### School Dimension
@@ -129,11 +118,10 @@ Underground portals cause an **explosion** on spawn to clear space (configurable
 
 - **Custom Rarities:** LEGENDARY (gold text) for deviant stones, MYTHIC (dark purple text) for eternal stones —
   registered via NeoForge's `@EnumExtension`.
-- **Custom Damage Type:** `laser` — bypasses armor, shields, enchantments, and knockback.
 - **Custom Chunk Generator:** `BoundedChunkGenerator` limits worldgen to a configurable radius.
 - **Data Attachments:** Affinities, portal target levels, and return positions persist via NeoForge attachment system.
-- **Network:** Payload-based packet system with client/server handlers for affinity effects, laser beam rendering, block
-  destruction, and entity damage.
+- **Network:** Payload-based packet system with client/server handlers for affinity effects and
+  affinity-book opening.
 - **Datagen:** Automatic generation of item models, recipes, advancements, loot tables, block/item tags, sounds, and
   biome modifiers.
 
@@ -186,7 +174,6 @@ src/
 │   │   ├── datagen/                       # Data generators (advancements, recipes, etc.)
 │   │   ├── events/                        # Server event handlers
 │   │   ├── magic/affinities/              # Affinity enum, types, management, rolls
-│   │   ├── mixin/                         # EnderDragon mixin (laser beam)
 │   │   ├── packets/                       # Network packets & handlers
 │   │   ├── registries/                    # All DeferredRegister registrations
 │   │   ├── saveddata/                     # Persistent world data

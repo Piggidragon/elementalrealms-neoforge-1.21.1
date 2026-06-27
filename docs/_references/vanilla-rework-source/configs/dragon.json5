@@ -1,0 +1,21 @@
+// Elemental Realms — dragon config (JSON5).
+// HP / damage multipliers stay in the TOML layer; this file holds the
+// per-attack behaviour injected by EnderDragonMixin.
+{
+  "schemaVersion": 1,
+
+  "laser": {
+    // How often (ticks) the dragon checks for stationary players within checkRadius.
+    "checkIntervalTicks": 60,
+    // Radius (blocks) the player must stay within for the dragon to count them as "still".
+    "checkRadius": 1.5,
+    // Range (blocks) at which the dragon starts scanning players for the laser attack.
+    "detectionRange": 100.0,
+    // Cooldown (ticks) before the dragon can target the same player again.
+    "cooldownTicks": 100,
+    // Range (blocks) at which nearby players hear the laser beam sound.
+    "soundHearingRange": 100.0,
+    "soundVolume": 5.0,
+    "soundPitch": 1.0
+  }
+}

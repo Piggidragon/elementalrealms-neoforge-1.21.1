@@ -17,6 +17,10 @@ public final class ModSounds {
             Registries.SOUND_EVENT,
             ElementalRealms.MODID
     );
+    public static final DeferredHolder<SoundEvent, SoundEvent> LASER_BEAM = SOUND_EVENTS.register(
+            "laser_beam",
+            () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ElementalRealms.MODID, "laser_beam"))
+    );
 
     private ModSounds() {
     }

@@ -65,13 +65,13 @@ Generic fantasy-academy world. Player enters a School dimension after the Dragon
 
 ---
 
-## 3. Dragon Rework
+## 3. Dragon Gate (vanilla)
 
-The Ender Dragon is the **gate to the School dimension** — warden of the dimension barrier. Killing it cracks the barrier. Hard enough that maxed Netherite + skill is the baseline.
+The Ender Dragon is the **gate to the School dimension** — warden of the dimension barrier. Killing it cracks the barrier. The dragon is left vanilla; maxed Netherite + skill is the baseline.
 
-Ideas (full detail in IDEAS.md): HP multiplier, multiple escalating phases, dragon breath / meteor shower / exploding fireballs, aggressive AI sweep, perch knockback + damage waves, stand-still punishment attack, summon adds, End Crystals as enemies that self-regenerate and spawn mobs on destruction, climatic finish.
+Hard-rework ideas (HP multiplier, phase system, breath/meteor/fireball, perch knockback, stand-still punishment, add spawns, crystal aggression, climatic finish) have been moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1` — see issue #52.
 
-Reference: TrueEnd datapack (similar overhaul).
+**Dragons Requiem reference:** TrueEnd datapack (similar overhaul).
 
 ---
 
@@ -283,13 +283,11 @@ Boss walking / behavior not yet decided.
 
 ## 10. Balance Changes
 
-### 10.1 Enchantment nerf
-
-Protection, Sharpness, Sweeping, Smite, Bane of Arthropods all scaled back. Reason: vanilla top-tier enchantments are too game-changing — general MC balance issue, not just for spell users. Multipliers per enchantment in `enchantments.json`.
-
-### 10.2 Ominous-Potion-Scaling
+### 10.1 Ominous-Potion-Scaling
 
 Potion effects scale with difficulty / location, Trial-Chamber-style.
+
+Per-enchantment global nerfs (Protection, Sharpness, Sweeping, Smite, Bane of Arthropods) have been moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1` — see issue #52.
 
 ---
 
@@ -342,9 +340,9 @@ Multiplayer-safe for single-pocket scenarios. Edge cases handled per-phase. Sing
 
 Each phase: code PR (Draft) → user game-test → feedback → fix → sign-off → merge to `dev`.
 
-### Phase 1 — Dragon Rework
+### Phase 1 — School + Crystal Orb + Spawn Structure
 
-TrueEnd-inspired overhaul. HP, phases, breath/meteor/fireballs, perch knockback, stand-still punishment, summon adds, crystal aggression + regen, climatic finish, aggressive AI.
+TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neoforge-1.21.1` (see issue #52). Phase 1 in ER starts with the School side of the gate:
 
 ### Phase 2 — School + Crystal Orb + Spawn Structure
 
@@ -499,9 +497,7 @@ client/
 | `bosses.json` | Boss stats per affinity |
 | `mobs.json` | Affinity mob spawn rules + tier-gating; modded mob spawn rules |
 | `portal.json` | Portal config |
-| `dragon.json` | HP multiplier, phase transitions, attack configs |
 | `school.json` | School + Crystal Orb + Dimension Staff config |
-| `enchantments.json` | Protection/sharpness nerf multipliers + potion scaling |
 | `timer.json` | Corrupted-world timer difficulty |
 
 ---
@@ -585,7 +581,7 @@ Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 - [x] NamingRegistry scope (display-name helper, not load-bearing)
 - [x] Boss names (generic fantasy-academy, see NamingRegistry)
 - [x] Saved_code triage (#26 — promoted / archived / discarded)
-- [x] Enchantment nerf defaults (0.7 protection, 0.6 sharpness)
+- [x] Enchantment nerf defaults (0.7 protection, 0.6 sharpness) — moved to `dragonsrequiem-neoforge-1.21.1` (see #52)
 - [x] Roll-logic specifics (3-stage per §5.2)
 
 ### Phase 1 (Dragon)

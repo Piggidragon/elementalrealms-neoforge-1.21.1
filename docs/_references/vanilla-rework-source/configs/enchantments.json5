@@ -1,0 +1,23 @@
+// Elemental Realms — enchantments config (JSON5). Phase 0.5 fleshes this out.
+// Multipliers applied on top of vanilla values: <1 = nerf, >1 = buff.
+{
+  "schemaVersion": 1,
+  "protection": {
+    "perLevelMultiplier": 1.0
+  },
+  "sharpness": {
+    "perLevelMultiplier": 1.0
+  },
+  "sweeping": {
+    "perLevelMultiplier": 1.0
+  },
+  "smite": {
+    "perLevelMultiplier": 1.0
+  },
+  "baneOfArthropods": {
+    "perLevelMultiplier": 1.0
+  },
+  "ominousPotionScaling": {
+    "difficultyMultiplier": 1.0
+  }
+}

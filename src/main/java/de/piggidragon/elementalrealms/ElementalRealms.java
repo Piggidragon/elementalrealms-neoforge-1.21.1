@@ -6,8 +6,6 @@ import de.piggidragon.elementalrealms.registries.blocks.ModBlocks;
 import de.piggidragon.elementalrealms.registries.configs.AffinityConfig;
 import de.piggidragon.elementalrealms.registries.configs.BossesConfig;
 import de.piggidragon.elementalrealms.registries.configs.DimensionsConfig;
-import de.piggidragon.elementalrealms.registries.configs.DragonConfig;
-import de.piggidragon.elementalrealms.registries.configs.EnchantmentsConfig;
 import de.piggidragon.elementalrealms.registries.configs.MobsConfig;
 import de.piggidragon.elementalrealms.registries.configs.ModConfigs;
 import de.piggidragon.elementalrealms.registries.configs.PortalConfig;
@@ -58,9 +56,7 @@ public class ElementalRealms {
         MobsConfig.INSTANCE.toString();
         SpellsConfig.INSTANCE.toString();
         PortalConfig.INSTANCE.toString();
-        DragonConfig.INSTANCE.toString();
         SchoolConfig.INSTANCE.toString();
-        EnchantmentsConfig.INSTANCE.toString();
         TimerConfig.INSTANCE.toString();
 
         ModAttachments.register(modEventBus);

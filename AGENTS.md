@@ -42,37 +42,9 @@ Full workflow details: see the `elementalrealms-workflow` skill (auto-loaded whe
 
 | File | Role | Status |
 |---|---|---|
-| `src/main/java/.../mixin/EnderDragonMixin.java` | Stationary-player laser attack on vanilla dragon. | **Marked for move to dragons_requiem — see issue #52.** |
-| `src/main/java/.../registries/configs/DragonConfig.java` | Loads `dragon.json`. 7 laser-config knobs. | **Move with the mixin.** |
-| `src/main/java/.../registries/configs/EnchantmentsConfig.java` | Loads `enchantments.json`. Enchantment-nerf stub. | **Move to dragons_requiem.** |
-| `src/main/java/.../events/DragonDeathHandler.java` | Listens for vanilla dragon-kill advancement, spawns School portal. | **Stays in ER** (gate trigger, not vanilla-rework). |
-| `src/main/java/.../packets/custom/enderdragon/*.java` | 3 laser packets. | **Move with the mixin.** |
-| `src/main/java/.../client/rendering/tasks/tick/LaserBeamTask.java` | Client-side beam rendering. | **Move with the mixin.** |
-| `src/main/resources/assets/elementalrealms/sounds/laser_beam.ogg` | Laser sound asset. License audit open. | **Move with the mixin.** |
-| `src/main/resources/elementalrealms.mixins.json` | Mixin registration (lists `EnderDragonMixin`). | Remove `EnderDragonMixin` entry when laser moves. |
+| `src/main/resources/elementalrealms.mixins.json` | Mixin registration. | Active (empty mixins list — vanilla-rework mixins moved to `dragonsrequiem-neoforge-1.21.1` per #52). |
 | `LICENSE` (repo root) | LGPL-3.0 license for our code. | Active. |
 | `gradle.properties` → `mod_license=LGPL-3.0` | License field for mod metadata. | Active. |
-
-### Current `dragon.json` defaults
-
-```json
-{
-  "schemaVersion": 1,
-  "laser": {
-    "checkIntervalTicks": 60,
-    "checkRadius": 1.5,
-    "detectionRange": 100.0,
-    "cooldownTicks": 100,
-    "soundHearingRange": 100.0,
-    "soundVolume": 5.0,
-    "soundPitch": 1.0
-  }
-}
-```
-
-### Current `enchantments.json` defaults
-
-Stub — all multipliers = 1.0, no actual nerf applied. (Will move to dragons_requiem.)
 
 ## What's NOT in the codebase yet
 
@@ -112,7 +84,7 @@ Notable open issues:
 
 ## Recently merged
 
-- PR #9 — Stationary-player laser attack on Ender Dragon.
+- PR #9 — Stationary-player laser attack on Ender Dragon. (Code moved to `dragonsrequiem-neoforge-1.21.1` per #52.)
 
 ## Last updated
 

@@ -12,12 +12,19 @@ import net.neoforged.neoforge.common.data.SoundDefinitionsProvider;
  */
 public class ModSoundsProvider extends SoundDefinitionsProvider {
 
+    private static final float LASER_VOLUME = 0.5f;
+    private static final float LASER_PITCH = 1.0f;
+
     public ModSoundsProvider(PackOutput output, ExistingFileHelper helper) {
         super(output, ElementalRealms.MODID, helper);
     }
 
     @Override
     public void registerSounds() {
-        // No sounds registered yet — re-add vanilla-rework or new sounds here when needed.
+        add(ModSounds.LASER_BEAM, SoundDefinition.definition()
+                .with(sound("elementalrealms:laser_beam").volume(LASER_VOLUME).pitch(LASER_PITCH))
+                .subtitle("sound.elementalrealms.laser_beam")
+                .replace(true)
+        );
     }
 }
