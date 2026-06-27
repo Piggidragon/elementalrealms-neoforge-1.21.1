@@ -43,12 +43,18 @@ public class SchoolStaff extends Item {
     }
 
     /**
-     * Advances all active beam animations. Must be called from the server tick event.
+     * Advances all active beam animations. Must be called from the server tick event
+     * once per tick; each animation either ticks itself or returns false to signal
+     * completion (and is then removed from the map).
      */
     public static void tickAnimations() {
         ACTIVE_ANIMATIONS.entrySet().removeIf(entry -> !entry.getValue().tick());
     }
 
+    /**
+     * Spawns a portal at the given position pointing to the School dimension,
+     * owned by {@code player} (used for later cleanup of duplicate staff portals).
+     */
     private static void spawnPortal(Level level, Player player, Vec3 targetPosition) {
         PortalEntity portal = new PortalEntity(
                 ModEntities.PORTAL_ENTITY.get(),
@@ -63,6 +69,11 @@ public class SchoolStaff extends Item {
         level.addFreshEntity(portal);
     }
 
+    /**
+     * Removes every portal owned by {@code player} within the configured search radius.
+     * Called at the start of each staff use to prevent portal stacking when the player
+     * spams right-click; the despawn particles + ender-eye sound give visual feedback.
+     */
     private static void removeOldPortals(Level level, Player player) {
         List<PortalEntity> portals = level.getEntitiesOfClass(
                 PortalEntity.class,
@@ -150,6 +161,9 @@ public class SchoolStaff extends Item {
                 return false;
             }
 
+            // Walk along the staff-tip -> target-pos line at a constant step size, then emit
+            // three spiral arms (cos/sin, 120° apart) at each step. This produces the
+            // twisting beam visual without locking the particle count to distance.
             Vec3 currentPos = startPos.add(direction.scale(currentTick * stepSize));
 
             for (int i = 0; i < 3; i++) {

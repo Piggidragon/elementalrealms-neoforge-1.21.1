@@ -57,16 +57,28 @@ public class PortalEntity extends Entity {
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level) {
         super(type, level);
         this.portalLevel = level.dimension();
+        // targetLevel defaults to OVERWORLD on the server; client side it stays null until
+        // the server pushes the real key via attachment sync. Code that reads targetLevel
+        // must therefore check for null on the client.
         if (!level.isClientSide() && level.getServer() != null) {
             this.targetLevel = Level.OVERWORLD;
         }
     }
 
+    /**
+     * Convenience constructor for portals whose target dimension is known at spawn time.
+     */
     public PortalEntity(EntityType<? extends PortalEntity> type, Level level, ResourceKey<Level> targetLevel) {
         this(type, level);
         this.targetLevel = targetLevel;
     }
 
+    /**
+     * Full constructor used by {@link de.piggidragon.elementalrealms.registries.items.magic.equipment.hand.custom.SchoolStaff}
+     * and debug commands. {@code discard=true} marks the portal as one-shot (it discards
+     * itself after the first teleport); {@code despawnTimeout > 0} bounds portal lifetime
+     * for staff-spawned portals; {@code ownerUUID} lets the staff find+remove duplicates.
+     */
     public PortalEntity(
             EntityType<? extends PortalEntity> type,
             Level level,
@@ -82,10 +94,18 @@ public class PortalEntity extends Entity {
         this.targetLevel = targetLevel;
     }
 
+    /**
+     * Returns the player UUID this portal belongs to (set by {@code SchoolStaff} for
+     * duplicate-cleanup), or {@code null} for natural worldgen portals.
+     */
     public UUID getOwnerUUID() {
         return this.ownerUUID;
     }
 
+    /**
+     * Overrides the target dimension. Used by debug commands that build the portal then
+     * set its destination in a second step (the {@code portalSpawnDimension} flow).
+     */
     public void setTargetLevel(ResourceKey<Level> targetLevel) {
         this.targetLevel = targetLevel;
     }
@@ -138,6 +158,8 @@ public class PortalEntity extends Entity {
         this.primed = compound.getBoolean(TAG_IS_NATURAL);
         this.initialized = compound.getBoolean(TAG_INITIALIZED);
 
+        // TargetLevel is optional in the save: a portal saved before this field existed
+        // restores to OVERWORLD on the server, null on the client (sync fills it later).
         if (compound.contains(TAG_TARGET_LEVEL)) {
             String levelKey = compound.getString(TAG_TARGET_LEVEL);
             if (!levelKey.isEmpty() && !this.level().isClientSide()) {
@@ -182,11 +204,17 @@ public class PortalEntity extends Entity {
     public void tick() {
         super.tick();
 
+        // Server-side first-tick explosion for natural portals. Must run on tickCount==1
+        // (not 0) because super.tick() runs first and chunk/tile-entity state isn't ready
+        // until the next tick boundary. Guarded by `!initialized` so a reload doesn't
+        // re-explode the portal.
         if (!this.level().isClientSide() && !initialized && this.tickCount == 1 && primed) {
             createExplosivePortalSpace();
             this.initialized = true;
         }
 
+        // Particle and teleport work happens server-side only - clients render the
+        // synced particles via Lodestone rather than via this entity.
         if (this.level().isClientSide()) return;
 
         if (despawnTimeout > 0) {
@@ -202,6 +230,8 @@ public class PortalEntity extends Entity {
             spawnAmbientParticles();
         }
 
+        // Teleport any intersecting non-spectator player. The portal-cooldown check lives
+        // inside teleportPlayer so the cooldown is enforced per-player, not per-portal.
         List<ServerPlayer> players = this.level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox());
         for (ServerPlayer player : players) {
             if (!player.isSpectator()) {
@@ -210,6 +240,13 @@ public class PortalEntity extends Entity {
         }
     }
 
+    /**
+     * On non-discard removal, tear down the dynamically-created dimension backing this
+     * portal. Skipped for OVERWORLD and the School dimension (those are static - never
+     * registered as dynamic realms). KILLED/DISCARDED reasons are ignored: those come from
+     * {@code discard()} (timeout, one-shot after teleport) and shouldn't cascade-destroy
+     * the realm.
+     */
     @Override
     public void remove(RemovalReason reason) {
         super.remove(reason);
@@ -256,6 +293,8 @@ public class PortalEntity extends Entity {
 
     private void teleportPlayer(Level level, ServerPlayer player) {
         if (level.isClientSide() || targetLevel == null) return;
+        // The portal-cooldown is set by vanilla on teleport; this lets the same player
+        // bounce through two overlapping portals without infinite loops.
         if (player.isOnPortalCooldown()) {
             player.displayClientMessage(Component.literal("Portal is on cooldown!"), true);
             return;
@@ -265,6 +304,9 @@ public class PortalEntity extends Entity {
         float yaw = player.getYRot();
         float pitch = player.getXRot();
 
+        // Split path: vanilla-source portals (overworld/nether/end) save the return
+        // position and create a return portal in the destination; custom-dimension
+        // portals consume the previously-saved return position to take the player home.
         if (PortalUtils.isVanilla(portalLevel)) {
             teleportFromVanilla(player, relatives, yaw, pitch);
         } else {
