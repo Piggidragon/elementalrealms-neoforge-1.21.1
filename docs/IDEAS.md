@@ -17,40 +17,9 @@ Sections below group ideas by topic. They're loosely ordered — newer ideas go 
 
 ---
 
-## 1. Dragon Rework
+## 1. Dragon Rework (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
 
-### Core mechanic ideas (TrueEnd-inspired)
-- HP multiplier TBD, start with 2× vanilla and tune
-- Multiple phases escalating aggression, new attacks each phase
-- Dragon breath / meteor shower / exploding fireballs
-- Aggressive AI sweep (not just orbit)
-- Perch knockback + damage waves in all directions when dragon perches
-- Stand-still punishment attack (1-hit kill if you stay in one place too long)
-- Summon adds in later phases (custom mobs, not vanilla)
-- Crystals as enemies: attack players, self-regenerate, destroying them spawns mobs
-- Climatic finish with strong visual moment
-
-### Player experience
-- Maxed Netherite + skill is the baseline requirement, not overkill
-- Fight should feel cinematic — combining all phases feels like a story
-
-### Lore
-- Dragon = warden of the dimension barrier
-- Killing cracks the barrier, dimensions become accessible
-- The barrier is what kept the pocket worlds sealed away
-
-### Phase progression (loose draft)
-- Phase 1 (high HP): vanilla-ish behavior + new breath attack
-- Phase 2 (mid HP): aggressive AI, perch knockback waves, stand-still punishment
-- Phase 3 (low HP): adds spawn, crystals regen faster, fireballs, meteor shower
-- Climactic: at ~5% HP, dramatic visual moment before death
-
-### Tuning questions
-- HP multiplier exact
-- Phase thresholds (HP %? time? other trigger?)
-- Add spawn rate per phase
-- Crystal aggression level
-- Whether to add a "post-death" cinematic event (the barrier cracking)
+TrueEnd-inspired dragon rework ideas (HP multiplier, phases, breath/meteor/fireballs, perch knockback, stand-still punishment, add spawns, crystal aggression, climatic finish, phase progression, tuning questions) have moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1`. ER keeps the dragon vanilla — see `docs/PLANS.md` §3 "Dragon Gate (vanilla)".
 
 ---
 
@@ -289,16 +258,14 @@ Examples (TBD tuning):
 
 ## 9. Balance Changes
 
-### Enchantment nerf
-- Reason: vanilla top-tier enchantments are too game-changing — general MC balance issue, not just for spell users
-- Affects: Protection, Sharpness, Sweeping Edge, Smite, Bane of Arthropods
-- Multipliers per enchantment in `enchantments.json`
-- Default multipliers TBD with tuning
+### Enchantment nerf (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
+
+Per-enchantment global nerfs have moved to the sibling repo.
 
 ### Ominous-Potion-Scaling
 - Like Trial Chambers — potion effects scale with difficulty
 - Applied to vanilla potions in harder contexts (pockets, boss arenas)
-- Could be in `enchantments.json` or own file
+- File layout TBD (will move to `dragonsrequiem-neoforge-1.21.1` along with the enchantment-nerf tunables — see #52)
 
 ### Pocket difficulty
 - Even easiest pocket one-shots maxed-vanilla players without matching affinity + correct gear
@@ -455,7 +422,7 @@ Examples (TBD tuning):
 
 ### Open questions
 - JSON5 or plain JSON? (JSON5 allows comments — cleaner)
-- Per-enchantment multipliers in `enchantments.json` or separate files?
+- Per-enchantment multipliers file layout (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
 - Modpack vs datapack priority when both override shared field
 
 ---
