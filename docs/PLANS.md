@@ -1,6 +1,6 @@
 # Elemental Realms — Master Plan
 
-> **Plan version:** v16
+> **Plan version:** v18
 >
 > **For Piggidragon:** Master plan with the big picture. Detailed ideas and brainstorming live in `IDEAS.md` — that file is the workspace. This file is the high-level overview that feedback-givers read first.
 
@@ -8,9 +8,14 @@
 
 **Status:** in development. English only. No timeline pressure. Performance: lean and sensible.
 
-**Goal:** Generic fantasy-academy progression mod. Player kills a hard Ender Dragon → unlocks a School dimension + 11 elemental pocket dimensions with bosses, spells, custom mobs.
+**Goal:** Generic fantasy-academy progression mod. Player kills the Dragon → mod starts. Unlocks a School dimension + 11 elemental pocket dimensions with bosses, spells, custom mobs.
 
 **Architecture:** NeoForge 1.21.1, Infiniverse for dynamic dimensions, Lodestone for VFX only, all tunables as config data, all display names through one registry.
+
+**Scope split:**
+- **ER (this repo)** = vanilla-balanced addons only. Vanilla mobs, vanilla structures, vanilla recipes stay untouched. Anything that modifies vanilla behavior lives in the sibling repo.
+- **`Piggidragon/dragonsrequiem-neoforge-1.21.1`** (sibling repo) = vanilla reworks.
+- **Modpack** combining both gets a separate balance pass.
 
 **Versioning:** SemVer-ish. `0.X.0` = major (breaking for players or modpack authors). `0.0.X` = minor (additive).
 
@@ -45,7 +50,7 @@
 
 ## 1. Vision & Setting
 
-Generic fantasy-academy world. Player enters a School dimension after the Dragon fight, learns about affinities, explores 11 elemental pocket dimensions, and grows stronger through spellcasting, boss kills, and progressive mastery. Everything user-facing flows through `NamingRegistry` for re-themability.
+Generic fantasy-academy world. Player enters a School dimension after killing the Dragon, learns about affinities, explores 11 elemental pocket dimensions, and grows stronger through spellcasting, boss kills, and progressive mastery. Everything user-facing flows through `NamingRegistry` for re-themability.
 
 ---
 
@@ -55,8 +60,8 @@ Generic fantasy-academy world. Player enters a School dimension after the Dragon
 |---|---|---|
 | **0. Login** | Overworld | One ELEMENTAL affinity auto-assigned at 100%. Others (incl. deviants) get small partial rolls. Affinities **client-invisible**. |
 | **1. Early progression** | Overworld | Player finds **rare** affinity shards (Small/Medium/Big) from vanilla + custom structures across vanilla dimensions and very rarely from affinity mobs. Item names identify affinity + size. |
-| **2. Dragon fight** | End | Hard dragon, maxed Netherite + skill required. |
-| **3. Dragon kill** | End | A custom structure spawns at Overworld spawn with a permanent School portal. Pocket dimensions technically accessible but barriere-gated. |
+| **2. Dragon fight** | End | Standard End dimension. |
+| **3. Dragon kill** | End | Mod starts. A custom structure spawns at Overworld spawn with a permanent School portal. Pocket dimensions technically accessible but barrier-gated. |
 | **4. School entry** | Staff or portal | Staff lets player reach the School from anywhere in vanilla dims. Fantasy-academy hub with the Crystal Orb of Awakening. |
 | **5. First pocket** | Anywhere in vanilla | No designated "first pocket" — player chooses. No guarantee which pocket is which tier. Survival is the cost of entry. Boss stone drop is not guaranteed. |
 | **6. Deviant stage** | After Elemental boss kill | Deviant mobs spawn in vanilla dims. Deviant pocket dims accessible. |
@@ -65,19 +70,17 @@ Generic fantasy-academy world. Player enters a School dimension after the Dragon
 
 ---
 
-## 3. Dragon Gate (vanilla)
+## 3. Dragon Gate
 
-The Ender Dragon is the **gate to the School dimension** — warden of the dimension barrier. Killing it cracks the barrier. The dragon is left vanilla; maxed Netherite + skill is the baseline.
+The Dragon kill is the gate that starts the mod. Killing the Dragon spawns the School-portal structure at Overworld spawn. After that, School, pockets, bosses, affinities, spells — everything is unlocked.
 
-Hard-rework ideas (HP multiplier, phase system, breath/meteor/fireball, perch knockback, stand-still punishment, add spawns, crystal aggression, climatic finish) have been moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1` — see issue #52.
-
-**Dragons Requiem reference:** TrueEnd datapack (similar overhaul).
+ER does not modify anything about the Dragon, the End dimension, the crystals, or any dragon-related vanilla behavior. The Dragon is the standard Minecraft experience; ER only listens for the kill advancement to trigger School-portal spawn.
 
 ---
 
 ## 4. School Dimension
 
-Fantasy-academy hub entered after the Dragon fight.
+Fantasy-academy hub entered after the Dragon kill.
 
 **Contents:** Crystal Orb of Awakening, lore library (written-book items), lecture halls (one per Elemental + Deviant halls), common room with cross-affinity bookshelves.
 
@@ -112,8 +115,8 @@ First-login random assignment of affinities. Driven by `affinities.json.roll`
 3. **Stage 3 — decaying Elemental/Deviant loop.** Up to
    `elementalMaxIterations` (default 5) additional iterations. Each: roll
    "continue?" starting at `elementalContinueChanceStartPercent` (default
-   50%), halving per iter via `elementalContinueChanceDecayPercent`
-   (default 50%). On success: pick a candidate and roll a partial completion
+   50%), halving per iter via `elementalContinueChanceDecayPercent` (default
+   50%). On success: pick a candidate and roll a partial completion
    capped at `elementalMaxCompletionPercent` (default 80%).
    - Candidate rules:
      - ELEMENTAL candidates: any elemental the player does not yet hold.
@@ -253,7 +256,7 @@ Fully custom entities. Spawn in pocket dimensions only. High-tier drops includin
 |---|---|---|
 | **Mage** | Hotbar / spell-book, projectiles & AoEs | Phase 3 first |
 | **Warrior** | Off-hand held, melee/buffs | Later |
-| **Bow** | Bow enchantment-mods | Later |
+| **Bow** | Bow-mod interactions | Later |
 
 ### 8.2 Mage samples (Phase 3)
 
@@ -285,15 +288,13 @@ Boss walking / behavior not yet decided.
 
 ### 10.1 Ominous-Potion-Scaling
 
-Potion effects scale with difficulty / location, Trial-Chamber-style.
-
-Per-enchantment global nerfs (Protection, Sharpness, Sweeping, Smite, Bane of Arthropods) have been moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1` — see issue #52.
+Potion effects scale with difficulty / location, Trial-Chamber-style. Applied to vanilla potions in harder contexts (pockets, boss arenas). Tunables live in ER config.
 
 ---
 
 ## 11. Progression & Advancements
 
-One advancement tree per phase. Milestones include first-login, first shard, Dragon kill, Awakening, first pocket entry, first boss kill, tier completions, no-laser/no-death Dragon clears, combo spells learned, etc.
+One advancement tree per phase. Milestones include first-login, first shard, Dragon kill, Awakening, first pocket entry, first boss kill, tier completions, combo spells learned, etc.
 
 ---
 
@@ -319,16 +320,15 @@ Multiplayer-safe for single-pocket scenarios. Edge cases handled per-phase. Sing
 
 | # | Decision | Why |
 |---|---|---|
-| 15.1 | Hard Dragon gate | Dedication + world-building + natural power-tier transition |
-| 15.2 | Enchantments nerfed globally | Vanilla enchantments too game-changing — general MC balance issue |
-| 15.3 | Pockets gated by barrier-progression, not by affinity | All accessible after Dragon kill; new tiers unlock via boss kills |
-| 15.4 | Pockets don't require affinity to enter | Soft gate via dimensional effects + gear |
-| 15.5 | Affinity state hidden until Reveal | Mystery, drives shard collection, makes Reveal a moment |
-| 15.6 | Boss stone drop not guaranteed | Affinity stone is the ultimate reward |
-| 15.7 | Boss death removes matching vanilla portal | Encourages variety over farming |
-| 15.8 | Pockets persistent | Boss killed = stays killed. Configurable to regenerate. |
-| 15.9 | Eternal all-or-nothing | Lore: three eternals together are the foundation of existence |
-| 15.10 | PvP not a design goal | Spells designed for PvE only |
+| 15.1 | Hard Dragon gate | Dedication + world-building + power-tier transition |
+| 15.2 | Pockets gated by barrier-progression, not by affinity | All accessible after Dragon kill; new tiers unlock via boss kills |
+| 15.3 | Pockets don't require affinity to enter | Soft gate via dimensional effects + gear |
+| 15.4 | Affinity state hidden until Reveal | Mystery, drives shard collection, makes Reveal a moment |
+| 15.5 | Boss stone drop not guaranteed | Affinity stone is the ultimate reward |
+| 15.6 | Boss death removes matching vanilla portal | Encourages variety over farming |
+| 15.7 | Pockets persistent | Boss killed = stays killed. Configurable to regenerate. |
+| 15.8 | Eternal all-or-nothing | Lore: three eternals together are the foundation of existence |
+| 15.9 | PvP not a design goal | Spells designed for PvE only |
 
 ---
 
@@ -342,9 +342,7 @@ Each phase: code PR (Draft) → user game-test → feedback → fix → sign-off
 
 ### Phase 1 — School + Crystal Orb + Spawn Structure
 
-TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neoforge-1.21.1` (see issue #52). Phase 1 in ER starts with the School side of the gate:
-
-### Phase 2 — School + Crystal Orb + Spawn Structure
+The Dragon is the gate that starts the mod. After the kill, the player reaches the School content.
 
 - Crystal Orb of Awakening item
 - School dimension content (lecture halls, library, common room)
@@ -352,8 +350,9 @@ TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neofor
 - Affinity reveal mechanic — `revealed: boolean` attachment field
 - Dimension Staff (from-anywhere School teleport)
 - Affinity Book GUI foundation
+- Dragon-kill advancement listener → trigger School-portal spawn
 
-### Phase 3 — Spell API + 12 mage samples
+### Phase 2 — Spell API + 12 mage samples
 
 - `Spell` interface, `SpellRegistry`
 - Mana bar (vanilla GuiGraphics)
@@ -362,7 +361,7 @@ TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neofor
 - Spell hotkey + cast burst via Lodestone
 - 12 sample spells end-to-end
 
-### Phase 4 — Pocket Dimensions
+### Phase 3 — Pocket Dimensions
 
 - Pocket ring layout (reusable Jigsaw templates)
 - 11 pocket-dimension JSONs with per-affinity themes
@@ -373,7 +372,7 @@ TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neofor
 - Negative dimensional effects per pocket; buffs at 100% matching affinity
 - Boss death removes matching vanilla portal
 
-### Phase 5 — 11 Bosses
+### Phase 4 — 11 Bosses
 
 - Boss entity base (vanilla boss bar, phases, AoE, resistances)
 - BossArenaStructure Jigsaw system
@@ -381,14 +380,14 @@ TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neofor
 - Boss drops: big shards (common), equipment, spells, lore items (always); affinity stone (rare)
 - Lodestone phase-transition VFX + screen shake
 
-### Phase 6 — Custom Mobs
+### Phase 5 — Custom Mobs
 
 - Affinity mobs (vanilla mobs + tag + particles) spawning rarely in vanilla dims
 - Tier-gating: Elemental everywhere; Deviant after first Elemental boss; Eternal after first Deviant boss
 - Affinity mobs drop shards only
 - Modded mobs in pockets only — fully custom, density tuned, high-tier drops
 
-### Phase 7 — GUI + Polish
+### Phase 6 — GUI + Polish
 
 - Affinity Book full implementation
 - Mana UI finalized
@@ -397,14 +396,14 @@ TrueEnd-inspired dragon rework is deferred to `Piggidragon/dragonsrequiem-neofor
 - Force-chunkload fix
 - Lodestone VFX pass
 
-### Phase 8 — Endgame
+### Phase 7 — Endgame
 
 - Corrupted-world timer difficulty
 - Generic-themed endgame boss
 - Multiplayer tooling
 - Wiki content at first public release
 
-### Phase 9+ — Expansion
+### Phase 8+ — Expansion
 
 1. Deviant mage spells
 2. Eternal mage spells
@@ -429,11 +428,11 @@ VFX only. NOT HP bars, NOT general entity rendering.
 | Portal idle | `WorldParticleManager` rotating glyph ring |
 | Portal rift | `LodestoneShaderRegistry` |
 | Meteor/Blizzard/Tornado | Lodestone `ProjectileRenderer` |
-| Laser (Dragon + Lightning) | `WorldParticleRenderer` line-of-sight beam |
+| Laser (Lightning) | `WorldParticleRenderer` line-of-sight beam |
 | Spell Book GUI | `LodestoneScreen` |
 | Corrupted World | `LodestoneScreenAPI` vignette + tint |
 
-NOT Lodestone: boss HP bars (vanilla `BossEvent`), Ender Dragon HP bar (vanilla), general entity rendering, mana bar / simple HUD (vanilla `GuiGraphics`).
+NOT Lodestone: boss HP bars (vanilla `BossEvent`), general entity rendering, mana bar / simple HUD (vanilla `GuiGraphics`).
 
 ### 18.2 Configuration-first
 
@@ -464,7 +463,7 @@ registries/
 ├── level/PocketRegistry.java
 ├── configs/
 │   ├── ModConfigs.java, ConfigReloadListener.java, NamingRegistry.java
-│   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,Dragon,School,Enchantments,Timer}Config.java
+│   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,School,Timer}Config.java
 └── commands/ModCommands.java
 magic/
 ├── affinities/             [✓ — 3-stage roll per §5.2]
@@ -476,7 +475,7 @@ magic/
 client/
 ├── lodestone/              [NEW]
 └── events/
-    ├── DragonDeathHandler.java [✓ — overhaul in Phase 1]
+    ├── DragonDeathHandler.java [✓ — dragon-kill listener, Phase 1]
     ├── PlayerLoginHandler.java [✓ — 3-stage roll per §5.2]
     ├── ServerTickHandler.java
     └── PocketDimensionBuilder.java [NEW]
@@ -529,8 +528,8 @@ Mix of freesound.org + DIY.
 
 ### 21.2 Labels
 
-**area/\*** (color `#c5def5`):
-`area/config`, `area/worldgen`, `area/magic`, `area/spells`, `area/bosses`, `area/mobs`, `area/gui`, `area/portal`, `area/lodestone`, `area/enchantment`, `area/assets`, `area/dragon`, `area/school`, `area/affinity`, `area/multiplayer`
+**area/\\*** (color `#c5def5`):
+`area/config`, `area/worldgen`, `area/magic`, `area/spells`, `area/bosses`, `area/mobs`, `area/gui`, `area/portal`, `area/lodestone`, `area/assets`, `area/school`, `area/affinity`, `area/multiplayer`
 
 ### 21.3 Draft PRs
 
@@ -553,7 +552,7 @@ You maintain in `run/saves/` (gitignored):
 | World | Purpose |
 |---|---|
 | `Test-FreshAffinities` | Fresh survival; login roll, shard use, reveal flow |
-| `Test-DragonFight` | Creative + End portal + dragon summoner; dragon buff tests |
+| `Test-DragonGate` | Creative + End portal + dragon summoner; Dragon kill triggers School-portal spawn at Overworld spawn |
 | `Test-Pockets` | Creative + pre-given affinity stones; pocket enter/exit + boss spawn |
 | `Test-ConfigTuning` | Fresh world; verify `/elementalrealms reload` applies config edits |
 
@@ -581,45 +580,37 @@ Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 - [x] NamingRegistry scope (display-name helper, not load-bearing)
 - [x] Boss names (generic fantasy-academy, see NamingRegistry)
 - [x] Saved_code triage (#26 — promoted / archived / discarded)
-- [x] Enchantment nerf defaults (0.7 protection, 0.6 sharpness) — moved to `dragonsrequiem-neoforge-1.21.1` (see #52)
 - [x] Roll-logic specifics (3-stage per §5.2)
 
-### Phase 1 (Dragon)
-- [ ] HP multiplier default
-- [ ] Number of phases
-- [ ] Phase-transition thresholds
-- [ ] Add-spawn rate per phase
-- [ ] Crystal aggression level
-
-### Phase 2 (School)
+### Phase 1 (School)
 - [ ] Crystal Orb visual design
 - [ ] Affinity Book layout
 - [ ] Dimension Staff use count
 
-### Phase 3 (Spells)
+### Phase 2 (Spells)
 - [ ] Mana system implementation
 - [ ] Combo spell list exact
 - [ ] Spell-Book GUI vs hotbar
 
-### Phase 4 (Pockets)
+### Phase 3 (Pockets)
 - [ ] Pocket size exact per affinity
 - [ ] Dimensional effects list exact
 - [ ] Affinity-buff specifics when inside matching dim
 
-### Phase 5 (Bosses)
+### Phase 4 (Bosses)
 - [ ] Boss HP scaling by player count
 - [ ] Boss walking / behavior
 - [ ] Boss theme / names final
 
-### Phase 6 (Mobs)
+### Phase 5 (Mobs)
 - [ ] Affinity mob spawn rate per tier
 - [ ] Modded mob count
 
-### Phase 7 (Polish)
+### Phase 6 (Polish)
 - [ ] Advancement tree depth
 - [ ] Force-chunkload timeout
 
-### Phase 8 (Endgame)
+### Phase 7 (Endgame)
 - [ ] Endgame boss required
 - [ ] Corrupted-world mechanic scope
 

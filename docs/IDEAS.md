@@ -17,13 +17,7 @@ Sections below group ideas by topic. They're loosely ordered — newer ideas go 
 
 ---
 
-## 1. Dragon Rework (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
-
-TrueEnd-inspired dragon rework ideas (HP multiplier, phases, breath/meteor/fireballs, perch knockback, stand-still punishment, add spawns, crystal aggression, climatic finish, phase progression, tuning questions) have moved to the sibling repo `Piggidragon/dragonsrequiem-neoforge-1.21.1`. ER keeps the dragon vanilla — see `docs/PLANS.md` §3 "Dragon Gate (vanilla)".
-
----
-
-## 2. Affinity System
+## 1. Affinity System
 
 ### Shard sizes
 - Small +1%, Medium +3%, Big +5%
@@ -80,7 +74,7 @@ TrueEnd-inspired dragon rework ideas (HP multiplier, phases, breath/meteor/fireb
 
 ---
 
-## 3. Pocket Dimensions
+## 2. Pocket Dimensions
 
 ### Per-affinity themes (11 unique environments)
 - FIRE = volcano in center
@@ -101,7 +95,7 @@ TrueEnd-inspired dragon rework ideas (HP multiplier, phases, breath/meteor/fireb
 - Center = boss arena, themed
 
 ### Size
-- Variable per affinity, balanced during Phase 4 build
+- Variable per affinity, balanced during Phase 3 build
 - No concrete numbers yet — start at rough placeholder, tune during testing
 
 ### Dimensional effects
@@ -134,7 +128,7 @@ Examples (TBD tuning):
 
 ---
 
-## 4. Mobs
+## 3. Mobs
 
 ### Affinity mobs
 - Vanilla mobs with affinity tag attached
@@ -159,12 +153,12 @@ Examples (TBD tuning):
 
 ---
 
-## 5. Spells
+## 4. Spells
 
 ### Three archetypes
-- **Mage** = hotbar / spell-book, projectiles & AoEs (Phase 3 first)
+- **Mage** = hotbar / spell-book, projectiles & AoEs (Phase 2 first)
 - **Warrior** = off-hand held, melee/buffs (later, ~year+ of work)
-- **Bow** = bow enchantment-mods (later, ~year+ of work)
+- **Bow** = bow-mod interactions (later, ~year+ of work)
 
 ### Combo spells (TBD exact list)
 - Wind + Lightning = Storm
@@ -172,7 +166,7 @@ Examples (TBD tuning):
 - Earth + Lightning = ?
 - Fire + Wind = Wildfire / Firestorm?
 - Sound + Lightning = Thunderclap?
-- (More to design — design happens during Phase 3)
+- (More to design — design happens during Phase 2)
 
 ### Mana
 - Separate bar (like hunger)
@@ -182,7 +176,7 @@ Examples (TBD tuning):
 
 ### Per-archetype spell counts
 - Not fixed per affinity
-- Phase 3: 12 sample mage spells (3 per Elemental) as starting point
+- Phase 2: 12 sample mage spells (3 per Elemental) as starting point
 - Deviant + Eternal mage spells later
 - Warrior + Bow archetypes later
 
@@ -190,7 +184,7 @@ Examples (TBD tuning):
 - Mana cost, cooldown, damage all configurable
 - Damage scaling: fixed + affinity-completion bonus (e.g. Fire 100% = +30% Fire spell damage)
 
-### Phase 3 sample list (locked in)
+### Phase 2 sample list (locked in)
 | Affinity | Basic | Utility | Ultimate |
 |---|---|---|---|
 | FIRE | Fire Bolt | Flame Shield | Meteor |
@@ -200,10 +194,10 @@ Examples (TBD tuning):
 
 ---
 
-## 6. Bosses
+## 5. Bosses
 
 ### Boss walking / behavior
-- **Not yet decided** — design during Phase 5
+- **Not yet decided** — design during Phase 4
 - Per-affinity style (e.g. Fire boss = aggressive, Ice boss = defensive with adds, Sound boss = moves around environment)
 - Boss HP / phase / drop mechanics TBD per boss during build
 
@@ -216,10 +210,10 @@ Examples (TBD tuning):
 
 ---
 
-## 7. Lore
+## 6. Lore
 
 ### Established
-- Dragon = warden of the dimension barrier
+- Dragon kill is the progression gate; School + pockets unlock after the kill
 - Pocket dimensions always existed; barrier kept them inaccessible
 - Affinities are the building blocks of magic
 - Three eternal affinities together are the foundation of existence
@@ -236,7 +230,7 @@ Examples (TBD tuning):
 
 ---
 
-## 8. School Dimension
+## 7. School Dimension
 
 ### Layout
 - Crystal Orb of Awakening (in a specific room — exact location TBD)
@@ -256,16 +250,13 @@ Examples (TBD tuning):
 
 ---
 
-## 9. Balance Changes
-
-### Enchantment nerf (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
-
-Per-enchantment global nerfs have moved to the sibling repo.
+## 8. Balance Changes
 
 ### Ominous-Potion-Scaling
 - Like Trial Chambers — potion effects scale with difficulty
 - Applied to vanilla potions in harder contexts (pockets, boss arenas)
-- File layout TBD (will move to `dragonsrequiem-neoforge-1.21.1` along with the enchantment-nerf tunables — see #52)
+- Tunables live in ER config — pocket-difficulty lever, not a vanilla-rework
+- File layout TBD (where in JSON tree: `dimensions.json` pocket-effects section vs new top-level file)
 
 ### Pocket difficulty
 - Even easiest pocket one-shots maxed-vanilla players without matching affinity + correct gear
@@ -274,7 +265,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 10. UI / GUI
+## 9. UI / GUI
 
 ### Affinity Book (Lodestone ScreenAPI)
 - Shows all affinities with completion % (after reveal)
@@ -285,7 +276,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 ### Mana UI
 - Skills-tree UI is one option
 - Other options: menu, inventory slot
-- Exact implementation TBD (Phase 3)
+- Exact implementation TBD (Phase 2)
 
 ### Portal rift shader
 - Lodestone distortion around active portal frames
@@ -298,7 +289,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 11. Progression & Advancements
+## 10. Progression & Advancements
 
 ### Milestone ideas
 - First Login (affinity rolled)
@@ -310,8 +301,6 @@ Per-enchantment global nerfs have moved to the sibling repo.
 - Elemental Master (all 4 elementals at 100%)
 - Deviant (first deviant learned)
 - Eternal (eternal affinity learned — rare)
-- Dragonslayer (kill Dragon without taking laser damage)
-- Survivor (kill Dragon without dying)
 - Combo spells learned (per combo)
 - All Bosses Defeated
 - Pocket Variety (entered all 11 pockets)
@@ -324,7 +313,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 12. Feature-Park (interesting but not scheduled)
+## 11. Feature-Park (interesting but not scheduled)
 
 ### Overworld raids from pocket dimensions
 - Mobs + mini-bosses spill out into vanilla worlds
@@ -333,7 +322,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 - Reward: defend vanilla world + get bonus loot
 
 ### Corrupted-world scaling
-- After Phase 8, dimensions get stronger over time (mob buffs, harder bosses, new effects)
+- After Phase 7, dimensions get stronger over time (mob buffs, harder bosses, new effects)
 - Optional toggle, balanced for hardcore players
 - Could depend on Warrior/Bow existing for proper combat challenge
 
@@ -365,7 +354,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 13. Multiplayer
+## 12. Multiplayer
 
 ### Single-pocket scenarios (handled by current code)
 - One player per pocket
@@ -373,10 +362,10 @@ Per-enchantment global nerfs have moved to the sibling repo.
 - Return position via per-player attachment
 
 ### Edge cases to handle per phase
-- Phase 4: two players entering same pocket simultaneously
-- Phase 4: race on dimension creation (handled by Infiniverse's per-portal key)
-- Phase 5: boss kill sync across players → server-side flag + broadcast advancement
-- Phase 5: return position race → per-player attachment (already implemented)
+- Phase 3: two players entering same pocket simultaneously
+- Phase 3: race on dimension creation (handled by Infiniverse's per-portal key)
+- Phase 4: boss kill sync across players → server-side flag + broadcast advancement
+- Phase 4: return position race → per-player attachment (already implemented)
 
 ### Open questions
 - Shared pocket world or per-player pocket?
@@ -386,7 +375,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 14. Performance
+## 13. Performance
 
 ### Lean perf philosophy
 - "As many particles as needed, as few as sensible"
@@ -405,7 +394,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 15. Configuration
+## 14. Configuration
 
 ### Schema versioning
 - `"schemaVersion": 1` per JSON
@@ -422,16 +411,15 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ### Open questions
 - JSON5 or plain JSON? (JSON5 allows comments — cleaner)
-- Per-enchantment multipliers file layout (moved to dragonsrequiem-neoforge-1.21.1 — see #52)
 - Modpack vs datapack priority when both override shared field
 
 ---
 
-## 16. Game-Testing & Workflow
+## 15. Game-Testing & Workflow
 
 ### Test worlds
 - `Test-FreshAffinities` — fresh survival; login roll, shard use, reveal flow
-- `Test-DragonFight` — creative + End portal + dragon summoner; dragon buff tests
+- `Test-DragonGate` — creative + End portal + dragon summoner; Dragon kill triggers School-portal spawn at Overworld spawn
 - `Test-Pockets` — creative + pre-given affinity stones; pocket enter/exit + boss spawn
 - `Test-ConfigTuning` — fresh world; verify `/elementalrealms reload` applies config edits
 
@@ -446,7 +434,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 17. Dropped / Rejected Ideas
+## 16. Dropped / Rejected Ideas
 
 > Track things we considered and dropped so we don't re-litigate later.
 
@@ -476,7 +464,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-## 18. New Ideas (catch-all)
+## 17. New Ideas (catch-all)
 
 > Dump new ideas here. They'll get organized into sections above as they mature.
 
@@ -520,7 +508,7 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ### XP → Mana + Skill Tree ("Magic Book" brainstorm)
 
-> Big-picture brainstorm, nicht lock-in. Größerer Scope-Shift als §10.1 Enchantment-Nerf — ersetzt Vanilla-XP-System komplett durch Mana + multi-layered Skill Tree.
+> Big-picture brainstorm, nicht lock-in. Größerer Scope-Shift — ersetzt Vanilla-XP-System komplett durch Mana + multi-layered Skill Tree.
 
 **Kern-Shape:**
 - XP komplett raus: keine XP-Drops mehr (Mobs, Ores, Smelting, Breeding, Fishing-Treasure-Bücher, Villager-Trades).
@@ -537,13 +525,13 @@ Per-enchantment global nerfs have moved to the sibling repo.
   - Mana-Spend-basiert (Schwelle X verbraucht → Skill-Punkt)
   - Affinitäts-Tier-basiert (Tier-Aufstieg gibt Punkte)
   - Vanilla-XP-gespiegelte zweite Bar (würde Vanilla nur ersetzen statt rethinken — wahrscheinlich nicht die Idee)
-- Respec: Void Stone räumt Affinitäten (§18, §5.3) — Skill-Punkte analog oder perm?
+- Respec: Void Stone räumt Affinitäten (§17, §5.3) — Skill-Punkte analog oder perm?
 
 **Magic Book (vormals Affinity Book):**
 - Tabs: **Affinitäten | Skill Tree | Mana Core**
 - Mana-Core-Tab: Pool-Anzeige, Regen-Rate, evtl. Mana-Potion-Slot, evtl. Config zu beidem.
 - §8.4 "Mana Core als Item (Curios-Slot)" wird damit vermutlich überflüssig — Mana Core als Tab statt Item. Bestätigung nötig: kommt das Item eh nicht?
-- §4 + §12 müssen Affinity Book → Magic Book umbenennen. Phase 2 betroffen.
+- §7 + §10 müssen Affinity Book → Magic Book umbenennen. Phase 1 betroffen.
 
 **Konsequenzen die ich sehe, du evtl. noch nicht:**
 - **Mending wird potenziell sehr stark** wenn Mana-Payment: kein Anvil-Trip-Druck mehr → ständig vollrepariert. Skill "Repair-Effizienz" als Dämpfer? Oder Mending hinter Skill-Gate?
@@ -571,37 +559,35 @@ Per-enchantment global nerfs have moved to the sibling repo.
 4. Bottles o' Enchanting: komplett raus oder Mana-Potion-Pendant (Trank der sofort Mana füllt)?
 
 **Phase-Einordnung (sehr grob):**
-- Mana-System + Magic-Book-Grundgerüst + Enchanting-Table-Rewire → Phase 3 (Spells)
-- Skill-Tree-Vollsystem → Phase 3 oder eigene Phase 3.5
+- Mana-System + Magic-Book-Grundgerüst + Enchanting-Table-Rewire → Phase 2 (Spells)
+- Skill-Tree-Vollsystem → Phase 2 oder eigene Phase 2.5
 - XP-Code-Path-Entfernung → muss quer durch alle Phasen mitgepatcht werden, kein einzelner Issue
 
 ---
 
-## 19. Decisions Log (locked-in design choices)
+## 18. Decisions Log (locked-in design choices)
 
 > Mirror of §15 Controversial Design Decisions in PLANS.md. Keep in sync.
 
 | # | Decision | Why |
 |---|---|---|
-| 1 | Hard Dragon gate | Dedication + world-building + power-tier transition |
-| 2 | Enchantments nerfed globally | Vanilla top-tier enchantments too game-changing — general MC balance issue |
-| 3 | Pockets gated by barrier-progression, not by affinity | All accessible after Dragon kill; new tiers unlock via boss kills |
-| 4 | Pockets don't require affinity to enter | Soft gate via dimensional effects + gear |
-| 5 | Affinity state hidden until Reveal | Mystery, drives shard collection, makes Reveal a moment |
-| 6 | Boss stone drop not guaranteed | Affinity stone is the ultimate reward |
-| 7 | Boss death removes matching vanilla portal | Encourages variety over farming |
-| 8 | Pockets persistent | Boss killed = stays killed. Configurable to regenerate |
-| 9 | Eternal all-or-nothing | Lore: three eternals together are the foundation of existence |
-| 10 | PvP not a design goal | Spells designed for PvE only |
+| 1 | Dragon kill starts the mod | Progression gate — School + pockets + everything else unlocks after the kill |
+| 2 | Pockets gated by barrier-progression, not by affinity | All accessible after Dragon kill; new tiers unlock via boss kills |
+| 3 | Pockets don't require affinity to enter | Soft gate via dimensional effects + gear |
+| 4 | Affinity state hidden until Reveal | Mystery, drives shard collection, makes Reveal a moment |
+| 5 | Boss stone drop not guaranteed | Affinity stone is the ultimate reward |
+| 6 | Boss death removes matching vanilla portal | Encourages variety over farming |
+| 7 | Pockets persistent | Boss killed = stays killed. Configurable to regenerate |
+| 8 | Eternal all-or-nothing | Lore: three eternals together are the foundation of existence |
+| 9 | PvP not a design goal | Spells designed for PvE only |
+| 10 | ER is vanilla-balanced | ER adds content on top of vanilla; sibling repo `dragonsrequiem-neoforge-1.21.1` owns the rework territory |
 
 ---
 
-## 20. Open Questions (live)
+## 19. Open Questions (live)
 
 > Working list of unresolved questions. Update as we go.
 
-- [ ] Dragon HP multiplier exact default
-- [ ] Dragon phase count (3? 4?)
 - [ ] Pocket size per affinity (final tuning)
 - [ ] Dimensional effects list per pocket (full draft)
 - [ ] Vanilla-MC effects per affinity at 100% (full list)
@@ -618,4 +604,4 @@ Per-enchantment global nerfs have moved to the sibling repo.
 
 ---
 
-*Last updated: 2026-06-25*
+*Last updated: 2026-06-27*
