@@ -54,9 +54,6 @@ public final class ConfigReloadListener {
     public static void reloadAllJson5() {
         ElementalRealms.LOGGER.info("Reloading JSON5 config layer...");
 
-        // Clear custom naming overrides before re-applying — default layer is static.
-        NamingRegistry.clearCustom();
-
         // Re-load each JSON5-backed config. Each loader pulls its own file.
         int reloaded = 0;
         int failed = 0;
