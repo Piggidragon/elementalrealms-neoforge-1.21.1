@@ -37,7 +37,6 @@
 - **Reveal** — transition from "unknown affinities" to "known affinities".
 - **Roll** — first-login random assignment of affinities.
 - **Mage / Warrior / Bow** — spell archetypes (Mage first, others later).
-- **NamingRegistry** — single source for boss / spell / dimension display names.
 - **Affinity mob** — vanilla mob with an affinity tag + particles. Drops shards only.
 - **Modded mob** — fully custom entity. Drops affinity-specific loot.
 - **Barrier stage** — progression marker (Dragon killed / Elemental boss killed / Deviant boss killed) that unlocks new content tiers.
@@ -50,7 +49,7 @@
 
 ## 1. Vision & Setting
 
-Generic fantasy-academy world. Player enters a School dimension after killing the Dragon, learns about affinities, explores 11 elemental pocket dimensions, and grows stronger through spellcasting, boss kills, and progressive mastery. Everything user-facing flows through `NamingRegistry` for re-themability.
+Generic fantasy-academy world. Player enters a School dimension after killing the Dragon, learns about affinities, explores 11 elemental pocket dimensions, and grows stronger through spellcasting, boss kills, and progressive mastery. All user-facing display names live in `lang/en_us.json` and flow through `Component.translatable()`; re-themability uses the standard Minecraft Resource Pack workflow.
 
 ---
 
@@ -376,7 +375,7 @@ The Dragon is the gate that starts the mod. After the kill, the player reaches t
 
 - Boss entity base (vanilla boss bar, phases, AoE, resistances)
 - BossArenaStructure Jigsaw system
-- 11 bosses (names from `NamingRegistry`)
+- 11 bosses (display names via `lang/en_us.json` + `Component.translatable()`)
 - Boss drops: big shards (common), equipment, spells, lore items (always); affinity stone (rare)
 - Lodestone phase-transition VFX + screen shake
 
@@ -462,7 +461,7 @@ registries/
 │   └── elementals/         [NEW]
 ├── level/PocketRegistry.java
 ├── configs/
-│   ├── ModConfigs.java, ConfigReloadListener.java, NamingRegistry.java
+│   ├── ModConfigs.java, ConfigReloadListener.java
 │   └── {Affinity,Dimensions,Spells,Bosses,Mobs,Portal,School,Timer}Config.java
 └── commands/ModCommands.java
 magic/
@@ -577,8 +576,6 @@ Status: `[ ]` unanswered · `[x]` answered · `[?]` superseded.
 - [x] JSON5 selected
 - [x] Hot-reload scope (TOML via ModConfigEvent, JSON5 via /elementalrealms reload)
 - [x] Reveal mechanic timing (post-Dragon kill, Crystal Orb of Awakening)
-- [x] NamingRegistry scope (display-name helper, not load-bearing)
-- [x] Boss names (generic fantasy-academy, see NamingRegistry)
 - [x] Saved_code triage (#26 — promoted / archived / discarded)
 - [x] Roll-logic specifics (3-stage per §5.2)
 
